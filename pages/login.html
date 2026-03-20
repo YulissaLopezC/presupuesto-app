@@ -246,7 +246,8 @@
 
     // Si ya hay sesión activa, ir directo al dashboard
     onAuthChange((user) => {
-      if (user) window.location.href = "./dashboard.html";
+      const BASE = window.location.pathname.replace(/\/pages\/.*$/, "");
+      if (user) window.location.href = BASE + "/pages/dashboard.html";
     });
 
     // ── Tabs ──────────────────────────────────────────────

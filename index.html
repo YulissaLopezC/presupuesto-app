@@ -9,22 +9,20 @@
       background: #0f110e;
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; margin: 0;
-      font-family: sans-serif; color: #7a7d6a;
-      font-size: 14px;
+      font-family: sans-serif; color: #7a7d6a; font-size: 14px;
     }
   </style>
 </head>
 <body>
   <p>Cargando...</p>
-
   <script type="module">
     import { onAuthChange } from "./modules/auth.js";
-
+    const BASE = window.location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "");
     onAuthChange((user) => {
       if (user) {
-        window.location.replace("./pages/dashboard.html");
+        window.location.replace(BASE + "/pages/dashboard.html");
       } else {
-        window.location.replace("./pages/login.html");
+        window.location.replace(BASE + "/pages/login.html");
       }
     });
   </script>
