@@ -1,0 +1,23 @@
+# ============================================================
+# .gitignore — Presupuesto App
+# ============================================================
+
+# Firebase: credenciales reales — NUNCA subir al repo
+firebase-config.js
+
+# Basura de sistemas operativos
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Basura de editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dependencias (si en algún momento usas npm)
+node_modules/
+
+# Logs
+*.log

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presupuesto · Inicio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 24px 24px;
+      margin-bottom: 14px;
+    }
+    .hero-month {
+      font-size: 12px; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
+    }
+    .hero-amount {
+      font-family: "DM Serif Display", serif;
+      font-size: 44px; font-weight: 400; letter-spacing: -1.5px;
+      line-height: 1; margin-bottom: 4px;
+    }
+    .hero-amount.positive { color: var(--accent); }
+    .hero-amount.negative { color: var(--danger); }
+    .hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hero-stat {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .hero-stat .label { margin-bottom: 4px; }
+    .hero-stat .value {
+      font-size: 18px; font-weight: 400;
+      font-family: "DM Serif Display", serif; letter-spacing: -0.5px;
+    }
+    .hero-stat .value.inc { color: var(--info); }
+    .hero-stat .value.exp { color: var(--warning); }
+    .progress-labels {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--muted); margin-bottom: 6px;
+    }
+    .envelopes-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 380px) { .envelopes-grid { grid-template-columns: 1fr; } }
+    .envelope-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px;
+    }
+    .envelope-name {
+      font-size: 12px; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .envelope-actual {
+      font-family: "DM Serif Display", serif;
+      font-size: 20px; font-weight: 400; letter-spacing: -0.5px; margin-bottom: 2px;
+    }
+    .envelope-actual.ok   { color: var(--accent); }
+    .envelope-actual.over { color: var(--danger); }
+    .envelope-actual.warn { color: var(--warning); }
+    .envelope-budget { font-size: 11px; color: var(--muted); }
+    .expense-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .expense-item:last-child { border-bottom: none; }
+    .expense-left { flex: 1; min-width: 0; }
+    .expense-cat { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .expense-desc { font-size: 12px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .expense-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
+    .expense-amount { font-family: "DM Serif Display", serif; font-size: 16px; color: var(--warning); letter-spacing: -0.3px; }
+    .expense-date { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .cat-row { margin-bottom: 14px; }
+    .cat-row:last-child { margin-bottom: 0; }
+    .cat-row-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+    .cat-name { font-size: 13px; color: var(--text); }
+    .cat-amounts { font-size: 12px; color: var(--muted); }
+    .cat-amounts span { color: var(--text); }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .link-small { font-size: 12px; color: var(--accent); text-decoration: none; }
+    .link-small:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div id="topbar" class="topbar"></div>
+  <div class="page">
+    <div id="month-selector-container" style="margin-bottom:16px;"></div>
+    <div class="hero-card" id="hero-card">
+      <div class="skeleton" style="height:140px;border-radius:12px;"></div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <h3>Cajitas</h3>
+        <a href="/pages/envelopes.html" class="link-small">Ver todas →</a>
+      </div>
+      <div id="envelopes-content">
+        <div class="skeleton" style="height:80px;border-radius:10px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <h3>Últimos gastos</h3>
+        <a href="/pages/expenses.html" class="link-small">Ver todos →</a>
+      </div>
+      <div id="recent-expenses-content">
+        <div class="skeleton" style="height:120px;border-radius:10px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <h3>Por categoría</h3>
+        <a href="/pages/comparison.html" class="link-small">Comparativo →</a>
+      </div>
+      <div id="categories-content">
+        <div class="skeleton" style="height:140px;border-radius:10px;"></div>
+      </div>
+    </div>
+  </div>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+
+  <script type="module">
+    import { requireAuth } from "../modules/auth.js";
+    import { getExpenses, getBudget, getEnvelopes } from "../modules/db.js";
+    import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js";
+    import { formatCOP, currentMonth, formatDate, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
+
+    let uid, selectedMonth;
+
+    const user = await requireAuth();
+    uid = user.uid;
+    selectedMonth = currentMonth();
+
+    renderTopbar(user);
+    renderBottomNav("dashboard");
+    renderMonthSelector("month-selector-container", selectedMonth, (m) => {
+      selectedMonth = m;
+      loadDashboard();
+    });
+
+    await loadDashboard();
+
+    async function loadDashboard() {
+      const [expenses, budget, envelopes] = await Promise.all([
+        getExpenses(uid, { month: selectedMonth }),
+        getBudget(uid, selectedMonth),
+        getEnvelopes(uid, selectedMonth)
+      ]);
+      renderHero(expenses, budget);
+      renderEnvelopes(envelopes);
+      renderRecentExpenses(expenses);
+      renderCategoryProgress(expenses, budget);
+    }
+
+    function renderHero(expenses, budget) {
+      const totalBudgeted = budget
+        ? Object.values(budget.categories || {}).reduce((s, v) => s + Number(v), 0) : 0;
+      const totalSpent = expenses.reduce((s, e) => s + Number(e.amount), 0);
+      const saldo = totalBudgeted - totalSpent;
+      const pctUsed = totalBudgeted > 0 ? Math.min(totalSpent / totalBudgeted, 1) : 0;
+      const amountClass = saldo >= 0 ? "positive" : "negative";
+      const barClass = pctUsed >= 1 ? "over" : pctUsed >= 0.8 ? "warn" : "";
+
+      document.getElementById("hero-card").innerHTML = `
+        <div class="hero-month">${formatMonth(selectedMonth)}</div>
+        <div class="hero-amount ${amountClass}">${formatCOP(Math.abs(saldo))}</div>
+        <div class="hero-sub">${saldo >= 0 ? "disponible del mes" : "por encima del presupuesto"}</div>
+        <div class="progress-labels">
+          <span>Gastado: ${formatCOP(totalSpent)}</span>
+          <span>${Math.round(pctUsed * 100)}% del presupuesto</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill ${barClass}" style="width:${pctUsed * 100}%"></div>
+        </div>
+        <div class="hero-stats" style="margin-top:16px;">
+          <div class="hero-stat">
+            <div class="label">Presupuesto</div>
+            <div class="value inc">${formatCOP(totalBudgeted)}</div>
+          </div>
+          <div class="hero-stat">
+            <div class="label">Gastado</div>
+            <div class="value exp">${formatCOP(totalSpent)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEnvelopes(envelopes) {
+      const el = document.getElementById("envelopes-content");
+      if (!envelopes.length) {
+        el.innerHTML = `<div class="empty-state"><p>No hay cajitas para este mes.</p>
+          <a href="/pages/envelopes.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
+        return;
+      }
+      el.innerHTML = `<div class="envelopes-grid">${envelopes.map(env => {
+        const pct = env.budgeted > 0 ? env.actual / env.budgeted : 0;
+        const cls = pct > 1 ? "over" : pct > 0.8 ? "warn" : "ok";
+        return `
+          <div class="envelope-card">
+            <div class="envelope-name">${env.name}</div>
+            <div class="envelope-actual ${cls}">${formatCOP(env.actual)}</div>
+            <div class="envelope-budget">de ${formatCOP(env.budgeted)}</div>
+            <div class="progress-bar" style="margin-top:8px;">
+              <div class="progress-fill ${cls === "ok" ? "" : cls}" style="width:${Math.min(pct,1)*100}%"></div>
+            </div>
+          </div>`;
+      }).join("")}</div>`;
+    }
+
+    function renderRecentExpenses(expenses) {
+      const el = document.getElementById("recent-expenses-content");
+      const recent = expenses.slice(0, 5);
+      if (!recent.length) {
+        el.innerHTML = `<div class="empty-state"><p>No hay gastos registrados este mes.</p>
+          <a href="/pages/expenses.html" class="link-small" style="display:inline-block;margin-top:8px;">Registrar gasto →</a></div>`;
+        return;
+      }
+      el.innerHTML = recent.map(e => `
+        <div class="expense-item">
+          <div class="expense-left">
+            <div class="expense-cat">${e.category}</div>
+            ${e.description ? `<div class="expense-desc">${e.description}</div>` : ""}
+          </div>
+          <div class="expense-right">
+            <div class="expense-amount">${formatCOP(e.amount)}</div>
+            <div class="expense-date">${formatDate(e.date)}</div>
+          </div>
+        </div>`).join("");
+    }
+
+    function renderCategoryProgress(expenses, budget) {
+      const el = document.getElementById("categories-content");
+      if (!budget?.categories) {
+        el.innerHTML = `<div class="empty-state"><p>Configura tu presupuesto para ver el progreso.</p>
+          <a href="/pages/budget.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
+        return;
+      }
+      const actual = sumByCategory(expenses);
+      const comparison = buildComparison(budget.categories, actual)
+        .filter(r => r.budgeted > 0)
+        .sort((a, b) => (b.pct || 0) - (a.pct || 0));
+
+      if (!comparison.length) {
+        el.innerHTML = `<div class="empty-state"><p>Sin datos de categorías.</p></div>`;
+        return;
+      }
+      el.innerHTML = comparison.map(row => {
+        const pct = row.pct !== null ? Math.min(row.pct, 1) : 0;
+        const pctN = row.pct !== null ? Math.round(row.pct * 100) : 0;
+        const barClass = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
+        return `
+          <div class="cat-row">
+            <div class="cat-row-header">
+              <span class="cat-name">${row.category}</span>
+              <span class="cat-amounts">
+                <span>${formatCOP(row.actual)}</span> / ${formatCOP(row.budgeted)}
+                <span style="margin-left:6px;color:${pctN>=100?"var(--danger)":"var(--muted)"}">${pctN}%</span>
+              </span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill ${barClass}" style="width:${pct*100}%"></div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+  </script>
+</body>
+</html>
