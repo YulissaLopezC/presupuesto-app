@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presupuesto · Categorías</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .fab {
+      position: fixed; bottom: 76px; right: 20px;
+      width: 54px; height: 54px;
+      background: var(--accent); color: #0f110e;
+      border: none; border-radius: 50%;
+      font-size: 26px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(181,209,122,0.3);
+      z-index: 90; transition: background 0.2s, transform 0.2s;
+    }
+    .fab:hover  { background: var(--accent2); }
+    .fab:active { transform: scale(0.95); }
+
+    .drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    .drawer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
+      z-index: 160; transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
+      max-width: 680px; margin: 0 auto;
+    }
+    .drawer.open { transform: translateY(0); }
+    .drawer-handle {
+      width: 36px; height: 4px; background: var(--border2);
+      border-radius: 99px; margin: 0 auto 20px;
+    }
+    .drawer-title {
+      font-family: "DM Serif Display", serif;
+      font-size: 20px; font-weight: 400; margin-bottom: 20px;
+    }
+
+    /* ── Grupos de tipo ──────────────────────────────────── */
+    .type-group { margin-bottom: 8px; }
+
+    .type-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0 8px;
+    }
+
+    .type-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .type-dot.basico     { background: var(--accent); }
+    .type-dot.no-esencial{ background: var(--warning); }
+    .type-dot.ahorro     { background: var(--info); }
+
+    .type-label {
+      font-size: 11px; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+
+    .type-count {
+      font-size: 11px; color: var(--muted2);
+      margin-left: auto;
+    }
+
+    /* ── Item de categoría ───────────────────────────────── */
+    .cat-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .cat-item:hover { border-color: var(--border2); }
+
+    .cat-item-name { font-size: 14px; color: var(--text); }
+
+    .cat-item-actions { display: flex; gap: 6px; align-items: center; }
+
+    /* ── Nota de categorías por defecto ──────────────────── */
+    .default-note {
+      background: rgba(112,171,224,0.07);
+      border: 1px solid rgba(112,171,224,0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--info);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* ── Selector de tipo en el drawer ───────────────────── */
+    .type-options {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .type-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .type-option:hover { border-color: var(--border2); }
+    .type-option.selected { border-color: var(--accent); background: rgba(181,209,122,0.05); }
+    .type-option.selected-warn { border-color: var(--warning); background: rgba(224,184,112,0.05); }
+    .type-option.selected-info { border-color: var(--info); background: rgba(112,171,224,0.05); }
+
+    .type-option-label { font-size: 14px; color: var(--text); }
+    .type-option-desc  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  </style>
+</head>
+<body>
+  <div id="topbar" class="topbar"></div>
+
+  <div class="page">
+    <div style="margin-bottom:20px;">
+      <h2>Categorías</h2>
+      <p style="font-size:13px;color:var(--muted);margin-top:4px;">
+        Define tus categorías de gasto, ahorro e inversión.
+      </p>
+    </div>
+
+    <div class="default-note">
+      Tip: configura tus categorías antes de registrar gastos o configurar el presupuesto mensual.
+    </div>
+
+    <div id="categories-list">
+      <div class="skeleton" style="height:200px;border-radius:14px;"></div>
+    </div>
+  </div>
+
+  <button class="fab" id="fab" title="Nueva categoría">+</button>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title" id="drawer-title">Nueva categoría</div>
+
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-input" id="field-name" placeholder="Ej: Mercado, Gimnasio..." maxlength="40"/>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" style="margin-bottom:10px;">Tipo</label>
+      <div class="type-options">
+        <div class="type-option" id="opt-basico" onclick="selectType('GASTO BÁSICO')">
+          <div class="type-dot basico"></div>
+          <div>
+            <div class="type-option-label">Gasto básico</div>
+            <div class="type-option-desc">Necesidades esenciales del mes</div>
+          </div>
+        </div>
+        <div class="type-option" id="opt-no-esencial" onclick="selectType('GASTO NO ESENCIAL')">
+          <div class="type-dot no-esencial"></div>
+          <div>
+            <div class="type-option-label">Gasto no esencial</div>
+            <div class="type-option-desc">Entretenimiento, gustos, salidas</div>
+          </div>
+        </div>
+        <div class="type-option" id="opt-ahorro" onclick="selectType('AHORRO O INVERSIÓN')">
+          <div class="type-dot ahorro"></div>
+          <div>
+            <div class="type-option-label">Ahorro o inversión</div>
+            <div class="type-option-desc">Ahorro mensual, inversiones, metas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-save" onclick="saveCategory()" style="margin-top:8px;">
+      Guardar categoría
+    </button>
+  </div>
+
+  <script type="module">
+    import { requireAuth }   from "../modules/auth.js";
+    import { getCategories, addCategory, updateCategory, deleteCategory } from "../modules/db.js";
+    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js";
+
+    let uid, categories = [], editingId = null, selectedType = "";
+
+    // ── Init ─────────────────────────────────────────────
+    const user = await requireAuth();
+    uid = user.uid;
+
+    renderTopbar(user);
+    renderBottomNav("categories");
+    await loadCategories();
+
+    // ── Cargar y renderizar ───────────────────────────────
+    async function loadCategories() {
+      categories = await getCategories(uid);
+      renderCategories();
+    }
+
+    function renderCategories() {
+      const el = document.getElementById("categories-list");
+
+      if (!categories.length) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <p>Aún no tienes categorías.</p>
+            <p style="margin-top:6px;font-size:12px;">Toca <strong style="color:var(--accent)">+</strong> para crear la primera.</p>
+          </div>`;
+        return;
+      }
+
+      const TYPES = [
+        { key: "GASTO BÁSICO",       cls: "basico",      label: "Gasto básico" },
+        { key: "GASTO NO ESENCIAL",  cls: "no-esencial", label: "Gasto no esencial" },
+        { key: "AHORRO O INVERSIÓN", cls: "ahorro",      label: "Ahorro o inversión" }
+      ];
+
+      el.innerHTML = TYPES.map(type => {
+        const items = categories.filter(c => c.type === type.key);
+        if (!items.length) return "";
+        return `
+          <div class="type-group">
+            <div class="type-header">
+              <div class="type-dot ${type.cls}"></div>
+              <span class="type-label">${type.label}</span>
+              <span class="type-count">${items.length}</span>
+            </div>
+            ${items.map(cat => `
+              <div class="cat-item" onclick="openEditDrawer('${cat.id}')">
+                <span class="cat-item-name">${cat.name}</span>
+                <div class="cat-item-actions">
+                  <span class="badge ${type.cls}">${type.label.split(" ")[0]}</span>
+                  <button class="btn-danger" onclick="event.stopPropagation();handleDelete('${cat.id}','${cat.name}')">✕</button>
+                </div>
+              </div>`).join("")}
+          </div>`;
+      }).join("");
+    }
+
+    // ── Drawer: nuevo ─────────────────────────────────────
+    document.getElementById("fab").addEventListener("click", openNewDrawer);
+
+    function openNewDrawer() {
+      editingId = null;
+      selectedType = "";
+      document.getElementById("drawer-title").textContent = "Nueva categoría";
+      document.getElementById("field-name").value = "";
+      document.getElementById("btn-save").textContent = "Guardar categoría";
+      clearTypeSelection();
+      openDrawer();
+    }
+
+    // ── Drawer: editar ────────────────────────────────────
+    window.openEditDrawer = function(id) {
+      const cat = categories.find(c => c.id === id);
+      if (!cat) return;
+      editingId = id;
+      selectedType = cat.type;
+      document.getElementById("drawer-title").textContent = "Editar categoría";
+      document.getElementById("field-name").value = cat.name;
+      document.getElementById("btn-save").textContent = "Actualizar categoría";
+      clearTypeSelection();
+      highlightType(cat.type);
+      openDrawer();
+    };
+
+    // ── Selección de tipo ─────────────────────────────────
+    window.selectType = function(type) {
+      selectedType = type;
+      clearTypeSelection();
+      highlightType(type);
+    };
+
+    function clearTypeSelection() {
+      document.getElementById("opt-basico").className      = "type-option";
+      document.getElementById("opt-no-esencial").className = "type-option";
+      document.getElementById("opt-ahorro").className      = "type-option";
+    }
+
+    function highlightType(type) {
+      const map = {
+        "GASTO BÁSICO":       { id: "opt-basico",      cls: "selected" },
+        "GASTO NO ESENCIAL":  { id: "opt-no-esencial", cls: "selected-warn" },
+        "AHORRO O INVERSIÓN": { id: "opt-ahorro",      cls: "selected-info" }
+      };
+      const entry = map[type];
+      if (entry) document.getElementById(entry.id).className = `type-option ${entry.cls}`;
+    }
+
+    // ── Guardar ───────────────────────────────────────────
+    window.saveCategory = async function() {
+      const name = document.getElementById("field-name").value.trim();
+      const btn  = document.getElementById("btn-save");
+
+      if (!name) {
+        showToast("Escribe un nombre para la categoría.", "error"); return;
+      }
+      if (!selectedType) {
+        showToast("Selecciona un tipo.", "error"); return;
+      }
+
+      // Validar nombre duplicado
+      const duplicate = categories.find(c =>
+        c.name.toLowerCase() === name.toLowerCase() && c.id !== editingId
+      );
+      if (duplicate) {
+        showToast("Ya existe una categoría con ese nombre.", "error"); return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+
+      try {
+        if (editingId) {
+          await updateCategory(uid, editingId, { name, type: selectedType });
+          showToast("Categoría actualizada.", "success");
+        } else {
+          await addCategory(uid, { name, type: selectedType });
+          showToast("Categoría creada.", "success");
+        }
+        closeDrawer();
+        await loadCategories();
+      } catch (err) {
+        showToast("Error al guardar. Intenta de nuevo.", "error");
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = editingId ? "Actualizar categoría" : "Guardar categoría";
+      }
+    };
+
+    // ── Eliminar ──────────────────────────────────────────
+    window.handleDelete = async function(id, name) {
+      if (!confirm(`¿Eliminar la categoría "${name}"?\nLos gastos existentes con esta categoría no se borran.`)) return;
+      try {
+        await deleteCategory(uid, id);
+        showToast("Categoría eliminada.", "success");
+        await loadCategories();
+      } catch (err) {
+        showToast("Error al eliminar.", "error");
+      }
+    };
+
+    // ── Drawer helpers ────────────────────────────────────
+    function openDrawer() {
+      document.getElementById("drawer-overlay").classList.add("open");
+      document.getElementById("drawer").classList.add("open");
+      setTimeout(() => document.getElementById("field-name").focus(), 320);
+    }
+
+    window.closeDrawer = function() {
+      document.getElementById("drawer-overlay").classList.remove("open");
+      document.getElementById("drawer").classList.remove("open");
+    };
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeDrawer();
+      if (e.key === "Enter" && document.getElementById("drawer").classList.contains("open")) {
+        saveCategory();
+      }
+    });
+  </script>
+</body>
+</html>

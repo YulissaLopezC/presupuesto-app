@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mi Presupuesto</title>
+  <style>
+    body {
+      background: #0f110e;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0;
+      font-family: sans-serif; color: #7a7d6a;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <p>Cargando...</p>
+
+  <script type="module">
+    import { onAuthChange } from "./modules/auth.js";
+
+    onAuthChange((user) => {
+      if (user) {
+        window.location.replace("./pages/dashboard.html");
+      } else {
+        window.location.replace("./pages/login.html");
+      }
+    });
+  </script>
+</body>
+</html>

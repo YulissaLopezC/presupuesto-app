@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presupuesto · Ingresar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f110e;
+      --surface:  #181b16;
+      --border:   #2a2e27;
+      --text:     #e8ead4;
+      --muted:    #7a7d6a;
+      --accent:   #b5d17a;
+      --accent2:  #7eb85c;
+      --danger:   #e07070;
+      --radius:   14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "DM Sans", sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* Fondo con patrón sutil */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 60% 50% at 70% 20%, rgba(181,209,122,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(126,184,92,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 40px 40px;
+      position: relative;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .brand-icon {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    }
+
+    .brand h1 {
+      font-family: "DM Serif Display", serif;
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .brand p {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* Tabs login / registro */
+    .tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 7px;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 7px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: "DM Sans", sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #0f110e;
+      border: none;
+      border-radius: 10px;
+      font-family: "DM Sans", sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover  { background: var(--accent2); }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .error-msg {
+      background: rgba(224,112,112,0.1);
+      border: 1px solid rgba(224,112,112,0.3);
+      color: var(--danger);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 24px;
+    }
+
+    /* Ocultar/mostrar secciones */
+    #section-register { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="brand-icon">💰</div>
+      <h1>Mi Presupuesto</h1>
+      <p>Control financiero personal</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-login"    onclick="switchTab('login')">Ingresar</div>
+      <div class="tab"        id="tab-register" onclick="switchTab('register')">Registrarme</div>
+    </div>
+
+    <!-- Formulario Login -->
+    <div id="section-login">
+      <div class="form-group">
+        <label>Correo</label>
+        <input type="email" id="login-email" placeholder="tu@correo.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button class="btn" id="btn-login" onclick="handleLogin()">Ingresar</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+
+    <!-- Formulario Registro -->
+    <div id="section-register">
+      <div class="form-group">
+        <label>Correo</label>
+        <input type="email" id="reg-email" placeholder="tu@correo.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+      </div>
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <input type="password" id="reg-password2" placeholder="Repite tu contraseña" autocomplete="new-password"/>
+      </div>
+      <button class="btn" id="btn-register" onclick="handleRegister()">Crear cuenta</button>
+      <div class="error-msg" id="register-error"></div>
+    </div>
+
+    <p class="footer-note">Tus datos son privados y solo tú los puedes ver.</p>
+  </div>
+
+  <script type="module">
+    import { login, register, onAuthChange } from "../modules/auth.js";
+
+    // Si ya hay sesión activa, ir directo al dashboard
+    onAuthChange((user) => {
+      if (user) window.location.href = "./dashboard.html";
+    });
+
+    // ── Tabs ──────────────────────────────────────────────
+    window.switchTab = function(tab) {
+      const isLogin = tab === "login";
+      document.getElementById("section-login").style.display    = isLogin ? "block" : "none";
+      document.getElementById("section-register").style.display = isLogin ? "none"  : "block";
+      document.getElementById("tab-login").classList.toggle("active", isLogin);
+      document.getElementById("tab-register").classList.toggle("active", !isLogin);
+    };
+
+    // ── Login ─────────────────────────────────────────────
+    window.handleLogin = async function() {
+      const email    = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+      const errEl    = document.getElementById("login-error");
+      const btn      = document.getElementById("btn-login");
+
+      errEl.classList.remove("show");
+      if (!email || !password) {
+        errEl.textContent = "Completa todos los campos.";
+        errEl.classList.add("show");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Ingresando...";
+
+      try {
+        await login(email, password);
+        // onAuthChange se encarga de redirigir
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Ingresar";
+        errEl.textContent = translateFirebaseError(err.code);
+        errEl.classList.add("show");
+      }
+    };
+
+    // ── Registro ──────────────────────────────────────────
+    window.handleRegister = async function() {
+      const email  = document.getElementById("reg-email").value.trim();
+      const pass1  = document.getElementById("reg-password").value;
+      const pass2  = document.getElementById("reg-password2").value;
+      const errEl  = document.getElementById("register-error");
+      const btn    = document.getElementById("btn-register");
+
+      errEl.classList.remove("show");
+
+      if (!email || !pass1 || !pass2) {
+        errEl.textContent = "Completa todos los campos.";
+        errEl.classList.add("show");
+        return;
+      }
+      if (pass1 !== pass2) {
+        errEl.textContent = "Las contraseñas no coinciden.";
+        errEl.classList.add("show");
+        return;
+      }
+      if (pass1.length < 6) {
+        errEl.textContent = "La contraseña debe tener al menos 6 caracteres.";
+        errEl.classList.add("show");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Creando cuenta...";
+
+      try {
+        await register(email, pass1);
+        // onAuthChange redirige al dashboard
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Crear cuenta";
+        errEl.textContent = translateFirebaseError(err.code);
+        errEl.classList.add("show");
+      }
+    };
+
+    // ── Traducción de errores Firebase ────────────────────
+    function translateFirebaseError(code) {
+      const map = {
+        "auth/invalid-email":          "El correo no es válido.",
+        "auth/user-not-found":         "No existe una cuenta con ese correo.",
+        "auth/wrong-password":         "Contraseña incorrecta.",
+        "auth/email-already-in-use":   "Ya existe una cuenta con ese correo.",
+        "auth/weak-password":          "La contraseña es muy débil.",
+        "auth/too-many-requests":      "Demasiados intentos. Intenta más tarde.",
+        "auth/network-request-failed": "Error de conexión. Revisa tu internet.",
+      };
+      return map[code] || "Ocurrió un error. Intenta de nuevo.";
+    }
+
+    // Enter para submit
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const activeSection = document.getElementById("section-login").style.display !== "none"
+        ? "login" : "register";
+      if (activeSection === "login") window.handleLogin();
+      else window.handleRegister();
+    });
+  </script>
+</body>
+</html>
