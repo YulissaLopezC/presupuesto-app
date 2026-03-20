@@ -96,7 +96,7 @@
     <div class="card">
       <div class="section-header">
         <h3>Cajitas</h3>
-        <a href="/pages/envelopes.html" class="link-small">Ver todas →</a>
+        <a href="./envelopes.html" class="link-small">Ver todas →</a>
       </div>
       <div id="envelopes-content">
         <div class="skeleton" style="height:80px;border-radius:10px;"></div>
@@ -105,7 +105,7 @@
     <div class="card">
       <div class="section-header">
         <h3>Últimos gastos</h3>
-        <a href="/pages/expenses.html" class="link-small">Ver todos →</a>
+        <a href="./expenses.html" class="link-small">Ver todos →</a>
       </div>
       <div id="recent-expenses-content">
         <div class="skeleton" style="height:120px;border-radius:10px;"></div>
@@ -114,7 +114,7 @@
     <div class="card">
       <div class="section-header">
         <h3>Por categoría</h3>
-        <a href="/pages/comparison.html" class="link-small">Comparativo →</a>
+        <a href="./comparison.html" class="link-small">Comparativo →</a>
       </div>
       <div id="categories-content">
         <div class="skeleton" style="height:140px;border-radius:10px;"></div>
@@ -193,7 +193,7 @@
       const el = document.getElementById("envelopes-content");
       if (!envelopes.length) {
         el.innerHTML = `<div class="empty-state"><p>No hay cajitas para este mes.</p>
-          <a href="/pages/envelopes.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
+          <a href="./envelopes.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
         return;
       }
       el.innerHTML = `<div class="envelopes-grid">${envelopes.map(env => {
@@ -216,7 +216,7 @@
       const recent = expenses.slice(0, 5);
       if (!recent.length) {
         el.innerHTML = `<div class="empty-state"><p>No hay gastos registrados este mes.</p>
-          <a href="/pages/expenses.html" class="link-small" style="display:inline-block;margin-top:8px;">Registrar gasto →</a></div>`;
+          <a href="./expenses.html" class="link-small" style="display:inline-block;margin-top:8px;">Registrar gasto →</a></div>`;
         return;
       }
       el.innerHTML = recent.map(e => `
@@ -236,7 +236,7 @@
       const el = document.getElementById("categories-content");
       if (!budget?.categories) {
         el.innerHTML = `<div class="empty-state"><p>Configura tu presupuesto para ver el progreso.</p>
-          <a href="/pages/budget.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
+          <a href="./budget.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
         return;
       }
       const actual = sumByCategory(expenses);

@@ -32,7 +32,7 @@ export async function login(email, password) {
 // ── Logout ────────────────────────────────────────────────
 export async function logout() {
   await signOut(auth);
-  window.location.href = "/pages/login.html";
+  window.location.href = "../pages/login.html";
 }
 
 // ── UID del usuario actual (sincrónico tras carga) ────────
@@ -51,7 +51,7 @@ export function requireAuth() {
       if (user) {
         resolve(user);
       } else {
-        window.location.href = "/pages/login.html";
+        window.location.href = "../pages/login.html";
         reject(new Error("No autenticado"));
       }
     });
