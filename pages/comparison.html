@@ -156,10 +156,10 @@
 
     <!-- Tabs de tipo -->
     <div class="type-tabs" id="type-tabs" style="display:none;">
-      <button class="type-tab active-all" data-filter="all"    onclick="setFilter(this,'all')">Todos</button>
-      <button class="type-tab"            data-filter="basico" onclick="setFilter(this,'basico')">Básico</button>
-      <button class="type-tab"            data-filter="noe"    onclick="setFilter(this,'noe')">No esencial</button>
-      <button class="type-tab"            data-filter="ahorro" onclick="setFilter(this,'ahorro')">Ahorro</button>
+      <button class="type-tab active-all" data-filter="all"   >Todos</button>
+      <button class="type-tab"            data-filter="basico">Básico</button>
+      <button class="type-tab"            data-filter="noe"   >No esencial</button>
+      <button class="type-tab"            data-filter="ahorro">Ahorro</button>
     </div>
 
     <!-- Lista comparativo -->
@@ -189,6 +189,12 @@
     renderMonthSelector("month-selector-container", selectedMonth, (m) => {
       selectedMonth = m;
       loadData();
+    });
+
+    // Event delegation for type tabs
+    document.getElementById("type-tabs").addEventListener("click", e => {
+      const btn = e.target.closest(".type-tab");
+      if (btn) setFilter(btn, btn.dataset.filter);
     });
 
     categories = await getCategories(uid);
@@ -347,7 +353,7 @@
     }
 
     // ── Filtro por tipo ───────────────────────────────────
-    window.setFilter = function(btn, filter) {
+    function setFilter(btn, filter) {
       document.querySelectorAll(".type-tab").forEach(b => b.className = "type-tab");
       const clsMap = { all: "active-all", basico: "active-basico", noe: "active-noe", ahorro: "active-ahorro" };
       btn.classList.add(clsMap[filter]);

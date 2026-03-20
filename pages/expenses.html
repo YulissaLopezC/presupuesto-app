@@ -184,7 +184,7 @@
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Drawer: agregar / editar gasto -->
-  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer-overlay" id="drawer-overlay"></div>
   <div class="drawer" id="drawer">
     <div class="drawer-handle"></div>
     <div class="drawer-title" id="drawer-title">Nuevo gasto</div>
@@ -214,7 +214,7 @@
       <input type="text" class="form-input" id="field-description" placeholder="Ej: Alimento + arena" maxlength="120"/>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="saveExpense()">Guardar gasto</button>
+    <button class="btn-primary" id="btn-save">Guardar gasto</button>
   </div>
 
   <script type="module">
@@ -223,7 +223,7 @@
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, parseCOP, currentMonth, formatDate, today } from "../assets/utils.js";
 
-    let uid, selectedMonth, allExpenses = [], categories = [], editingId = null;
+    let uid, selectedMonth, allExpenses = [], categories = [], editingId = null, activeFilter = "";
 
     // ── Init ─────────────────────────────────────────────
     const user = await requireAuth();
@@ -243,6 +243,30 @@
 
     await loadExpenses();
 
+    // ── Event listeners estáticos ─────────────────────────
+    document.getElementById("fab").addEventListener("click", openNewDrawer);
+    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
+    document.getElementById("btn-save").addEventListener("click", saveExpense);
+
+    // Event delegation para lista de gastos (items dinámicos)
+    document.getElementById("expenses-list").addEventListener("click", e => {
+      const deleteBtn = e.target.closest(".btn-danger");
+      const editRow   = e.target.closest(".expense-left");
+      if (deleteBtn) {
+        const id = deleteBtn.dataset.id;
+        if (id) handleDelete(id);
+      } else if (editRow) {
+        const id = editRow.dataset.id;
+        if (id) openEditDrawer(id);
+      }
+    });
+
+    // Event delegation para filtros de categoría
+    document.getElementById("category-filters").addEventListener("click", e => {
+      const chip = e.target.closest(".filter-chip");
+      if (chip) setFilter(chip, chip.dataset.cat);
+    });
+
     // ── Cargar gastos ─────────────────────────────────────
     async function loadExpenses() {
       document.getElementById("expenses-list").innerHTML =
@@ -253,7 +277,6 @@
     }
 
     // ── Render con filtro activo ──────────────────────────
-    let activeFilter = "";
 
     function renderAll() {
       const filtered = activeFilter
@@ -284,13 +307,13 @@
           <div class="date-label">${formatDate(date)}</div>
           ${groups[date].map(e => `
             <div class="expense-item">
-              <div class="expense-left" onclick="openEditDrawer('${e.id}')">
+              <div class="expense-left" data-id="${e.id}">
                 <div class="expense-cat">${e.category}</div>
                 ${e.description ? `<div class="expense-desc">${e.description}</div>` : ""}
               </div>
               <div class="expense-right">
                 <div class="expense-amount">${formatCOP(e.amount)}</div>
-                <button class="btn-danger" onclick="handleDelete('${e.id}')">✕</button>
+                <button class="btn-danger" data-id="${e.id}">✕</button>
               </div>
             </div>`).join("")}
         </div>`).join("");
@@ -302,11 +325,12 @@
       const usedCats = [...new Set(allExpenses.map(e => e.category))];
       const cats = categories.length ? categories.map(c => c.name) : usedCats;
 
-      container.innerHTML = `<button class="filter-chip active" data-cat="" onclick="setFilter(this, '')">Todos</button>` +
-        cats.map(c => `<button class="filter-chip" data-cat="${c}" onclick="setFilter(this,'${c}')">${c}</button>`).join("");
+      container.innerHTML =
+        `<button class="filter-chip active" data-cat="">Todos</button>` +
+        cats.map(c => `<button class="filter-chip" data-cat="${c}">${c}</button>`).join("");
     }
 
-    window.setFilter = function(btn, cat) {
+    function setFilter(btn, cat) {
       document.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       activeFilter = cat;
@@ -332,8 +356,6 @@
     }
 
     // ── Drawer: abrir para nuevo gasto ────────────────────
-    document.getElementById("fab").addEventListener("click", openNewDrawer);
-
     function openNewDrawer() {
       editingId = null;
       document.getElementById("drawer-title").textContent = "Nuevo gasto";
@@ -345,7 +367,7 @@
       openDrawer();
     }
 
-    window.openEditDrawer = function(id) {
+    function openEditDrawer(id) {
       const e = allExpenses.find(x => x.id === id);
       if (!e) return;
       editingId = id;
@@ -363,13 +385,13 @@
       document.getElementById("drawer").classList.add("open");
     }
 
-    window.closeDrawer = function() {
+    function closeDrawer() {
       document.getElementById("drawer-overlay").classList.remove("open");
       document.getElementById("drawer").classList.remove("open");
     };
 
     // ── Guardar / actualizar gasto ────────────────────────
-    window.saveExpense = async function() {
+    async function saveExpense() {
       const date     = document.getElementById("field-date").value;
       const category = document.getElementById("field-category").value;
       const amount   = Number(document.getElementById("field-amount").value);
@@ -405,7 +427,7 @@
     };
 
     // ── Eliminar gasto ────────────────────────────────────
-    window.handleDelete = async function(id) {
+    async function handleDelete(id) {
       if (!confirm("¿Eliminar este gasto?")) return;
       try {
         await deleteExpense(uid, id);

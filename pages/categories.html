@@ -146,7 +146,7 @@
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Drawer -->
-  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer-overlay" id="drawer-overlay"></div>
   <div class="drawer" id="drawer">
     <div class="drawer-handle"></div>
     <div class="drawer-title" id="drawer-title">Nueva categoría</div>
@@ -159,21 +159,21 @@
     <div class="form-group">
       <label class="form-label" style="margin-bottom:10px;">Tipo</label>
       <div class="type-options">
-        <div class="type-option" id="opt-basico" onclick="selectType('GASTO BÁSICO')">
+        <div class="type-option" id="opt-basico">
           <div class="type-dot basico"></div>
           <div>
             <div class="type-option-label">Gasto básico</div>
             <div class="type-option-desc">Necesidades esenciales del mes</div>
           </div>
         </div>
-        <div class="type-option" id="opt-no-esencial" onclick="selectType('GASTO NO ESENCIAL')">
+        <div class="type-option" id="opt-no-esencial">
           <div class="type-dot no-esencial"></div>
           <div>
             <div class="type-option-label">Gasto no esencial</div>
             <div class="type-option-desc">Entretenimiento, gustos, salidas</div>
           </div>
         </div>
-        <div class="type-option" id="opt-ahorro" onclick="selectType('AHORRO O INVERSIÓN')">
+        <div class="type-option" id="opt-ahorro">
           <div class="type-dot ahorro"></div>
           <div>
             <div class="type-option-label">Ahorro o inversión</div>
@@ -183,7 +183,7 @@
       </div>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="saveCategory()" style="margin-top:8px;">
+    <button class="btn-primary" id="btn-save" style="margin-top:8px;">
       Guardar categoría
     </button>
   </div>
@@ -238,11 +238,11 @@
               <span class="type-count">${items.length}</span>
             </div>
             ${items.map(cat => `
-              <div class="cat-item" onclick="openEditDrawer('${cat.id}')">
+              <div class="cat-item" data-id="${cat.id}">
                 <span class="cat-item-name">${cat.name}</span>
                 <div class="cat-item-actions">
                   <span class="badge ${type.cls}">${type.label.split(" ")[0]}</span>
-                  <button class="btn-danger" onclick="event.stopPropagation();handleDelete('${cat.id}','${cat.name}')">✕</button>
+                  <button class="btn-danger" data-id="${cat.id}" data-name="${cat.name}">✕</button>
                 </div>
               </div>`).join("")}
           </div>`;
@@ -251,6 +251,24 @@
 
     // ── Drawer: nuevo ─────────────────────────────────────
     document.getElementById("fab").addEventListener("click", openNewDrawer);
+    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
+    document.getElementById("btn-save").addEventListener("click", saveCategory);
+    document.getElementById("opt-basico").addEventListener("click", () => selectType("GASTO BÁSICO"));
+    document.getElementById("opt-no-esencial").addEventListener("click", () => selectType("GASTO NO ESENCIAL"));
+    document.getElementById("opt-ahorro").addEventListener("click", () => selectType("AHORRO O INVERSIÓN"));
+
+    // Event delegation for dynamic cat list
+    document.getElementById("categories-list").addEventListener("click", e => {
+      const deleteBtn = e.target.closest(".btn-danger");
+      const catItem   = e.target.closest(".cat-item");
+      if (deleteBtn) {
+        const id = deleteBtn.dataset.id, name = deleteBtn.dataset.name;
+        if (id) handleDelete(id, name);
+      } else if (catItem && !e.target.closest(".btn-danger")) {
+        const id = catItem.dataset.id;
+        if (id) openEditDrawer(id);
+      }
+    });
 
     function openNewDrawer() {
       editingId = null;
@@ -263,7 +281,7 @@
     }
 
     // ── Drawer: editar ────────────────────────────────────
-    window.openEditDrawer = function(id) {
+    function openEditDrawer(id) {
       const cat = categories.find(c => c.id === id);
       if (!cat) return;
       editingId = id;
@@ -277,7 +295,7 @@
     };
 
     // ── Selección de tipo ─────────────────────────────────
-    window.selectType = function(type) {
+    function selectType(type) {
       selectedType = type;
       clearTypeSelection();
       highlightType(type);
@@ -300,7 +318,7 @@
     }
 
     // ── Guardar ───────────────────────────────────────────
-    window.saveCategory = async function() {
+    async function saveCategory() {
       const name = document.getElementById("field-name").value.trim();
       const btn  = document.getElementById("btn-save");
 
@@ -342,7 +360,7 @@
     };
 
     // ── Eliminar ──────────────────────────────────────────
-    window.handleDelete = async function(id, name) {
+    async function handleDelete(id, name) {
       if (!confirm(`¿Eliminar la categoría "${name}"?\nLos gastos existentes con esta categoría no se borran.`)) return;
       try {
         await deleteCategory(uid, id);
@@ -360,7 +378,7 @@
       setTimeout(() => document.getElementById("field-name").focus(), 320);
     }
 
-    window.closeDrawer = function() {
+    function closeDrawer() {
       document.getElementById("drawer-overlay").classList.remove("open");
       document.getElementById("drawer").classList.remove("open");
     };

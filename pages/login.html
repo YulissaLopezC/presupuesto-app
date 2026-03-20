@@ -202,8 +202,8 @@
     </div>
 
     <div class="tabs">
-      <div class="tab active" id="tab-login"    onclick="switchTab('login')">Ingresar</div>
-      <div class="tab"        id="tab-register" onclick="switchTab('register')">Registrarme</div>
+      <div class="tab active" id="tab-login"    id="tab-login-btn">Ingresar</div>
+      <div class="tab"        id="tab-register" id="tab-register-btn">Registrarme</div>
     </div>
 
     <!-- Formulario Login -->
@@ -216,7 +216,7 @@
         <label>Contraseña</label>
         <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
       </div>
-      <button class="btn" id="btn-login" onclick="handleLogin()">Ingresar</button>
+      <button class="btn" id="btn-login">Ingresar</button>
       <div class="error-msg" id="login-error"></div>
     </div>
 
@@ -234,7 +234,7 @@
         <label>Confirmar contraseña</label>
         <input type="password" id="reg-password2" placeholder="Repite tu contraseña" autocomplete="new-password"/>
       </div>
-      <button class="btn" id="btn-register" onclick="handleRegister()">Crear cuenta</button>
+      <button class="btn" id="btn-register">Crear cuenta</button>
       <div class="error-msg" id="register-error"></div>
     </div>
 
@@ -251,7 +251,7 @@
     });
 
     // ── Tabs ──────────────────────────────────────────────
-    window.switchTab = function(tab) {
+    function switchTab(tab) {
       const isLogin = tab === "login";
       document.getElementById("section-login").style.display    = isLogin ? "block" : "none";
       document.getElementById("section-register").style.display = isLogin ? "none"  : "block";
@@ -260,7 +260,7 @@
     };
 
     // ── Login ─────────────────────────────────────────────
-    window.handleLogin = async function() {
+    async function handleLogin() {
       const email    = document.getElementById("login-email").value.trim();
       const password = document.getElementById("login-password").value;
       const errEl    = document.getElementById("login-error");
@@ -288,7 +288,7 @@
     };
 
     // ── Registro ──────────────────────────────────────────
-    window.handleRegister = async function() {
+    async function handleRegister() {
       const email  = document.getElementById("reg-email").value.trim();
       const pass1  = document.getElementById("reg-password").value;
       const pass2  = document.getElementById("reg-password2").value;
@@ -341,13 +341,18 @@
       return map[code] || "Ocurrió un error. Intenta de nuevo.";
     }
 
+    document.getElementById("tab-login-btn").addEventListener("click", () => switchTab("login"));
+    document.getElementById("tab-register-btn").addEventListener("click", () => switchTab("register"));
+    document.getElementById("btn-login").addEventListener("click", handleLogin);
+    document.getElementById("btn-register").addEventListener("click", handleRegister);
+
     // Enter para submit
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
       const activeSection = document.getElementById("section-login").style.display !== "none"
         ? "login" : "register";
-      if (activeSection === "login") window.handleLogin();
-      else window.handleRegister();
+      if (activeSection === "login") handleLogin();
+      else handleRegister();
     });
   </script>
 </body>

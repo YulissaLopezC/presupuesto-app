@@ -195,7 +195,7 @@
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Drawer: agregar / editar cajita -->
-  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer-overlay" id="drawer-overlay"></div>
   <div class="drawer" id="drawer">
     <div class="drawer-handle"></div>
     <div class="drawer-title" id="drawer-title">Nueva cajita</div>
@@ -212,7 +212,7 @@
         <div class="amount-wrapper">
           <span class="sym">$</span>
           <input type="number" class="form-input" id="field-budgeted"
-                 placeholder="0" min="0" oninput="updateDrawerProgress()"/>
+                 placeholder="0" min="0"/>
         </div>
       </div>
       <div class="form-group">
@@ -220,7 +220,7 @@
         <div class="amount-wrapper">
           <span class="sym">$</span>
           <input type="number" class="form-input" id="field-actual"
-                 placeholder="0" min="0" oninput="updateDrawerProgress()"/>
+                 placeholder="0" min="0"/>
         </div>
       </div>
     </div>
@@ -236,7 +236,7 @@
       </div>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="saveEnvelope()">Guardar cajita</button>
+    <button class="btn-primary" id="btn-save">Guardar cajita</button>
   </div>
 
   <script type="module">
@@ -304,7 +304,7 @@
         const statusLbl = pct > 1 ? "Por encima" : pct > 0.8 ? "Casi llena" : "En curso";
 
         return `
-          <div class="envelope-card" onclick="openEditDrawer('${env.id}')">
+          <div class="envelope-card" data-id="${env.id}">
             <div class="env-card-top">
               <div class="env-card-name">${env.name}</div>
               <div class="env-card-status ${cls}">${statusLbl}</div>
@@ -323,7 +323,7 @@
             </div>
             <div class="env-card-footer" style="margin-top:8px;">
               <span class="env-pct-label">${pctN}% completado</span>
-              <button class="btn-danger" onclick="event.stopPropagation();handleDelete('${env.id}','${env.name}')">
+              <button class="btn-danger" data-id="${env.id}" data-name="${env.name}">
                 Eliminar
               </button>
             </div>
@@ -372,6 +372,23 @@
 
     // ── Drawer: nuevo ─────────────────────────────────────
     document.getElementById("fab").addEventListener("click", openNewDrawer);
+    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
+    document.getElementById("btn-save").addEventListener("click", saveEnvelope);
+    document.getElementById("field-budgeted").addEventListener("input", updateDrawerProgress);
+    document.getElementById("field-actual").addEventListener("input", updateDrawerProgress);
+
+    // Event delegation for envelope cards
+    document.getElementById("envelopes-list").addEventListener("click", e => {
+      const deleteBtn = e.target.closest(".btn-danger");
+      const card      = e.target.closest(".envelope-card");
+      if (deleteBtn) {
+        const id = deleteBtn.dataset.id, name = deleteBtn.dataset.name;
+        if (id) handleDelete(id, name);
+      } else if (card) {
+        const id = card.dataset.id;
+        if (id) openEditDrawer(id);
+      }
+    });
 
     function openNewDrawer() {
       editingId = null;
@@ -385,7 +402,7 @@
     }
 
     // ── Drawer: editar ────────────────────────────────────
-    window.openEditDrawer = function(id) {
+    function openEditDrawer(id) {
       const env = envelopes.find(e => e.id === id);
       if (!env) return;
       editingId = id;
@@ -399,7 +416,7 @@
     };
 
     // ── Mini progreso en el drawer ────────────────────────
-    window.updateDrawerProgress = function() {
+    function updateDrawerProgress() {
       const budgeted = Number(document.getElementById("field-budgeted").value) || 0;
       const actual   = Number(document.getElementById("field-actual").value)   || 0;
       const wrap = document.getElementById("drawer-progress-wrap");
@@ -425,7 +442,7 @@
     }
 
     // ── Guardar ───────────────────────────────────────────
-    window.saveEnvelope = async function() {
+    async function saveEnvelope() {
       const name     = document.getElementById("field-name").value.trim();
       const budgeted = Number(document.getElementById("field-budgeted").value) || 0;
       const actual   = Number(document.getElementById("field-actual").value)   || 0;
@@ -455,7 +472,7 @@
     };
 
     // ── Eliminar ──────────────────────────────────────────
-    window.handleDelete = async function(id, name) {
+    async function handleDelete(id, name) {
       if (!confirm(`¿Eliminar la cajita "${name}"?`)) return;
       try {
         await deleteEnvelope(uid, id);
@@ -473,7 +490,7 @@
       setTimeout(() => document.getElementById("field-name").focus(), 320);
     }
 
-    window.closeDrawer = function() {
+    function closeDrawer() {
       document.getElementById("drawer-overlay").classList.remove("open");
       document.getElementById("drawer").classList.remove("open");
     };

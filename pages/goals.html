@@ -191,20 +191,20 @@
           <label class="form-label">Meta total</label>
           <div class="amount-wrapper">
             <span class="sym">$</span>
-            <input type="number" class="form-input" id="qc-goal" placeholder="0" min="0" oninput="calcQuick()"/>
+            <input type="number" class="form-input" id="qc-goal" placeholder="0" min="0"/>
           </div>
         </div>
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label">Ya tengo</label>
           <div class="amount-wrapper">
             <span class="sym">$</span>
-            <input type="number" class="form-input" id="qc-saved" placeholder="0" min="0" oninput="calcQuick()"/>
+            <input type="number" class="form-input" id="qc-saved" placeholder="0" min="0"/>
           </div>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">Meses para lograrlo</label>
-        <input type="number" class="form-input" id="qc-months" placeholder="12" min="1" max="360" oninput="calcQuick()"/>
+        <input type="number" class="form-input" id="qc-months" placeholder="12" min="1" max="360"/>
       </div>
       <div id="qc-result" style="display:none;" class="goal-calc-panel">
         <div class="calc-row">
@@ -232,7 +232,7 @@
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Drawer: crear / editar meta -->
-  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer-overlay" id="drawer-overlay"></div>
   <div class="drawer" id="drawer">
     <div class="drawer-handle"></div>
     <div class="drawer-title" id="drawer-title">Nueva meta</div>
@@ -257,7 +257,7 @@
         <div class="amount-wrapper">
           <span class="sym">$</span>
           <input type="number" class="form-input" id="field-goal"
-                 placeholder="0" min="0" oninput="updateDrawerCalc()"/>
+                 placeholder="0" min="0"/>
         </div>
       </div>
       <div class="form-group">
@@ -265,7 +265,7 @@
         <div class="amount-wrapper">
           <span class="sym">$</span>
           <input type="number" class="form-input" id="field-saved"
-                 placeholder="0" min="0" oninput="updateDrawerCalc()"/>
+                 placeholder="0" min="0"/>
         </div>
       </div>
     </div>
@@ -276,7 +276,7 @@
         Fecha objetivo
         <span style="color:var(--muted);font-weight:300;">(opcional)</span>
       </label>
-      <input type="month" class="form-input" id="field-date" oninput="updateDrawerCalc()"/>
+      <input type="month" class="form-input" id="field-date"/>
     </div>
 
     <!-- Notas -->
@@ -297,7 +297,7 @@
           <strong id="dc-slider-val">$ 0</strong>
         </div>
         <input type="range" id="dc-slider" min="0" max="5000000" step="10000"
-               value="0" oninput="onSliderChange(this.value)"/>
+               value="0"/>
       </div>
       <div style="height:10px;"></div>
       <div class="calc-row">
@@ -314,7 +314,7 @@
       </div>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="saveGoal()" style="margin-top:8px;">
+    <button class="btn-primary" id="btn-save" style="margin-top:8px;">
       Guardar meta
     </button>
   </div>
@@ -403,7 +403,7 @@
         : null;
 
       return `
-        <div class="goal-card" onclick="openEditDrawer('${g.id}')">
+        <div class="goal-card" data-id="${g.id}">
           <div class="goal-card-top">
             <div class="goal-left">
               <div class="goal-emoji">${g.emoji || "🎯"}</div>
@@ -432,7 +432,7 @@
           </div>
 
           ${!done && needed !== null ? `
-            <div class="goal-calc-panel" style="margin-top:12px;" onclick="event.stopPropagation()">
+            <div class="goal-calc-panel" style="margin-top:12px;">
               <div class="calc-row">
                 <span class="calc-label">Ahorro mensual necesario</span>
                 <span class="calc-value accent">${formatCOP(needed)}</span>
@@ -449,7 +449,7 @@
             </div>` : ""}
 
           <div style="display:flex;justify-content:flex-end;margin-top:12px;">
-            <button class="btn-danger" onclick="event.stopPropagation();handleDelete('${g.id}','${g.name}')">
+            <button class="btn-danger" data-id="${g.id}" data-name="${g.name}">
               Eliminar
             </button>
           </div>
@@ -457,7 +457,7 @@
     }
 
     // ── Calculadora rápida ────────────────────────────────
-    window.calcQuick = function() {
+    function calcQuick() {
       const goal   = Number(document.getElementById("qc-goal").value)   || 0;
       const saved  = Number(document.getElementById("qc-saved").value)  || 0;
       const months = Number(document.getElementById("qc-months").value) || 0;
@@ -477,6 +477,32 @@
 
     // ── Drawer: nuevo ─────────────────────────────────────
     document.getElementById("fab").addEventListener("click", openNewDrawer);
+    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
+    document.getElementById("btn-save").addEventListener("click", saveGoal);
+    document.getElementById("qc-goal").addEventListener("input", calcQuick);
+    document.getElementById("qc-saved").addEventListener("input", calcQuick);
+    document.getElementById("qc-months").addEventListener("input", calcQuick);
+    document.getElementById("field-goal").addEventListener("input", updateDrawerCalc);
+    document.getElementById("field-saved").addEventListener("input", updateDrawerCalc);
+    document.getElementById("field-date").addEventListener("input", updateDrawerCalc);
+    document.getElementById("dc-slider").addEventListener("input", e => onSliderChange(e.target.value));
+
+    // Event delegation for goal cards
+    document.getElementById("goals-list").addEventListener("click", e => {
+      const deleteBtn = e.target.closest(".btn-danger");
+      const card      = e.target.closest(".goal-card");
+      if (deleteBtn && deleteBtn.dataset.id) {
+        handleDelete(deleteBtn.dataset.id, deleteBtn.dataset.name);
+      } else if (card && !e.target.closest(".goal-calc-panel") && !e.target.closest(".btn-danger")) {
+        if (card.dataset.id) openEditDrawer(card.dataset.id);
+      }
+    });
+
+    // Event delegation for emoji grid
+    document.getElementById("emoji-grid").addEventListener("click", e => {
+      const btn = e.target.closest(".emoji-btn");
+      if (btn) selectEmoji(btn.dataset.emoji);
+    });
 
     function openNewDrawer() {
       editingId = null;
@@ -494,7 +520,7 @@
     }
 
     // ── Drawer: editar ────────────────────────────────────
-    window.openEditDrawer = function(id) {
+    function openEditDrawer(id) {
       const g = goals.find(x => x.id === id);
       if (!g) return;
       editingId = id;
@@ -512,7 +538,7 @@
     };
 
     // ── Calculadora en el drawer ──────────────────────────
-    window.updateDrawerCalc = function() {
+    function updateDrawerCalc() {
       const goal   = Number(document.getElementById("field-goal").value)  || 0;
       const saved  = Number(document.getElementById("field-saved").value) || 0;
       const date   = document.getElementById("field-date").value;
@@ -546,7 +572,7 @@
       document.getElementById("dc-date-row").style.display = date ? "" : "none";
     };
 
-    window.onSliderChange = function(val) {
+    function onSliderChange(val) {
       const goal  = Number(document.getElementById("field-goal").value)  || 0;
       const saved = Number(document.getElementById("field-saved").value) || 0;
       document.getElementById("dc-slider-val").textContent = formatCOP(Number(val));
@@ -561,11 +587,11 @@
     // ── Emoji grid ────────────────────────────────────────
     function buildEmojiGrid() {
       document.getElementById("emoji-grid").innerHTML = EMOJIS.map(e => `
-        <button type="button" class="emoji-btn" data-emoji="${e}" onclick="selectEmoji('${e}')">${e}</button>
+        <button type="button" class="emoji-btn" data-emoji="${e}">${e}</button>
       `).join("");
     }
 
-    window.selectEmoji = function(e) {
+    function selectEmoji(e) {
       selectedEmoji = e;
       highlightEmoji(e);
     };
@@ -577,7 +603,7 @@
     }
 
     // ── Guardar ───────────────────────────────────────────
-    window.saveGoal = async function() {
+    async function saveGoal() {
       const name       = document.getElementById("field-name").value.trim();
       const goalAmount = Number(document.getElementById("field-goal").value)  || 0;
       const savedAmount= Number(document.getElementById("field-saved").value) || 0;
@@ -614,7 +640,7 @@
     };
 
     // ── Eliminar ──────────────────────────────────────────
-    window.handleDelete = async function(id, name) {
+    async function handleDelete(id, name) {
       if (!confirm(`¿Eliminar la meta "${name}"?`)) return;
       try {
         await deleteGoal(uid, id);
@@ -632,7 +658,7 @@
       setTimeout(() => document.getElementById("field-name").focus(), 320);
     }
 
-    window.closeDrawer = function() {
+    function closeDrawer() {
       document.getElementById("drawer-overlay").classList.remove("open");
       document.getElementById("drawer").classList.remove("open");
     };
