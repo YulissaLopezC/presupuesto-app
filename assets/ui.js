@@ -80,123 +80,84 @@ export function showToast(message, type = "", duration = 2800) {
   setTimeout(() => toast.classList.remove("show"), duration);
 }
 
-// ── Selector de mes — calendario mini tipo picker ────────
-// Muestra el mes activo con botón que abre un grid de meses
-// agrupados por año. Un clic fuera lo cierra.
+// ── Selector de mes — navegación con flechas ─────────────
 export function renderMonthSelector(containerId, currentMonth, onChange) {
   const el = document.getElementById(containerId);
   if (!el) return;
 
-  const months = lastMonths(24); // últimos 2 años
-  // Agrupar por año
-  const byYear = months.reduce((acc, m) => {
-    const y = m.slice(0, 4);
-    (acc[y] = acc[y] || []).push(m);
-    return acc;
-  }, {});
-  const years = Object.keys(byYear).sort().reverse();
-
-  const id = "month-picker-" + containerId;
+  let selected = currentMonth;
 
   el.innerHTML = `
-    <div class="mp-wrap" style="position:relative;display:inline-block;">
-      <button class="mp-btn" id="${id}-btn" type="button">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <span id="${id}-label">${formatMonth(currentMonth)}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;opacity:0.5;">
-          <polyline points="6 9 12 15 18 9"/>
+    <div class="ms-wrap">
+      <button class="ms-arrow" id="ms-prev" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
-      <div class="mp-dropdown" id="${id}-dropdown" style="display:none;">
-        ${years.map(y => `
-          <div class="mp-year">${y}</div>
-          <div class="mp-months">
-            ${byYear[y].map(m => {
-              const short = new Date(m + "-01").toLocaleDateString("es-CO", { month: "short" });
-              return `<button class="mp-month ${m === currentMonth ? "mp-active" : ""}" data-month="${m}" type="button">${short}</button>`;
-            }).join("")}
-          </div>
-        `).join("")}
-      </div>
+      <span class="ms-label" id="ms-label">${formatMonth(selected)}</span>
+      <button class="ms-arrow" id="ms-next" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
     </div>
   `;
 
-  // Inyectar estilos si no existen
-  if (!document.getElementById("mp-styles")) {
+  if (!document.getElementById("ms-styles")) {
     const style = document.createElement("style");
-    style.id = "mp-styles";
+    style.id = "ms-styles";
     style.textContent = `
-      .mp-btn {
-        display: inline-flex; align-items: center; gap: 7px;
-        padding: 8px 14px; border-radius: 99px;
+      .ms-wrap {
+        display: inline-flex; align-items: center; gap: 4px;
         background: var(--surface); border: 1px solid var(--border2);
-        color: var(--text); font-family: "DM Sans", sans-serif;
-        font-size: 13px; font-weight: 400; cursor: pointer;
-        transition: border-color 0.15s;
+        border-radius: 99px; padding: 4px 6px;
       }
-      .mp-btn:hover { border-color: var(--accent); }
-      .mp-dropdown {
-        position: absolute; top: calc(100% + 8px); left: 0;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: 16px; padding: 14px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-        z-index: 200; min-width: 240px;
-        animation: mp-in 0.15s ease;
+      .ms-arrow {
+        width: 30px; height: 30px; border-radius: 50%;
+        border: none; background: none;
+        color: var(--muted); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s, color 0.15s;
+        flex-shrink: 0;
       }
-      @keyframes mp-in { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
-      .mp-year {
-        font-size: 10px; font-weight: 500; color: var(--muted);
-        text-transform: uppercase; letter-spacing: 0.08em;
-        margin: 10px 0 6px; padding-left: 2px;
-      }
-      .mp-year:first-child { margin-top: 0; }
-      .mp-months {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
-      }
-      .mp-month {
-        padding: 7px 4px; border-radius: 8px; border: none;
-        background: none; color: var(--text);
-        font-family: "DM Sans", sans-serif; font-size: 12px;
-        cursor: pointer; text-align: center; text-transform: capitalize;
-        transition: background 0.12s, color 0.12s;
-      }
-      .mp-month:hover { background: var(--surface2); }
-      .mp-active {
-        background: var(--accent) !important;
-        color: #fff !important; font-weight: 500;
+      .ms-arrow:hover { background: var(--surface2); color: var(--accent); }
+      .ms-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+      .ms-label {
+        font-size: 13px; font-weight: 500; color: var(--text);
+        min-width: 130px; text-align: center;
+        text-transform: capitalize;
       }
     `;
     document.head.appendChild(style);
   }
 
-  let selected = currentMonth;
-  const btn      = document.getElementById(id + "-btn");
-  const dropdown = document.getElementById(id + "-dropdown");
-  const label    = document.getElementById(id + "-label");
+  const prevBtn  = document.getElementById("ms-prev");
+  const nextBtn  = document.getElementById("ms-next");
+  const labelEl  = document.getElementById("ms-label");
 
-  btn.addEventListener("click", e => {
-    e.stopPropagation();
-    const isOpen = dropdown.style.display !== "none";
-    dropdown.style.display = isOpen ? "none" : "block";
-  });
+  // No permitir ir más allá del mes actual
+  const [cy, cm] = currentMonth.split("-").map(Number);
 
-  dropdown.addEventListener("click", e => {
-    const monthBtn = e.target.closest(".mp-month");
-    if (!monthBtn) return;
-    selected = monthBtn.dataset.month;
-    label.textContent = formatMonth(selected);
-    dropdown.querySelectorAll(".mp-month").forEach(b => b.classList.remove("mp-active"));
-    monthBtn.classList.add("mp-active");
-    dropdown.style.display = "none";
+  function updateButtons() {
+    const [sy, sm] = selected.split("-").map(Number);
+    nextBtn.disabled = (sy === cy && sm === cm);
+  }
+
+  function shiftMonth(delta) {
+    const [y, m] = selected.split("-").map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    selected = d.getFullYear() + "-" + mm;
+    labelEl.textContent = formatMonth(selected);
+    updateButtons();
     onChange(selected);
-  });
+  }
 
-  document.addEventListener("click", () => {
-    dropdown.style.display = "none";
-  });
+  prevBtn.addEventListener("click", () => shiftMonth(-1));
+  nextBtn.addEventListener("click", () => shiftMonth(1));
+  updateButtons();
 }
+
 
 // ── Badge de tipo de categoría ────────────────────────────
 export function categoryBadge(type) {
