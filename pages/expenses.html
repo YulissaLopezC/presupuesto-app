@@ -15,14 +15,14 @@
       right: 20px;
       width: 54px; height: 54px;
       background: var(--accent);
-      color: #0f110e;
+      color: #fdf6f0;
       border: none;
       border-radius: 50%;
       font-size: 26px;
       font-weight: 300;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(181,209,122,0.3);
+      box-shadow: 0 4px 20px rgba(212,96,138,0.25);
       z-index: 90;
       transition: background 0.2s, transform 0.2s;
     }
@@ -94,9 +94,12 @@
 
     /* ── Filtros ─────────────────────────────────────────── */
     .filters {
-      display: flex; gap: 8px; overflow-x: auto;
-      padding-bottom: 4px; margin-bottom: 16px;
+      display: flex; gap: 8px;
+      overflow-x: auto; overflow-y: visible;
+      padding-bottom: 8px; margin-bottom: 16px;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
     }
     .filters::-webkit-scrollbar { display: none; }
 
@@ -114,7 +117,7 @@
       white-space: nowrap;
     }
     .filter-chip.active {
-      background: rgba(181,209,122,0.1);
+      background: rgba(212,96,138,0.1);
       border-color: var(--accent);
       color: var(--accent);
     }

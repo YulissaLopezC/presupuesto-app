@@ -6,21 +6,40 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0f110e;
-  --surface:   #181b16;
-  --surface2:  #1f2219;
-  --border:    #2a2e27;
-  --border2:   #343830;
-  --text:      #e8ead4;
-  --muted:     #7a7d6a;
-  --muted2:    #555850;
-  --accent:    #b5d17a;
-  --accent2:   #7eb85c;
-  --danger:    #e07070;
-  --warning:   #e0b870;
-  --info:      #70abe0;
+  /* ── Modo claro (default) ── */
+  --bg:        #fdf6f0;
+  --surface:   #ffffff;
+  --surface2:  #fdf0f4;
+  --border:    #f0dde6;
+  --border2:   #e8ccd8;
+  --text:      #3a2530;
+  --muted:     #9e7d8a;
+  --muted2:    #c4a8b4;
+  --accent:    #d4608a;
+  --accent2:   #b84d75;
+  --danger:    #d94f4f;
+  --warning:   #c97c2e;
+  --info:      #4a7fb5;
   --radius:    14px;
   --nav-h:     60px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #1c1217;
+    --surface:   #261820;
+    --surface2:  #2e1e27;
+    --border:    #3d2633;
+    --border2:   #4a2f3e;
+    --text:      #f2e0e8;
+    --muted:     #9e7d8a;
+    --muted2:    #6b4d5a;
+    --accent:    #e87aaa;
+    --accent2:   #d45c90;
+    --danger:    #e07070;
+    --warning:   #e0a050;
+    --info:      #70a8e0;
+  }
 }
 
 body {
@@ -38,8 +57,8 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(181,209,122,0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 10% 90%, rgba(126,184,92,0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(212,96,138,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 10% 90%, rgba(212,96,138,0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -211,9 +230,9 @@ h3 {
   letter-spacing: 0.03em;
 }
 
-.badge.basico     { background: rgba(181,209,122,0.12); color: var(--accent); }
-.badge.no-esencial{ background: rgba(224,184,112,0.12); color: var(--warning); }
-.badge.ahorro     { background: rgba(112,171,224,0.12); color: var(--info); }
+.badge.basico     { background: rgba(212,96,138,0.10); color: var(--accent); }
+.badge.no-esencial{ background: rgba(201,124,46,0.12);  color: var(--warning); }
+.badge.ahorro     { background: rgba(74,127,181,0.12);  color: var(--info); }
 
 /* ── Formularios ───────────────────────────────────────── */
 .form-group { margin-bottom: 16px; }
@@ -261,7 +280,7 @@ h3 {
   width: 100%;
   padding: 14px;
   background: var(--accent);
-  color: #0f110e;
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   font-family: "DM Sans", sans-serif;
