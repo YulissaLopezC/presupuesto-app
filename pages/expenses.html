@@ -100,6 +100,8 @@
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
       scroll-snap-type: x proximity;
+      cursor: grab;
+      user-select: none;
     }
     .filters::-webkit-scrollbar { display: none; }
 
@@ -262,6 +264,31 @@
         const id = editRow.dataset.id;
         if (id) openEditDrawer(id);
       }
+    });
+
+
+    // ── Drag to scroll en filtros (mouse) ────────────────
+    const filtersEl = document.getElementById("category-filters");
+    let isDragging = false, startX, scrollLeft;
+    filtersEl.addEventListener("mousedown", e => {
+      isDragging = true;
+      filtersEl.style.cursor = "grabbing";
+      startX = e.pageX - filtersEl.offsetLeft;
+      scrollLeft = filtersEl.scrollLeft;
+    });
+    filtersEl.addEventListener("mouseleave", () => {
+      isDragging = false;
+      filtersEl.style.cursor = "grab";
+    });
+    filtersEl.addEventListener("mouseup", () => {
+      isDragging = false;
+      filtersEl.style.cursor = "grab";
+    });
+    filtersEl.addEventListener("mousemove", e => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.pageX - filtersEl.offsetLeft;
+      filtersEl.scrollLeft = scrollLeft - (x - startX);
     });
 
     // Event delegation para filtros de categoría

@@ -268,8 +268,8 @@
       const isLogin = tab === "login";
       document.getElementById("section-login").style.display    = isLogin ? "block" : "none";
       document.getElementById("section-register").style.display = isLogin ? "none"  : "block";
-      document.getElementById("tab-login").classList.toggle("active", isLogin);
-      document.getElementById("tab-register").classList.toggle("active", !isLogin);
+      document.getElementById("tab-login-btn").classList.toggle("active", isLogin);
+      document.getElementById("tab-register-btn").classList.toggle("active", !isLogin);
     };
 
     // ── Login ─────────────────────────────────────────────
