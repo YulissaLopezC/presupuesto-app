@@ -39,16 +39,12 @@ export function renderBottomNav(activeItem) {
       icon: `<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`
     },
     {
-      id: "budget", href: "../pages/budget.html", label: "Presupuesto",
-      icon: `<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`
+      id: "incomes", href: "../pages/incomes.html", label: "Ingresos",
+      icon: `<svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`
     },
     {
-      id: "envelopes", href: "../pages/envelopes.html", label: "Cajitas",
-      icon: `<svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>`
-    },
-    {
-      id: "goals", href: "../pages/goals.html", label: "Metas",
-      icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`
+      id: "envelopes", href: "../pages/wallets.html", label: "Cajitas",
+      icon: `<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`
     },
     {
       id: "categories", href: "../pages/categories.html", label: "Más",

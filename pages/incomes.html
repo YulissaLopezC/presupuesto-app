@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presupuesto · Ingresos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .fab {
+      position: fixed; bottom: 76px; right: 20px;
+      width: 54px; height: 54px;
+      background: var(--info); color: #fff;
+      border: none; border-radius: 50%; font-size: 26px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(74,127,181,0.3);
+      z-index: 90; transition: background 0.2s, transform 0.2s;
+    }
+    .fab:hover  { background: #3a6fa0; }
+    .fab:active { transform: scale(0.95); }
+
+    .drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .drawer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
+      z-index: 160; transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
+      max-width: 680px; margin: 0 auto; max-height: 90vh; overflow-y: auto;
+    }
+    .drawer.open { transform: translateY(0); }
+    .drawer-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 99px; margin: 0 auto 20px; }
+    .drawer-title  { font-family: "DM Serif Display", serif; font-size: 20px; font-weight: 400; margin-bottom: 20px; }
+
+    /* ── Resumen del mes ─────────────────────────────────── */
+    .summary-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-bottom: 16px;
+    }
+    .sum-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px;
+    }
+    .sum-label { font-size: 10px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .sum-value { font-family: "DM Serif Display", serif; font-size: 20px; letter-spacing: -0.5px; }
+    .sum-value.inc { color: var(--info); }
+    .sum-value.exp { color: var(--warning); }
+
+    /* ── Comparativo presupuestado vs real ───────────────── */
+    .budget-comparison {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px; margin-bottom: 16px;
+    }
+    .bc-title { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .bc-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .bc-row:last-child { border-bottom: none; }
+    .bc-source { color: var(--text); }
+    .bc-amounts { text-align: right; }
+    .bc-real { font-family: "DM Serif Display", serif; font-size: 15px; color: var(--info); }
+    .bc-budgeted { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .bc-diff { font-size: 11px; margin-top: 1px; }
+    .bc-diff.pos { color: var(--accent); }
+    .bc-diff.neg { color: var(--danger); }
+
+    /* ── Lista de ingresos ───────────────────────────────── */
+    .income-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .income-item:last-child { border-bottom: none; }
+    .income-left { flex: 1; min-width: 0; cursor: pointer; }
+    .income-source { font-size: 14px; color: var(--text); }
+    .income-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .income-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
+    .income-amount { font-family: "DM Serif Display", serif; font-size: 16px; color: var(--info); letter-spacing: -0.3px; }
+    .income-wallet { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .date-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 0 6px; }
+
+    /* ── Amount wrapper ──────────────────────────────────── */
+    .amount-wrapper { position: relative; }
+    .amount-wrapper .sym {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none;
+    }
+    .amount-wrapper .form-input { padding-left: 26px; }
+  </style>
+</head>
+<body>
+  <div id="topbar" class="topbar"></div>
+
+  <div class="page">
+    <div style="margin-bottom:16px;">
+      <h2>Ingresos</h2>
+      <p style="font-size:13px;color:var(--muted);margin-top:4px;">
+        Registra lo que realmente recibiste cada mes.
+      </p>
+    </div>
+
+    <div id="month-selector-container" style="margin-bottom:16px;"></div>
+
+    <!-- Resumen -->
+    <div class="summary-row">
+      <div class="sum-card">
+        <div class="sum-label">Recibido</div>
+        <div class="sum-value inc" id="sum-real">$ 0</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Presupuestado</div>
+        <div class="sum-value exp" id="sum-budgeted">$ 0</div>
+      </div>
+    </div>
+
+    <!-- Comparativo por fuente -->
+    <div class="budget-comparison" id="budget-comparison" style="display:none;">
+      <div class="bc-title">Por fuente de ingreso</div>
+      <div id="bc-rows"></div>
+    </div>
+
+    <!-- Lista de ingresos registrados -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3>Registros del mes</h3>
+      </div>
+      <div id="incomes-list">
+        <div class="skeleton" style="height:160px;border-radius:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" id="fab" title="Registrar ingreso">+</button>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title" id="drawer-title">Nuevo ingreso</div>
+
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input type="date" class="form-input" id="field-date"/>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Fuente</label>
+      <input type="text" class="form-input" id="field-source"
+             placeholder="Ej: Guillo, Sociedad, Freelance..." maxlength="60"
+             list="sources-list"/>
+      <datalist id="sources-list"></datalist>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Valor</label>
+      <div class="amount-wrapper">
+        <span class="sym">$</span>
+        <input type="number" class="form-input" id="field-amount" placeholder="0" min="0"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">¿A cuál cajita entró?</label>
+      <select class="form-select" id="field-wallet">
+        <option value="">Sin cajita asignada</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Descripción <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
+      <input type="text" class="form-input" id="field-description" placeholder="Nota adicional..." maxlength="100"/>
+    </div>
+
+    <button class="btn-primary" id="btn-save">Registrar ingreso</button>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from "../modules/auth.js";
+    import { getIncomes, addIncome, updateIncome, deleteIncome, getWallets, getBudget } from "../modules/db.js";
+    import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
+    import { formatCOP, currentMonth, formatDate, today } from "../assets/utils.js";
+
+    let uid, selectedMonth, incomes = [], wallets = [], budget = null, editingId = null;
+
+    const user = await requireAuth();
+    uid = user.uid;
+    selectedMonth = currentMonth();
+
+    renderTopbar(user);
+    renderBottomNav("incomes");
+    renderMonthSelector("month-selector-container", selectedMonth, m => {
+      selectedMonth = m;
+      loadAll();
+    });
+
+    wallets = await getWallets(uid);
+    populateWalletSelect();
+    await loadAll();
+
+    // ── Event listeners ───────────────────────────────────
+    document.getElementById("fab").addEventListener("click", openNewDrawer);
+    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
+    document.getElementById("btn-save").addEventListener("click", saveIncome);
+    document.getElementById("incomes-list").addEventListener("click", e => {
+      const deleteBtn = e.target.closest(".btn-danger");
+      const row       = e.target.closest(".income-left");
+      if (deleteBtn) handleDelete(deleteBtn.dataset.id);
+      else if (row)  openEditDrawer(row.dataset.id);
+    });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+    // ── Cargar todo ───────────────────────────────────────
+    async function loadAll() {
+      const [inc, bud] = await Promise.all([
+        getIncomes(uid, { month: selectedMonth }),
+        getBudget(uid, selectedMonth)
+      ]);
+      incomes = inc;
+      budget  = bud;
+      renderSummary();
+      renderComparison();
+      renderIncomes();
+      populateSourcesSuggestions();
+    }
+
+    // ── Resumen ───────────────────────────────────────────
+    function renderSummary() {
+      const totalReal     = incomes.reduce((s, i) => s + Number(i.amount), 0);
+      const totalBudgeted = budget
+        ? Object.values(budget.income || {}).reduce((s, v) => s + Number(v), 0) : 0;
+      document.getElementById("sum-real").textContent     = formatCOP(totalReal);
+      document.getElementById("sum-budgeted").textContent = formatCOP(totalBudgeted);
+    }
+
+    // ── Comparativo por fuente ────────────────────────────
+    function renderComparison() {
+      const compEl = document.getElementById("budget-comparison");
+      const rowsEl = document.getElementById("bc-rows");
+      if (!budget?.income) { compEl.style.display = "none"; return; }
+
+      compEl.style.display = "block";
+      const realBySource = incomes.reduce((acc, i) => {
+        acc[i.source] = (acc[i.source] || 0) + Number(i.amount);
+        return acc;
+      }, {});
+
+      // Combinar fuentes presupuestadas + reales sin presupuesto
+      const allSources = new Set([
+        ...Object.keys(budget.income),
+        ...Object.keys(realBySource)
+      ]);
+
+      rowsEl.innerHTML = [...allSources].map(source => {
+        const budgeted = Number(budget.income[source] || 0);
+        const real     = realBySource[source] || 0;
+        const diff     = real - budgeted;
+        const diffCls  = diff >= 0 ? "pos" : "neg";
+        return `
+          <div class="bc-row">
+            <span class="bc-source">${source}</span>
+            <div class="bc-amounts">
+              <div class="bc-real">${formatCOP(real)}</div>
+              ${budgeted ? `<div class="bc-budgeted">de ${formatCOP(budgeted)}</div>` : ""}
+              ${budgeted ? `<div class="bc-diff ${diffCls}">${diff >= 0 ? "+" : ""}${formatCOP(diff)}</div>` : ""}
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    // ── Lista ingresos ────────────────────────────────────
+    function renderIncomes() {
+      const el = document.getElementById("incomes-list");
+      if (!incomes.length) {
+        el.innerHTML = `<div class="empty-state"><p>No hay ingresos registrados este mes.</p></div>`;
+        return;
+      }
+      const groups = incomes.reduce((acc, i) => {
+        (acc[i.date] = acc[i.date] || []).push(i);
+        return acc;
+      }, {});
+      const sortedDates = Object.keys(groups).sort().reverse();
+      el.innerHTML = sortedDates.map(date => `
+        <div class="date-label">${formatDate(date)}</div>
+        ${groups[date].map(i => `
+          <div class="income-item">
+            <div class="income-left" data-id="${i.id}">
+              <div class="income-source">${i.source}</div>
+              ${i.description ? `<div class="income-sub">${i.description}</div>` : ""}
+              ${i.walletName  ? `<div class="income-wallet">→ ${i.walletName}</div>` : ""}
+            </div>
+            <div class="income-right">
+              <div class="income-amount">${formatCOP(i.amount)}</div>
+              <button class="btn-danger" data-id="${i.id}" style="margin-top:4px;">✕</button>
+            </div>
+          </div>`).join("")}
+      `).join("");
+    }
+
+    // ── Sugerencias de fuentes ────────────────────────────
+    function populateSourcesSuggestions() {
+      const sources = [...new Set([
+        ...incomes.map(i => i.source),
+        ...Object.keys(budget?.income || {})
+      ])];
+      document.getElementById("sources-list").innerHTML =
+        sources.map(s => `<option value="${s}">`).join("");
+    }
+
+    // ── Populate wallet select ────────────────────────────
+    function populateWalletSelect() {
+      const sel = document.getElementById("field-wallet");
+      sel.innerHTML = `<option value="">Sin cajita asignada</option>` +
+        wallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon || "🏦"} ${w.name} — ${formatCOP(w.balance)}</option>`).join("");
+    }
+
+    // ── Drawer nuevo ──────────────────────────────────────
+    function openNewDrawer() {
+      editingId = null;
+      document.getElementById("drawer-title").textContent = "Nuevo ingreso";
+      document.getElementById("field-date").value         = today();
+      document.getElementById("field-source").value       = "";
+      document.getElementById("field-amount").value       = "";
+      document.getElementById("field-wallet").value       = "";
+      document.getElementById("field-description").value  = "";
+      document.getElementById("btn-save").textContent     = "Registrar ingreso";
+      openDrawer();
+    }
+
+    // ── Drawer editar ─────────────────────────────────────
+    function openEditDrawer(id) {
+      const i = incomes.find(x => x.id === id);
+      if (!i) return;
+      editingId = id;
+      document.getElementById("drawer-title").textContent = "Editar ingreso";
+      document.getElementById("field-date").value         = i.date;
+      document.getElementById("field-source").value       = i.source;
+      document.getElementById("field-amount").value       = i.amount;
+      document.getElementById("field-wallet").value       = i.walletId || "";
+      document.getElementById("field-description").value  = i.description || "";
+      document.getElementById("btn-save").textContent     = "Actualizar ingreso";
+      openDrawer();
+    }
+
+    // ── Guardar ───────────────────────────────────────────
+    async function saveIncome() {
+      const date        = document.getElementById("field-date").value;
+      const source      = document.getElementById("field-source").value.trim();
+      const amount      = Number(document.getElementById("field-amount").value);
+      const walletId    = document.getElementById("field-wallet").value;
+      const description = document.getElementById("field-description").value.trim();
+      const btn         = document.getElementById("btn-save");
+
+      const walletOpt  = document.querySelector(`#field-wallet option[value="${walletId}"]`);
+      const walletName = walletOpt?.dataset.name || "";
+
+      if (!date || !source || !amount) {
+        showToast("Completa fecha, fuente y valor.", "error"); return;
+      }
+
+      btn.disabled = true; btn.textContent = "Guardando...";
+      const data = { date, source, amount, description, walletId, walletName };
+
+      try {
+        if (editingId) {
+          const old = incomes.find(x => x.id === editingId);
+          await updateIncome(uid, editingId, old, data);
+          showToast("Ingreso actualizado.", "success");
+        } else {
+          await addIncome(uid, data);
+          showToast("Ingreso registrado.", "success");
+        }
+        closeDrawer();
+        wallets = await getWallets(uid);
+        populateWalletSelect();
+        await loadAll();
+      } catch (err) {
+        showToast("Error al guardar.", "error");
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = editingId ? "Actualizar ingreso" : "Registrar ingreso";
+      }
+    }
+
+    // ── Eliminar ──────────────────────────────────────────
+    async function handleDelete(id) {
+      if (!confirm("¿Eliminar este ingreso? El saldo de la cajita se ajustará.")) return;
+      try {
+        const i = incomes.find(x => x.id === id);
+        await deleteIncome(uid, id, i);
+        showToast("Ingreso eliminado.", "success");
+        wallets = await getWallets(uid);
+        populateWalletSelect();
+        await loadAll();
+      } catch (err) {
+        showToast("Error al eliminar.", "error");
+      }
+    }
+
+    function openDrawer() {
+      document.getElementById("drawer-overlay").classList.add("open");
+      document.getElementById("drawer").classList.add("open");
+    }
+    function closeDrawer() {
+      document.getElementById("drawer-overlay").classList.remove("open");
+      document.getElementById("drawer").classList.remove("open");
+    }
+  </script>
+</body>
+</html>

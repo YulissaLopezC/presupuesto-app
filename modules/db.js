@@ -1,24 +1,22 @@
 // ============================================================
 // modules/db.js
-// Capa de acceso a Firestore. Toda operación con la base de
-// datos pasa por aquí. Nunca llames a Firestore directamente
-// desde las páginas — usa siempre este módulo.
+// Capa de acceso a Firestore.
 //
 // Estructura en Firestore:
-//   users/{uid}/expenses/{id}
-//   users/{uid}/budgets/{YYYY-MM}      (uno por mes)
-//   users/{uid}/envelopes/{id}
-//   users/{uid}/categories/{id}
-//   users/{uid}/income_sources/{id}
-//   users/{uid}/goals/{id}
+//   users/{uid}/expenses/{id}       — gastos diarios
+//   users/{uid}/incomes/{id}        — ingresos reales registrados
+//   users/{uid}/budgets/{YYYY-MM}   — presupuesto mensual
+//   users/{uid}/wallets/{id}        — cajitas/cuentas permanentes
+//   users/{uid}/categories/{id}     — categorías de gasto
+//   users/{uid}/goals/{id}          — metas de ahorro
 // ============================================================
 
 import {
   collection, doc,
   addDoc, setDoc, updateDoc, deleteDoc,
   getDocs, getDoc,
-  query, where, orderBy, limit,
-  serverTimestamp
+  query, where, orderBy,
+  serverTimestamp, increment, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { db } from "../firebase-config.js";
@@ -34,24 +32,30 @@ function userDoc(uid, colName, docId) {
 }
 
 // ── GASTOS (expenses) ─────────────────────────────────────
+// data: { date, category, amount, description, walletId, walletName }
+// Al agregar un gasto, descuenta el monto de la cajita en una transacción atómica
 
-// Agregar gasto
-// data: { date: "2026-03-19", category: "Gatos", amount: 70000, description: "Comida" }
 export async function addExpense(uid, data) {
-  return addDoc(userCol(uid, "expenses"), {
-    ...data,
-    amount: Number(data.amount),
-    createdAt: serverTimestamp()
+  const expenseRef = doc(userCol(uid, "expenses"));
+  const walletRef  = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+
+  await runTransaction(db, async (tx) => {
+    tx.set(expenseRef, {
+      ...data,
+      amount: Number(data.amount),
+      createdAt: serverTimestamp()
+    });
+    if (walletRef) {
+      tx.update(walletRef, { balance: increment(-Number(data.amount)) });
+    }
   });
+  return expenseRef;
 }
 
-// Obtener gastos con filtros opcionales
-// filters: { month: "2026-03", category: "Gatos" }
 export async function getExpenses(uid, filters = {}) {
   let q = query(userCol(uid, "expenses"), orderBy("date", "desc"));
 
   if (filters.month) {
-    // Filtra por prefijo YYYY-MM en el campo date
     q = query(
       userCol(uid, "expenses"),
       where("date", ">=", filters.month + "-01"),
@@ -59,37 +63,141 @@ export async function getExpenses(uid, filters = {}) {
       orderBy("date", "desc")
     );
   }
-
-  if (filters.category) {
-    q = query(q, where("category", "==", filters.category));
-  }
-
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// Actualizar gasto
-export async function updateExpense(uid, expenseId, data) {
-  return updateDoc(userDoc(uid, "expenses", expenseId), {
-    ...data,
-    amount: Number(data.amount)
+export async function updateExpense(uid, expenseId, oldData, newData) {
+  // Revierte el efecto del gasto viejo en la cajita y aplica el nuevo
+  await runTransaction(db, async (tx) => {
+    const expRef = userDoc(uid, "expenses", expenseId);
+
+    // Revertir cajita anterior si existía
+    if (oldData.walletId) {
+      const oldWalletRef = userDoc(uid, "wallets", oldData.walletId);
+      tx.update(oldWalletRef, { balance: increment(Number(oldData.amount)) });
+    }
+    // Aplicar cajita nueva
+    if (newData.walletId) {
+      const newWalletRef = userDoc(uid, "wallets", newData.walletId);
+      tx.update(newWalletRef, { balance: increment(-Number(newData.amount)) });
+    }
+    tx.update(expRef, { ...newData, amount: Number(newData.amount) });
   });
 }
 
-// Eliminar gasto
-export async function deleteExpense(uid, expenseId) {
-  return deleteDoc(userDoc(uid, "expenses", expenseId));
+export async function deleteExpense(uid, expenseId, expenseData) {
+  await runTransaction(db, async (tx) => {
+    const expRef = userDoc(uid, "expenses", expenseId);
+    // Revertir el descuento en la cajita
+    if (expenseData?.walletId) {
+      const walletRef = userDoc(uid, "wallets", expenseData.walletId);
+      tx.update(walletRef, { balance: increment(Number(expenseData.amount)) });
+    }
+    tx.delete(expRef);
+  });
+}
+
+// ── INGRESOS REALES (incomes) ─────────────────────────────
+// data: { date, source, amount, description, walletId, walletName }
+// Al registrar un ingreso, suma el monto a la cajita
+
+export async function addIncome(uid, data) {
+  const incomeRef = doc(userCol(uid, "incomes"));
+  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+
+  await runTransaction(db, async (tx) => {
+    tx.set(incomeRef, {
+      ...data,
+      amount: Number(data.amount),
+      createdAt: serverTimestamp()
+    });
+    if (walletRef) {
+      tx.update(walletRef, { balance: increment(Number(data.amount)) });
+    }
+  });
+  return incomeRef;
+}
+
+export async function getIncomes(uid, filters = {}) {
+  let q = query(userCol(uid, "incomes"), orderBy("date", "desc"));
+
+  if (filters.month) {
+    q = query(
+      userCol(uid, "incomes"),
+      where("date", ">=", filters.month + "-01"),
+      where("date", "<=", filters.month + "-31"),
+      orderBy("date", "desc")
+    );
+  }
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function updateIncome(uid, incomeId, oldData, newData) {
+  await runTransaction(db, async (tx) => {
+    const incRef = userDoc(uid, "incomes", incomeId);
+    if (oldData.walletId) {
+      tx.update(userDoc(uid, "wallets", oldData.walletId), { balance: increment(-Number(oldData.amount)) });
+    }
+    if (newData.walletId) {
+      tx.update(userDoc(uid, "wallets", newData.walletId), { balance: increment(Number(newData.amount)) });
+    }
+    tx.update(incRef, { ...newData, amount: Number(newData.amount) });
+  });
+}
+
+export async function deleteIncome(uid, incomeId, incomeData) {
+  await runTransaction(db, async (tx) => {
+    const incRef = userDoc(uid, "incomes", incomeId);
+    if (incomeData?.walletId) {
+      tx.update(userDoc(uid, "wallets", incomeData.walletId), { balance: increment(-Number(incomeData.amount)) });
+    }
+    tx.delete(incRef);
+  });
+}
+
+// ── CAJITAS / CUENTAS (wallets) ───────────────────────────
+// data: { name, balance, icon, notes }
+// Permanentes — no tienen mes, el saldo se actualiza con cada movimiento
+
+export async function addWallet(uid, data) {
+  return addDoc(userCol(uid, "wallets"), {
+    ...data,
+    balance: Number(data.balance || 0),
+    createdAt: serverTimestamp()
+  });
+}
+
+export async function getWallets(uid) {
+  const snap = await getDocs(userCol(uid, "wallets"));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function updateWallet(uid, walletId, data) {
+  return updateDoc(userDoc(uid, "wallets", walletId), {
+    ...data,
+    balance: Number(data.balance)
+  });
+}
+
+export async function deleteWallet(uid, walletId) {
+  return deleteDoc(userDoc(uid, "wallets", walletId));
+}
+
+// Ajuste manual de saldo (para correcciones)
+export async function adjustWalletBalance(uid, walletId, newBalance) {
+  return updateDoc(userDoc(uid, "wallets", walletId), {
+    balance: Number(newBalance),
+    updatedAt: serverTimestamp()
+  });
 }
 
 // ── PRESUPUESTO MENSUAL (budgets) ─────────────────────────
 
-// El docId es el mes: "2026-03"
-// data: { categories: { Gatos: 180000, Transporte: 0, ... }, income: { Guillo: 600000, ... } }
 export async function setBudget(uid, month, data) {
   return setDoc(userDoc(uid, "budgets", month), {
-    ...data,
-    month,
-    updatedAt: serverTimestamp()
+    ...data, month, updatedAt: serverTimestamp()
   });
 }
 
@@ -98,38 +206,13 @@ export async function getBudget(uid, month) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// Obtener todos los meses que tienen presupuesto (para el historial)
 export async function getBudgetMonths(uid) {
   const snap = await getDocs(userCol(uid, "budgets"));
   return snap.docs.map(d => d.id).sort().reverse();
 }
 
-// ── CAJITAS / SOBRES (envelopes) ──────────────────────────
-
-// data: { name: "Ahorro", month: "2026-03", budgeted: 1753416, actual: 1108326 }
-export async function setEnvelope(uid, envelopeId, data) {
-  return setDoc(userDoc(uid, "envelopes", envelopeId), {
-    ...data,
-    budgeted: Number(data.budgeted),
-    actual: Number(data.actual),
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function getEnvelopes(uid, month) {
-  const q = query(userCol(uid, "envelopes"), where("month", "==", month));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-export async function deleteEnvelope(uid, envelopeId) {
-  return deleteDoc(userDoc(uid, "envelopes", envelopeId));
-}
-
 // ── CATEGORÍAS (categories) ───────────────────────────────
 
-// data: { name: "Gatos", type: "GASTO BÁSICO" }
-// type: "GASTO BÁSICO" | "GASTO NO ESENCIAL" | "AHORRO O INVERSIÓN"
 export async function addCategory(uid, data) {
   return addDoc(userCol(uid, "categories"), data);
 }
@@ -147,38 +230,7 @@ export async function deleteCategory(uid, categoryId) {
   return deleteDoc(userDoc(uid, "categories", categoryId));
 }
 
-// ── FUENTES DE INGRESO (income_sources) ───────────────────
-
-// data: { name: "Guillo", month: "2026-03", budgeted: 600000, actual: 0 }
-export async function setIncomeSource(uid, sourceId, data) {
-  return setDoc(userDoc(uid, "income_sources", sourceId), {
-    ...data,
-    budgeted: Number(data.budgeted),
-    actual: Number(data.actual || 0),
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function getIncomeSources(uid, month) {
-  const q = query(userCol(uid, "income_sources"), where("month", "==", month));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-export async function deleteIncomeSource(uid, sourceId) {
-  return deleteDoc(userDoc(uid, "income_sources", sourceId));
-}
-
 // ── METAS DE AHORRO (goals) ───────────────────────────────
-//
-// data: {
-//   name:       "Viaje a Japón",
-//   goalAmount: 5000000,
-//   savedAmount: 800000,
-//   targetDate: "2027-06",    (YYYY-MM, mes en que quieres lograrlo)
-//   emoji:      "✈️",
-//   notes:      "texto libre opcional"
-// }
 
 export async function addGoal(uid, data) {
   return addDoc(userCol(uid, "goals"), {

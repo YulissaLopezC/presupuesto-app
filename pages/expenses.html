@@ -215,6 +215,13 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">¿De cuál cajita salió?</label>
+      <select class="form-select" id="field-wallet">
+        <option value="">Sin cajita asignada</option>
+      </select>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">Descripción <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
       <input type="text" class="form-input" id="field-description" placeholder="Ej: Alimento + arena" maxlength="120"/>
     </div>
@@ -224,11 +231,11 @@
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { addExpense, getExpenses, updateExpense, deleteExpense, getCategories } from "../modules/db.js";
+    import { addExpense, getExpenses, updateExpense, deleteExpense, getCategories, getWallets } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, parseCOP, currentMonth, formatDate, today } from "../assets/utils.js";
 
-    let uid, selectedMonth, allExpenses = [], categories = [], editingId = null, activeFilter = "";
+    let uid, selectedMonth, allExpenses = [], categories = [], wallets = [], editingId = null, activeFilter = "";
 
     // ── Init ─────────────────────────────────────────────
     const user = await requireAuth();
@@ -243,7 +250,9 @@
     });
 
     categories = await getCategories(uid);
+    wallets    = await getWallets(uid);
     populateCategorySelect();
+    populateWalletSelect();
     populateCategoryFilters();
 
     await loadExpenses();
@@ -367,6 +376,13 @@
       renderAll();
     };
 
+    // ── Populate select de cajitas ───────────────────────────
+    function populateWalletSelect() {
+      const sel = document.getElementById("field-wallet");
+      sel.innerHTML = `<option value="">Sin cajita asignada</option>` +
+        wallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon || "🏦"} ${w.name}</option>`).join("");
+    }
+
     // ── Populate select de categorías ─────────────────────
     function populateCategorySelect() {
       const sel = document.getElementById("field-category");
@@ -392,6 +408,7 @@
       document.getElementById("field-date").value = today();
       document.getElementById("field-category").value = "";
       document.getElementById("field-amount").value = "";
+      document.getElementById("field-wallet").value      = "";
       document.getElementById("field-description").value = "";
       document.getElementById("btn-save").textContent = "Guardar gasto";
       openDrawer();
@@ -405,6 +422,7 @@
       document.getElementById("field-date").value = e.date;
       document.getElementById("field-category").value = e.category;
       document.getElementById("field-amount").value = e.amount;
+      document.getElementById("field-wallet").value      = e.walletId || "";
       document.getElementById("field-description").value = e.description || "";
       document.getElementById("btn-save").textContent = "Actualizar gasto";
       openDrawer();
@@ -425,8 +443,11 @@
       const date     = document.getElementById("field-date").value;
       const category = document.getElementById("field-category").value;
       const amount   = Number(document.getElementById("field-amount").value);
+      const walletId    = document.getElementById("field-wallet").value;
+      const walletOpt   = document.querySelector(`#field-wallet option[value="${walletId}"]`);
+      const walletName  = walletOpt?.dataset.name || "";
       const description = document.getElementById("field-description").value.trim();
-      const btn = document.getElementById("btn-save");
+      const btn         = document.getElementById("btn-save");
 
       if (!date || !category || !amount) {
         showToast("Completa fecha, categoría y valor.", "error");
@@ -437,13 +458,17 @@
       btn.textContent = "Guardando...";
 
       try {
+        const data = { date, category, amount, description, walletId, walletName };
         if (editingId) {
-          await updateExpense(uid, editingId, { date, category, amount, description });
+          const old = allExpenses.find(x => x.id === editingId);
+          await updateExpense(uid, editingId, old, data);
           showToast("Gasto actualizado.", "success");
         } else {
-          await addExpense(uid, { date, category, amount, description });
+          await addExpense(uid, data);
           showToast("Gasto registrado.", "success");
         }
+        wallets = await getWallets(uid);
+        populateWalletSelect();
         closeDrawer();
         await loadExpenses();
         populateCategoryFilters();
@@ -458,9 +483,10 @@
 
     // ── Eliminar gasto ────────────────────────────────────
     async function handleDelete(id) {
-      if (!confirm("¿Eliminar este gasto?")) return;
+      if (!confirm("¿Eliminar este gasto? El saldo de la cajita se ajustará.")) return;
       try {
-        await deleteExpense(uid, id);
+        const expense = allExpenses.find(x => x.id === id);
+        await deleteExpense(uid, id, expense);
         showToast("Gasto eliminado.", "success");
         await loadExpenses();
       } catch (err) {
