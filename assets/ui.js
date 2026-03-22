@@ -60,12 +60,104 @@ export function renderBottomNav(activeItem) {
     }
   ];
 
-  el.innerHTML = items.map(item => `
+  // En móvil: primeros 4 fijos + botón "Más" que abre popup con el resto
+  // En desktop: todos visibles
+  const mainItems = items.slice(0, 4);
+  const moreItems = items.slice(4);
+  const isMoreActive = moreItems.some(i => i.id === activeItem);
+
+  el.innerHTML = mainItems.map(item => `
+    <a href="${item.href}" class="nav-item ${item.id === activeItem ? "active" : ""}">
+      ${item.icon}
+      ${item.label}
+    </a>
+  `).join("") + `
+    <div class="nav-item nav-more-btn ${isMoreActive ? "active" : ""}" id="nav-more-btn">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+      Más
+    </div>
+  `;
+
+  // Inject all items for desktop (hidden on mobile via CSS)
+  const desktopExtra = document.createElement("div");
+  desktopExtra.id = "nav-desktop-extra";
+  desktopExtra.innerHTML = moreItems.map(item => `
     <a href="${item.href}" class="nav-item ${item.id === activeItem ? "active" : ""}">
       ${item.icon}
       ${item.label}
     </a>
   `).join("");
+  el.appendChild(desktopExtra);
+
+  // Popup menu
+  const popup = document.createElement("div");
+  popup.id = "nav-more-popup";
+  popup.innerHTML = moreItems.map(item => `
+    <a href="${item.href}" class="nav-more-item ${item.id === activeItem ? "active" : ""}">
+      ${item.icon}
+      <span>${item.label}</span>
+    </a>
+  `).join("");
+  document.body.appendChild(popup);
+
+  // Inject styles if not present
+  if (!document.getElementById("nav-more-styles")) {
+    const style = document.createElement("style");
+    style.id = "nav-more-styles";
+    style.textContent = `
+      /* Mobile: hide desktop extra, show more btn */
+      @media (max-width: 600px) {
+        #nav-desktop-extra { display: none !important; }
+        .nav-more-btn { display: flex; cursor: pointer; }
+      }
+      /* Desktop: hide more btn, show all items inline */
+      @media (min-width: 601px) {
+        .nav-more-btn { display: none !important; }
+        #nav-desktop-extra { display: contents; }
+        #nav-more-popup { display: none !important; }
+      }
+      /* Popup */
+      #nav-more-popup {
+        position: fixed;
+        bottom: calc(var(--nav-h) + 8px);
+        right: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px;
+        z-index: 200;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        min-width: 160px;
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+        animation: popup-in 0.15s ease;
+      }
+      #nav-more-popup.open { display: flex; }
+      @keyframes popup-in {
+        from { opacity: 0; transform: translateY(8px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .nav-more-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 11px 14px; border-radius: 10px;
+        text-decoration: none; color: var(--muted);
+        font-size: 13px; font-weight: 400;
+        transition: background 0.15s, color 0.15s;
+      }
+      .nav-more-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+      .nav-more-item:hover { background: var(--surface2); color: var(--text); }
+      .nav-more-item.active { color: var(--accent); }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Toggle popup
+  document.getElementById("nav-more-btn").addEventListener("click", e => {
+    e.stopPropagation();
+    popup.classList.toggle("open");
+  });
+  document.addEventListener("click", () => popup.classList.remove("open"));
 }
 
 // ── Toast notification ────────────────────────────────────
