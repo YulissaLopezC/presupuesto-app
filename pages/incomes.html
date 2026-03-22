@@ -293,8 +293,12 @@
     // ── Resumen ───────────────────────────────────────────
     function renderSummary() {
       const totalReal     = incomes.reduce((s, i) => s + Number(i.amount), 0);
-      const totalBudgeted = budget
-        ? Object.values(budget.income || {}).reduce((s, v) => s + Number(v), 0) : 0;
+      const incomeArr = Array.isArray(budget?.income)
+        ? budget.income
+        : Object.entries(budget?.income || {})
+            .filter(([k,v]) => typeof v === "number")
+            .map(([name,amount]) => ({name, amount}));
+      const totalBudgeted = incomeArr.reduce((s, i) => s + Number(i.amount || 0), 0);
       document.getElementById("sum-real").textContent     = formatCOP(totalReal);
       document.getElementById("sum-budgeted").textContent = formatCOP(totalBudgeted);
     }

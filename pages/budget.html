@@ -470,8 +470,8 @@
       const amount       = inc.amount || "";
       const type         = inc.type || "fijo";
       const proportional = inc.proportional || false;
-      const qty          = inc.qty || "";
-      const unitVal      = inc.unitValue || "";
+      const qty     = (inc.qty && inc.qty > 0)     ? inc.qty     : "";
+      const unitVal = (inc.unitValue && inc.unitValue > 0) ? inc.unitValue : "";
       const id           = `ic-${idx}`;
 
       const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
@@ -502,7 +502,7 @@
           </div>
 
           <!-- Form avanzado -->
-          <div class="advanced-form ${qty || unitVal ? "open" : ""}">
+          <div class="advanced-form ${(qty > 0 || unitVal > 0) ? "open" : ""}">
             <div class="advanced-row">
               <div>
                 <div class="advanced-label">Cantidad</div>
@@ -516,7 +516,7 @@
                 </div>
               </div>
             </div>
-            <div class="advanced-result" id="${id}-result">${qty && unitVal ? "= " + new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",minimumFractionDigits:0}).format(qty*unitVal) : ""}</div>
+            <div class="advanced-result" id="${id}-result">${(qty > 0 && unitVal > 0) ? "= " + new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",minimumFractionDigits:0}).format(Number(qty)*Number(unitVal)) : ""}</div>
           </div>
 
           <div style="display:flex;justify-content:flex-end;margin-top:8px;">
