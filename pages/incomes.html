@@ -145,10 +145,10 @@
       </div>
     </div>
 
-    <!-- Comparativo por fuente -->
-    <div class="budget-comparison" id="budget-comparison" style="display:none;">
-      <div class="bc-title">Por fuente de ingreso</div>
-      <div id="bc-rows"></div>
+    <!-- Por fuente de ingreso -->
+    <div id="sources-section" style="display:none;">
+      <h3 style="margin-bottom:12px;">Por fuente de ingreso</h3>
+      <div id="sources-list"></div>
     </div>
 
     <!-- Lista de ingresos registrados -->
@@ -213,7 +213,7 @@
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatDate, today } from "../assets/utils.js";
 
-    let uid, selectedMonth, incomes = [], wallets = [], budget = null, editingId = null;
+    let uid, selectedMonth, incomes = [], wallets = [], budget = null, propSummary = [], editingId = null;
 
     const user = await requireAuth();
     uid = user.uid;
@@ -247,13 +247,14 @@
       // Sincronizar proporcionales antes de cargar
       await syncProportionalIncomes(uid, selectedMonth);
 
-      const [inc, bud, propSummary] = await Promise.all([
+      const [inc, bud, propSum] = await Promise.all([
         getIncomes(uid, { month: selectedMonth }),
         getBudget(uid, selectedMonth),
         getProportionalSummary(uid, selectedMonth)
       ]);
-      incomes = inc;
-      budget  = bud;
+      incomes    = inc;
+      budget     = bud;
+      propSummary = propSum;
       renderDevengado(propSummary);
       renderSummary();
       renderComparison();
@@ -314,39 +315,85 @@
       document.getElementById("sum-budgeted").textContent = formatCOP(totalBudgeted);
     }
 
-    // ── Comparativo por fuente ────────────────────────────
+    // ── Por fuente de ingreso ─────────────────────────────
     function renderComparison() {
-      const compEl = document.getElementById("budget-comparison");
-      const rowsEl = document.getElementById("bc-rows");
-      if (!budget?.income) { compEl.style.display = "none"; return; }
+      const section  = document.getElementById("sources-section");
+      const listEl   = document.getElementById("sources-list");
+      const incomeArr = normalizeIncome(budget?.income);
+      if (!incomeArr.length) { section.style.display = "none"; return; }
+      section.style.display = "block";
 
-      compEl.style.display = "block";
-      const realBySource = incomes.reduce((acc, i) => {
-        acc[i.source] = (acc[i.source] || 0) + Number(i.amount);
-        return acc;
-      }, {});
+      // Sumar ingresos reales por fuente (excluir proporcionales automáticos)
+      const realBySource = incomes
+        .filter(i => !i.isProportional)
+        .reduce((acc, i) => {
+          acc[i.source] = (acc[i.source] || 0) + Number(i.amount);
+          return acc;
+        }, {});
 
-      // Combinar fuentes presupuestadas + reales sin presupuesto
-      const allSources = new Set([
-        ...Object.keys(budget.income),
-        ...Object.keys(realBySource)
-      ]);
+      // Proporcionales devengados hoy
+      const propMap = {};
+      if (propSummary) {
+        propSummary.forEach(p => { propMap[p.name] = p; });
+      }
 
-      rowsEl.innerHTML = [...allSources].map(source => {
-        const budgeted = Number(budget.income[source] || 0);
-        const real     = realBySource[source] || 0;
-        const diff     = real - budgeted;
-        const diffCls  = diff >= 0 ? "pos" : "neg";
-        return `
-          <div class="bc-row">
-            <span class="bc-source">${source}</span>
-            <div class="bc-amounts">
-              <div class="bc-real">${formatCOP(real)}</div>
-              ${budgeted ? `<div class="bc-budgeted">de ${formatCOP(budgeted)}</div>` : ""}
-              ${budgeted ? `<div class="bc-diff ${diffCls}">${diff >= 0 ? "+" : ""}${formatCOP(diff)}</div>` : ""}
+      // Fuentes extra registradas pero no presupuestadas
+      const budgetedNames = new Set(incomeArr.map(i => i.name));
+      const extraSources  = Object.keys(realBySource).filter(s => !budgetedNames.has(s));
+
+      listEl.innerHTML = [
+        ...incomeArr.map(inc => sourceCardHTML(inc, realBySource[inc.name] || 0, propMap[inc.name])),
+        ...extraSources.map(src => sourceCardHTML({name: src, amount: 0, type: "fijo", proportional: false}, realBySource[src] || 0, null))
+      ].join("");
+    }
+
+    function sourceCardHTML(inc, received, prop) {
+      const budgeted  = Number(inc.amount || 0);
+      const diff      = received - budgeted;
+      const pct       = budgeted > 0 ? Math.min(received / budgeted, 1) : 0;
+      const barCls    = pct >= 1 ? "" : pct >= 0.8 ? "warn" : "";
+      const barColor  = pct >= 1 ? "var(--accent)" : "var(--info)";
+
+      const diffVal   = Math.abs(diff);
+      const diffCls   = diff > 0 ? "diff-pos" : diff < 0 ? "diff-neg" : "diff-ok";
+      const diffLabel = diff > 0 ? `+${formatCOP(diffVal)} extra` : diff < 0 ? `-${formatCOP(diffVal)} pendiente` : "Completo ✓";
+
+      const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
+      const typeLabel  = inc.proportional
+        ? (typeLabels[inc.type] || inc.type) + " · Proporcional"
+        : (typeLabels[inc.type] || inc.type);
+
+      return `
+        <div class="source-card">
+          <div class="source-card-header">
+            <span class="source-name">${inc.name}</span>
+            <span class="source-type-badge ${inc.proportional ? "prop" : inc.type}">${typeLabel}</span>
+          </div>
+          <div class="source-amounts">
+            <div class="source-col">
+              <div class="source-col-label">Presupuestado</div>
+              <div class="source-col-val budgeted">${budgeted > 0 ? formatCOP(budgeted) : "—"}</div>
             </div>
-          </div>`;
-      }).join("");
+            <div class="source-col">
+              <div class="source-col-label">Recibido</div>
+              <div class="source-col-val received">${formatCOP(received)}</div>
+            </div>
+            <div class="source-col">
+              <div class="source-col-label">Diferencia</div>
+              <div class="source-col-val ${diffCls}">${budgeted > 0 ? diffLabel : "—"}</div>
+            </div>
+          </div>
+          ${budgeted > 0 ? `
+            <div class="progress-bar">
+              <div class="progress-fill ${barCls}" style="width:${pct*100}%;background:${barColor};"></div>
+            </div>` : ""}
+          ${prop ? `
+            <div class="source-prop-note">
+              Devengado hoy: <span>${formatCOP(prop.accruedAmount)}</span>
+              · ${prop.daysPassed} de ${prop.daysInMonth} días
+              · <span>${formatCOP(prop.dailyAmount)}/día</span>
+            </div>` : ""}
+        </div>`;
     }
 
     // ── Lista ingresos ────────────────────────────────────
