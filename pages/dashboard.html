@@ -96,7 +96,7 @@
     <div class="card">
       <div class="section-header">
         <h3>Cajitas</h3>
-        <a href="./envelopes.html" class="link-small">Ver todas →</a>
+        <a href="./wallets.html" class="link-small">Ver todas →</a>
       </div>
       <div id="envelopes-content">
         <div class="skeleton" style="height:80px;border-radius:10px;"></div>
@@ -125,7 +125,7 @@
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getExpenses, getBudget, getEnvelopes } from "../modules/db.js";
+    import { getExpenses, getBudget, getWallets, getIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatDate, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
 
@@ -145,32 +145,37 @@
     await loadDashboard();
 
     async function loadDashboard() {
-      const [expenses, budget, envelopes] = await Promise.all([
+      const [expenses, budget, wallets, incomes] = await Promise.all([
         getExpenses(uid, { month: selectedMonth }),
         getBudget(uid, selectedMonth),
-        getEnvelopes(uid, selectedMonth)
+        getWallets(uid),
+        getIncomes(uid, { month: selectedMonth })
       ]);
-      renderHero(expenses, budget);
-      renderEnvelopes(envelopes);
+      renderHero(expenses, budget, wallets, incomes);
+      renderWallets(wallets);
       renderRecentExpenses(expenses);
       renderCategoryProgress(expenses, budget);
     }
 
-    function renderHero(expenses, budget) {
+    function renderHero(expenses, budget, wallets, incomes) {
       const totalBudgeted = budget
         ? Object.values(budget.categories || {}).reduce((s, v) => s + Number(v), 0) : 0;
-      const totalSpent = expenses.reduce((s, e) => s + Number(e.amount), 0);
-      const saldo = totalBudgeted - totalSpent;
-      const pctUsed = totalBudgeted > 0 ? Math.min(totalSpent / totalBudgeted, 1) : 0;
-      const amountClass = saldo >= 0 ? "positive" : "negative";
-      const barClass = pctUsed >= 1 ? "over" : pctUsed >= 0.8 ? "warn" : "";
+      const totalSpent    = expenses.reduce((s, e) => s + Number(e.amount), 0);
+      const totalIncome   = incomes.reduce((s, i) => s + Number(i.amount), 0);
+      const totalWallets  = wallets.reduce((s, w) => s + Number(w.balance), 0);
+      const saldo         = totalBudgeted - totalSpent;
+      const pctUsed       = totalBudgeted > 0 ? Math.min(totalSpent / totalBudgeted, 1) : 0;
+      const amountClass   = saldo >= 0 ? "positive" : "negative";
+      const barClass      = pctUsed >= 1 ? "over" : pctUsed >= 0.8 ? "warn" : "";
 
       document.getElementById("hero-card").innerHTML = `
         <div class="hero-month">${formatMonth(selectedMonth)}</div>
-        <div class="hero-amount ${amountClass}">${formatCOP(Math.abs(saldo))}</div>
-        <div class="hero-sub">${saldo >= 0 ? "disponible del mes" : "por encima del presupuesto"}</div>
+        <div class="hero-amount ${wallets.length ? (totalWallets >= 0 ? "positive" : "negative") : amountClass}">
+          ${formatCOP(wallets.length ? Math.abs(totalWallets) : Math.abs(saldo))}
+        </div>
+        <div class="hero-sub">${wallets.length ? "saldo total en cajitas" : (saldo >= 0 ? "disponible del mes" : "por encima del presupuesto")}</div>
         <div class="progress-labels">
-          <span>Gastado: ${formatCOP(totalSpent)}</span>
+          <span>Gastado este mes: ${formatCOP(totalSpent)}</span>
           <span>${Math.round(pctUsed * 100)}% del presupuesto</span>
         </div>
         <div class="progress-bar">
@@ -178,8 +183,8 @@
         </div>
         <div class="hero-stats" style="margin-top:16px;">
           <div class="hero-stat">
-            <div class="label">Presupuesto</div>
-            <div class="value inc">${formatCOP(totalBudgeted)}</div>
+            <div class="label">Ingresos del mes</div>
+            <div class="value inc">${formatCOP(totalIncome)}</div>
           </div>
           <div class="hero-stat">
             <div class="label">Gastado</div>
@@ -189,24 +194,20 @@
       `;
     }
 
-    function renderEnvelopes(envelopes) {
+    function renderWallets(wallets) {
       const el = document.getElementById("envelopes-content");
-      if (!envelopes.length) {
-        el.innerHTML = `<div class="empty-state"><p>No hay cajitas para este mes.</p>
-          <a href="./envelopes.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
+      if (!wallets.length) {
+        el.innerHTML = `<div class="empty-state"><p>No tienes cajitas creadas.</p>
+          <a href="./wallets.html" class="link-small" style="display:inline-block;margin-top:8px;">Crear cajita →</a></div>`;
         return;
       }
-      el.innerHTML = `<div class="envelopes-grid">${envelopes.map(env => {
-        const pct = env.budgeted > 0 ? env.actual / env.budgeted : 0;
-        const cls = pct > 1 ? "over" : pct > 0.8 ? "warn" : "ok";
+      el.innerHTML = `<div class="envelopes-grid">${wallets.map(w => {
+        const balance = Number(w.balance);
+        const isNeg   = balance < 0;
         return `
           <div class="envelope-card">
-            <div class="envelope-name">${env.name}</div>
-            <div class="envelope-actual ${cls}">${formatCOP(env.actual)}</div>
-            <div class="envelope-budget">de ${formatCOP(env.budgeted)}</div>
-            <div class="progress-bar" style="margin-top:8px;">
-              <div class="progress-fill ${cls === "ok" ? "" : cls}" style="width:${Math.min(pct,1)*100}%"></div>
-            </div>
+            <div class="envelope-name">${w.icon || "🏦"} ${w.name}</div>
+            <div class="envelope-actual ${isNeg ? "over" : "ok"}">${formatCOP(balance)}</div>
           </div>`;
       }).join("")}</div>`;
     }
