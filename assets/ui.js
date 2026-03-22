@@ -51,6 +51,10 @@ export function renderBottomNav(activeItem) {
       icon: `<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`
     },
     {
+      id: "goals", href: "../pages/goals.html", label: "Metas",
+      icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`
+    },
+    {
       id: "categories", href: "../pages/categories.html", label: "Más",
       icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`
     }
