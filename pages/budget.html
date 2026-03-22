@@ -650,12 +650,11 @@
         const unitValue    = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
         const daysInMonth  = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
         if (name && amount > 0) {
-          incomeData.push({
-            name, amount, type, proportional,
-            dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0,
-            qty:        qty || null,
-            unitValue:  unitValue || null
-          });
+          const entry = { name, amount, type, proportional,
+            dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
+          if (qty > 0)       entry.qty       = qty;
+          if (unitValue > 0) entry.unitValue = unitValue;
+          incomeData.push(entry);
         }
       });
 
