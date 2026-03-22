@@ -158,14 +158,25 @@ export async function deleteIncome(uid, incomeId, incomeData) {
 }
 
 // ── CAJITAS / CUENTAS (wallets) ───────────────────────────
-// data: { name, balance, icon, notes }
-// Permanentes — no tienen mes, el saldo se actualiza con cada movimiento
+//
+// data: {
+//   name:        "Banco Davivienda",
+//   icon:        "🏦",
+//   type:        "ahorro" | "efectivo" | "credito"
+//   balance:     saldo actual
+//                · ahorro/efectivo: saldo positivo disponible
+//                · credito:         saldo usado (deuda acumulada), arranca en 0
+//   creditLimit: cupo total (solo para type="credito")
+//   notes:       texto libre
+// }
 
 export async function addWallet(uid, data) {
+  const isCredit = data.type === "credito";
   return addDoc(userCol(uid, "wallets"), {
     ...data,
-    balance: Number(data.balance || 0),
-    createdAt: serverTimestamp()
+    balance:     isCredit ? 0 : Number(data.balance || 0),
+    creditLimit: isCredit ? Number(data.creditLimit || 0) : null,
+    createdAt:   serverTimestamp()
   });
 }
 
@@ -175,10 +186,14 @@ export async function getWallets(uid) {
 }
 
 export async function updateWallet(uid, walletId, data) {
-  return updateDoc(userDoc(uid, "wallets", walletId), {
-    ...data,
-    balance: Number(data.balance)
-  });
+  const isCredit = data.type === "credito";
+  const updates  = { ...data, updatedAt: serverTimestamp() };
+  if (isCredit) {
+    updates.creditLimit = Number(data.creditLimit || 0);
+  } else {
+    updates.balance = Number(data.balance || 0);
+  }
+  return updateDoc(userDoc(uid, "wallets", walletId), updates);
 }
 
 export async function deleteWallet(uid, walletId) {
@@ -190,6 +205,68 @@ export async function adjustWalletBalance(uid, walletId, newBalance) {
   return updateDoc(userDoc(uid, "wallets", walletId), {
     balance: Number(newBalance),
     updatedAt: serverTimestamp()
+  });
+}
+
+// ── TRANSFERENCIAS ENTRE CAJITAS (transfers) ──────────────
+//
+// data: { date, fromWalletId, fromWalletName, toWalletId, toWalletName, amount, description }
+// Atómica: descuenta de origen y suma en destino en una sola operación
+
+export async function addTransfer(uid, data) {
+  const transferRef  = doc(userCol(uid, "transfers"));
+  const fromRef      = userDoc(uid, "wallets", data.fromWalletId);
+  const toRef        = userDoc(uid, "wallets", data.toWalletId);
+  const amount       = Number(data.amount);
+
+  await runTransaction(db, async (tx) => {
+    const fromSnap = await tx.get(fromRef);
+    const toSnap   = await tx.get(toRef);
+
+    if (!fromSnap.exists() || !toSnap.exists()) throw new Error("Cajita no encontrada");
+
+    const fromWallet = fromSnap.data();
+    const toWallet   = toSnap.data();
+
+    // Para crédito origen: el pago reduce la deuda (balance baja)
+    // Para crédito destino: la transferencia aumenta la deuda (balance sube)
+    // Para ahorro/efectivo: balance normal
+    const fromDelta = fromWallet.type === "credito" ? -amount : -amount;
+    const toDelta   = toWallet.type   === "credito" ?  amount :  amount;
+
+    tx.update(fromRef, { balance: increment(fromDelta) });
+    tx.update(toRef,   { balance: increment(toDelta) });
+    tx.set(transferRef, {
+      ...data,
+      amount,
+      createdAt: serverTimestamp()
+    });
+  });
+  return transferRef;
+}
+
+export async function getTransfers(uid, filters = {}) {
+  let q = query(userCol(uid, "transfers"), orderBy("date", "desc"));
+  if (filters.month) {
+    q = query(
+      userCol(uid, "transfers"),
+      where("date", ">=", filters.month + "-01"),
+      where("date", "<=", filters.month + "-31"),
+      orderBy("date", "desc")
+    );
+  }
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function deleteTransfer(uid, transferId, transferData) {
+  await runTransaction(db, async (tx) => {
+    const amount  = Number(transferData.amount);
+    const fromRef = userDoc(uid, "wallets", transferData.fromWalletId);
+    const toRef   = userDoc(uid, "wallets", transferData.toWalletId);
+    tx.update(fromRef, { balance: increment(amount) });
+    tx.update(toRef,   { balance: increment(-amount) });
+    tx.delete(userDoc(uid, "transfers", transferId));
   });
 }
 
