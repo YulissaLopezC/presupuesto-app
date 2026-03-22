@@ -161,6 +161,94 @@
       font-size: 13px; color: var(--warning); line-height: 1.5;
       margin-bottom: 16px;
     }
+
+    /* ── Filas de ingreso mejoradas ──────────────────────── */
+    .income-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; margin-bottom: 8px;
+    }
+    .income-card-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    }
+    .income-name-input {
+      flex: 1; background: transparent; border: none;
+      font-family: "DM Sans", sans-serif; font-size: 14px;
+      color: var(--text); outline: none; min-width: 0;
+    }
+    .income-name-input::placeholder { color: var(--muted2); }
+    .income-type-select {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px;
+      font-family: "DM Sans", sans-serif; font-size: 11px;
+      color: var(--muted); outline: none; cursor: pointer;
+      appearance: none; flex-shrink: 0;
+    }
+    .income-type-select option { background: var(--surface); }
+
+    .income-card-body { display: flex; gap: 8px; align-items: flex-start; }
+    .income-amount-wrap { flex: 1; position: relative; }
+    .income-amount-wrap .sym {
+      position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px; color: var(--muted); pointer-events: none;
+    }
+    .income-amount-input {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px 8px 22px;
+      font-family: "DM Serif Display", serif;
+      font-size: 14px; color: var(--text);
+      outline: none; text-align: right;
+    }
+    .income-amount-input:focus { border-color: var(--accent); }
+
+    /* Toggle proporcional */
+    .prop-toggle {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .prop-toggle label { font-size: 12px; color: var(--muted); cursor: pointer; flex: 1; }
+    .toggle-switch {
+      width: 32px; height: 18px; background: var(--border2);
+      border-radius: 9px; position: relative; cursor: pointer;
+      transition: background 0.2s; flex-shrink: 0; border: none;
+    }
+    .toggle-switch.on { background: var(--accent); }
+    .toggle-switch::after {
+      content: ""; position: absolute;
+      width: 14px; height: 14px; background: #fff;
+      border-radius: 50%; top: 2px; left: 2px;
+      transition: transform 0.2s;
+    }
+    .toggle-switch.on::after { transform: translateX(14px); }
+
+    /* Form avanzado */
+    .advanced-form {
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+    .advanced-form.open { display: block; }
+    .advanced-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .advanced-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .advanced-result { font-size: 12px; color: var(--accent); margin-top: 6px; font-weight: 500; }
+    .btn-advanced {
+      background: none; border: none; color: var(--muted);
+      font-size: 11px; font-family: "DM Sans", sans-serif;
+      cursor: pointer; padding: 0; text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .btn-advanced:hover { color: var(--text); }
+
+    /* Badges de tipo */
+    .type-badge {
+      font-size: 10px; font-weight: 500; padding: 2px 7px;
+      border-radius: 99px; flex-shrink: 0;
+    }
+    .type-badge.fijo          { background: rgba(74,127,181,0.12); color: var(--info); }
+    .type-badge.no_operacional{ background: rgba(201,124,46,0.12); color: var(--warning); }
+    .type-badge.extraordinario{ background: rgba(212,96,138,0.10); color: var(--accent); }
   </style>
 </head>
 <body>
@@ -236,7 +324,7 @@
 
   <script type="module">
     import { requireAuth }   from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatMonth, lastMonths } from "../assets/utils.js";
 
@@ -366,29 +454,135 @@
 
     // ── Panel Ingresos ────────────────────────────────────
     function renderIncomeForm() {
-      const container  = document.getElementById("income-form");
-      const savedIncome = currentBudget?.income || {};
-      const entries    = Object.entries(savedIncome);
-      container.innerHTML = entries.map(([name, amount], i) => incomeRowHTML(name, amount, i)).join("");
+      const container   = document.getElementById("income-form");
+      const savedIncome = currentBudget?.income || [];
+      // Soporte legado: si income era objeto {name: amount}, convertir a array
+      const entries = Array.isArray(savedIncome)
+        ? savedIncome
+        : Object.entries(savedIncome).map(([name, amount]) => ({ name, amount, type: "fijo", proportional: false }));
+      container.innerHTML = entries.map((inc, i) => incomeCardHTML(inc, i)).join("");
+      bindIncomeCardEvents();
     }
 
-    function incomeRowHTML(name = "", amount = "", idx = Date.now()) {
+    function incomeCardHTML(inc = {}, idx = Date.now()) {
+      const name         = inc.name || "";
+      const amount       = inc.amount || "";
+      const type         = inc.type || "fijo";
+      const proportional = inc.proportional || false;
+      const qty          = inc.qty || "";
+      const unitVal      = inc.unitValue || "";
+      const id           = `ic-${idx}`;
+
+      const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
+
       return `
-        <div class="income-row" id="income-row-${idx}">
-          <input type="text" class="income-name-input" placeholder="Fuente de ingreso" value="${name}"/>
-          <div class="budget-input-wrap" style="width:130px;">
-            <span class="sym">$</span>
-            <input type="number" min="0" class="budget-input" placeholder="0" value="${amount}"/>
+        <div class="income-card" id="${id}">
+          <div class="income-card-header">
+            <input type="text" class="income-name-input" placeholder="Fuente de ingreso" value="${name}"/>
+            <select class="income-type-select" data-field="type">
+              <option value="fijo"           ${type==="fijo"            ? "selected":""}>Fijo</option>
+              <option value="no_operacional" ${type==="no_operacional"  ? "selected":""}>No operacional</option>
+              <option value="extraordinario" ${type==="extraordinario"  ? "selected":""}>Extraordinario</option>
+            </select>
+            <button class="btn-danger" style="flex-shrink:0;">✕</button>
           </div>
-          <button class="btn-danger">✕</button>
+
+          <div class="income-card-body">
+            <div class="income-amount-wrap">
+              <span class="sym">$</span>
+              <input type="number" min="0" class="income-amount-input" placeholder="0" value="${amount}" data-field="amount"/>
+            </div>
+          </div>
+
+          <!-- Toggle proporcional -->
+          <div class="prop-toggle">
+            <label>¿Se devenga día a día?</label>
+            <button type="button" class="toggle-switch ${proportional ? "on" : ""}" data-field="proportional" title="Activar proporcional por día"></button>
+          </div>
+
+          <!-- Form avanzado -->
+          <div class="advanced-form ${qty || unitVal ? "open" : ""}">
+            <div class="advanced-row">
+              <div>
+                <div class="advanced-label">Cantidad</div>
+                <input type="number" min="0" class="form-input" style="padding:8px 10px;font-size:13px;" placeholder="0" value="${qty}" data-field="qty"/>
+              </div>
+              <div>
+                <div class="advanced-label">Valor unitario</div>
+                <div style="position:relative;">
+                  <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);">$</span>
+                  <input type="number" min="0" class="form-input" style="padding:8px 10px 8px 22px;font-size:13px;" placeholder="0" value="${unitVal}" data-field="unitValue"/>
+                </div>
+              </div>
+            </div>
+            <div class="advanced-result" id="${id}-result">${qty && unitVal ? "= " + new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",minimumFractionDigits:0}).format(qty*unitVal) : ""}</div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+            <button type="button" class="btn-advanced" data-action="toggle-advanced">
+              ${qty || unitVal ? "Ocultar form avanzado" : "Form avanzado (cantidad × valor)"}
+            </button>
+          </div>
         </div>`;
+    }
+
+    function bindIncomeCardEvents() {
+      const container = document.getElementById("income-form");
+
+      container.addEventListener("input", e => {
+        const card = e.target.closest(".income-card");
+        if (!card) return;
+        const field = e.target.dataset.field;
+        if (field === "qty" || field === "unitValue") {
+          // Auto-calcular total
+          const qty      = Number(card.querySelector("[data-field='qty']")?.value) || 0;
+          const unitVal  = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
+          const total    = qty * unitVal;
+          const resultEl = card.querySelector("[id$='-result']");
+          if (resultEl) {
+            resultEl.textContent = total > 0
+              ? "= " + new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",minimumFractionDigits:0}).format(total)
+              : "";
+          }
+          // Actualizar el campo de monto con el total
+          if (total > 0) {
+            const amountInput = card.querySelector(".income-amount-input");
+            if (amountInput) amountInput.value = total;
+          }
+        }
+        updateSummary();
+      });
+
+      container.addEventListener("click", e => {
+        const card = e.target.closest(".income-card");
+        if (!card) return;
+
+        // Toggle proporcional
+        if (e.target.dataset.field === "proportional") {
+          e.target.classList.toggle("on");
+        }
+
+        // Toggle form avanzado
+        if (e.target.dataset.action === "toggle-advanced") {
+          const advForm = card.querySelector(".advanced-form");
+          const isOpen  = advForm.classList.toggle("open");
+          e.target.textContent = isOpen ? "Ocultar form avanzado" : "Form avanzado (cantidad × valor)";
+        }
+
+        // Eliminar fila
+        if (e.target.classList.contains("btn-danger")) {
+          card.remove();
+          updateSummary();
+        }
+      });
     }
 
     function addIncomeRow() {
       const container = document.getElementById("income-form");
       const div = document.createElement("div");
-      div.innerHTML = incomeRowHTML();
+      div.innerHTML = incomeCardHTML({}, Date.now());
       container.appendChild(div.firstElementChild);
+      bindIncomeCardEvents();
       container.lastElementChild.querySelector(".income-name-input").focus();
     }
 
@@ -403,9 +597,9 @@
     function updateSummary() {
       const catInputs  = document.querySelectorAll(".budget-input[data-cat]");
       const totalExp   = Array.from(catInputs).reduce((s, i) => s + (Number(i.value) || 0), 0);
-      const incomeRows = document.querySelectorAll("#income-form .income-row");
-      const totalIncome = Array.from(incomeRows).reduce((s, row) => {
-        return s + (Number(row.querySelector(".budget-input")?.value) || 0);
+      const incomeCards = document.querySelectorAll("#income-form .income-card");
+      const totalIncome = Array.from(incomeCards).reduce((s, card) => {
+        return s + (Number(card.querySelector(".income-amount-input")?.value) || 0);
       }, 0);
       const balance = totalIncome - totalExp;
       document.getElementById("sum-income").textContent   = formatCOP(totalIncome);
@@ -442,7 +636,7 @@
         if (name && amount > 0) incomeData[name] = amount;
       });
 
-      if (!Object.keys(categoriesData).length && !Object.keys(incomeData).length) {
+      if (!Object.keys(categoriesData).length && !incomeData.length) {
         showToast("Ingresa al menos un valor para guardar.", "error"); return;
       }
 
@@ -452,6 +646,10 @@
         currentBudget = { categories: categoriesData, income: incomeData };
         showToast("Presupuesto guardado.", "success");
         document.getElementById("copy-banner").style.display = "none";
+        // Sincronizar ingresos proporcionales
+        if (incomeData.some(i => i.proportional)) {
+          await syncProportionalIncomes(uid, selectedMonth);
+        }
       } catch (err) {
         showToast("Error al guardar. Intenta de nuevo.", "error");
         console.error(err);

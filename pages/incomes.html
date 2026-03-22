@@ -87,6 +87,25 @@
     .date-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 0 6px; }
 
     /* ── Amount wrapper ──────────────────────────────────── */
+    /* ── Sección devengado ───────────────────────────────── */
+    .devengado-section {
+      margin-bottom: 16px;
+    }
+    .devengado-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px; margin-bottom: 8px;
+    }
+    .dev-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .dev-name { font-size: 14px; color: var(--text); font-weight: 400; }
+    .dev-type { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 99px; }
+    .dev-type.fijo { background: rgba(74,127,181,0.12); color: var(--info); }
+    .dev-type.no_operacional { background: rgba(201,124,46,0.12); color: var(--warning); }
+    .dev-type.extraordinario { background: rgba(212,96,138,0.10); color: var(--accent); }
+    .dev-amounts { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .dev-accrued { font-family: "DM Serif Display", serif; font-size: 22px; letter-spacing: -0.5px; color: var(--info); }
+    .dev-total { font-size: 12px; color: var(--muted); }
+    .dev-days { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
     .amount-wrapper { position: relative; }
     .amount-wrapper .sym {
       position: absolute; left: 12px; top: 50%;
@@ -107,6 +126,12 @@
     </div>
 
     <div id="month-selector-container" style="margin-bottom:16px;"></div>
+
+    <!-- Devengado del mes -->
+    <div id="devengado-section" class="devengado-section" style="display:none;">
+      <h3 style="margin-bottom:10px;">Devengado del mes</h3>
+      <div id="devengado-list"></div>
+    </div>
 
     <!-- Resumen -->
     <div class="summary-row">
@@ -184,7 +209,7 @@
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getIncomes, addIncome, updateIncome, deleteIncome, getWallets, getBudget } from "../modules/db.js";
+    import { getIncomes, addIncome, updateIncome, deleteIncome, getWallets, getBudget, syncProportionalIncomes, getProportionalSummary } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatDate, today } from "../assets/utils.js";
 
@@ -219,16 +244,50 @@
 
     // ── Cargar todo ───────────────────────────────────────
     async function loadAll() {
-      const [inc, bud] = await Promise.all([
+      // Sincronizar proporcionales antes de cargar
+      await syncProportionalIncomes(uid, selectedMonth);
+
+      const [inc, bud, propSummary] = await Promise.all([
         getIncomes(uid, { month: selectedMonth }),
-        getBudget(uid, selectedMonth)
+        getBudget(uid, selectedMonth),
+        getProportionalSummary(uid, selectedMonth)
       ]);
       incomes = inc;
       budget  = bud;
+      renderDevengado(propSummary);
       renderSummary();
       renderComparison();
       renderIncomes();
       populateSourcesSuggestions();
+    }
+
+    // ── Devengado del mes ─────────────────────────────────
+    function renderDevengado(summary) {
+      const section = document.getElementById("devengado-section");
+      const list    = document.getElementById("devengado-list");
+      if (!summary.length) { section.style.display = "none"; return; }
+      section.style.display = "block";
+
+      list.innerHTML = summary.map(s => {
+        const pct    = Math.min(s.pct, 1);
+        const barCls = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
+        const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
+        return `
+          <div class="devengado-card">
+            <div class="dev-header">
+              <span class="dev-name">${s.name}</span>
+              <span class="dev-type ${s.type}">${typeLabels[s.type] || s.type}</span>
+            </div>
+            <div class="dev-amounts">
+              <div class="dev-accrued">${formatCOP(s.accruedAmount)}</div>
+              <div class="dev-total">de ${formatCOP(s.totalAmount)}</div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill ${barCls}" style="width:${pct*100}%;background:var(--info);"></div>
+            </div>
+            <div class="dev-days">${s.daysPassed} de ${s.daysInMonth} días · ${formatCOP(s.dailyAmount)}/día</div>
+          </div>`;
+      }).join("");
     }
 
     // ── Resumen ───────────────────────────────────────────
