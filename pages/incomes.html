@@ -293,11 +293,16 @@
     // ── Resumen ───────────────────────────────────────────
     function renderSummary() {
       const totalReal     = incomes.reduce((s, i) => s + Number(i.amount), 0);
-      const incomeArr = Array.isArray(budget?.income)
-        ? budget.income
-        : Object.entries(budget?.income || {})
-            .filter(([k,v]) => typeof v === "number")
-            .map(([name,amount]) => ({name, amount}));
+      let incomeArr;
+      if (Array.isArray(budget?.income)) {
+        incomeArr = budget.income.filter(i => i && i.name && Number(i.amount) > 0);
+      } else if (typeof budget?.income === "object" && budget?.income !== null) {
+        incomeArr = Object.entries(budget.income)
+          .filter(([k, v]) => typeof v === "number" && isNaN(Number(k)))
+          .map(([name, amount]) => ({ name, amount }));
+      } else {
+        incomeArr = [];
+      }
       const totalBudgeted = incomeArr.reduce((s, i) => s + Number(i.amount || 0), 0);
       document.getElementById("sum-real").textContent     = formatCOP(totalReal);
       document.getElementById("sum-budgeted").textContent = formatCOP(totalBudgeted);
