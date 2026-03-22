@@ -447,10 +447,20 @@
     function renderIncomeForm() {
       const container   = document.getElementById("income-form");
       const savedIncome = currentBudget?.income || [];
+
       // Soporte legado: si income era objeto {name: amount}, convertir a array
-      const entries = Array.isArray(savedIncome)
-        ? savedIncome
-        : Object.entries(savedIncome).map(([name, amount]) => ({ name, amount, type: "fijo", proportional: false }));
+      // Filtrar solo entradas donde el valor sea un número (ignorar campos de Firestore)
+      let entries;
+      if (Array.isArray(savedIncome)) {
+        entries = savedIncome;
+      } else if (typeof savedIncome === "object" && savedIncome !== null) {
+        entries = Object.entries(savedIncome)
+          .filter(([key, val]) => typeof val === "number" && !["month","updatedAt"].includes(key))
+          .map(([name, amount]) => ({ name, amount, type: "fijo", proportional: false }));
+      } else {
+        entries = [];
+      }
+
       container.innerHTML = entries.map((inc, i) => incomeCardHTML(inc, i)).join("");
       if (entries.length) bindIncomeCardEvents();
     }
