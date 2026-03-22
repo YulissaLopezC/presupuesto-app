@@ -32,8 +32,14 @@ const DEFAULT_CATEGORIES = [
 ];
 
 async function createDefaultCategories(uid) {
-  const col = collection(db, "users", uid, "categories");
-  await Promise.all(DEFAULT_CATEGORIES.map(cat => addDoc(col, cat)));
+  try {
+    const col = collection(db, "users", uid, "categories");
+    await Promise.all(DEFAULT_CATEGORIES.map(cat => addDoc(col, cat)));
+    console.log("Categorías por defecto creadas para:", uid);
+  } catch (err) {
+    console.error("Error creando categorías por defecto:", err);
+    // No lanzamos el error — el registro sigue aunque falle esto
+  }
 }
 
 // ── Registro ──────────────────────────────────────────────
