@@ -628,7 +628,26 @@
         if (val > 0) categoriesData[inp.dataset.cat] = val;
       });
 
-      // legacy removed
+      // Recoger ingresos (nueva estructura array)
+      const incomeCards = document.querySelectorAll("#income-form .income-card");
+      const incomeData  = [];
+      incomeCards.forEach(card => {
+        const name         = card.querySelector(".income-name-input")?.value.trim();
+        const amount       = Number(card.querySelector(".income-amount-input")?.value) || 0;
+        const type         = card.querySelector(".income-type-select")?.value || "fijo";
+        const proportional = card.querySelector(".toggle-switch")?.classList.contains("on") || false;
+        const qty          = Number(card.querySelector("[data-field='qty']")?.value) || 0;
+        const unitValue    = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
+        const daysInMonth  = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
+        if (name && amount > 0) {
+          incomeData.push({
+            name, amount, type, proportional,
+            dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0,
+            qty:        qty || null,
+            unitValue:  unitValue || null
+          });
+        }
+      });
 
       if (!Object.keys(categoriesData).length && !incomeData.length) {
         showToast("Ingresa al menos un valor para guardar.", "error"); return;
