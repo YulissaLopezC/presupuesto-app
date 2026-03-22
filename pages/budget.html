@@ -352,15 +352,6 @@
       }
     });
 
-    document.getElementById("income-form").addEventListener("input", () => updateSummary());
-
-    document.getElementById("income-form").addEventListener("click", e => {
-      if (e.target.classList.contains("btn-danger")) {
-        e.target.closest(".income-row").remove();
-        updateSummary();
-      }
-    });
-
     // Tabs
     document.getElementById("tab-gastos").addEventListener("click",   () => switchTab("gastos"));
     document.getElementById("tab-ingresos").addEventListener("click", () => switchTab("ingresos"));
@@ -461,7 +452,7 @@
         ? savedIncome
         : Object.entries(savedIncome).map(([name, amount]) => ({ name, amount, type: "fijo", proportional: false }));
       container.innerHTML = entries.map((inc, i) => incomeCardHTML(inc, i)).join("");
-      bindIncomeCardEvents();
+      if (entries.length) bindIncomeCardEvents();
     }
 
     function incomeCardHTML(inc = {}, idx = Date.now()) {
@@ -527,24 +518,27 @@
     }
 
     function bindIncomeCardEvents() {
+      // Usamos delegación en el contenedor padre para evitar duplicados
+      // Primero removemos listeners viejos clonando el nodo
       const container = document.getElementById("income-form");
+      const fresh = container.cloneNode(true);
+      container.parentNode.replaceChild(fresh, container);
+      const cont = document.getElementById("income-form");
 
-      container.addEventListener("input", e => {
+      cont.addEventListener("input", e => {
         const card = e.target.closest(".income-card");
         if (!card) return;
         const field = e.target.dataset.field;
         if (field === "qty" || field === "unitValue") {
-          // Auto-calcular total
-          const qty      = Number(card.querySelector("[data-field='qty']")?.value) || 0;
-          const unitVal  = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
-          const total    = qty * unitVal;
+          const qty     = Number(card.querySelector("[data-field='qty']")?.value) || 0;
+          const unitVal = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
+          const total   = qty * unitVal;
           const resultEl = card.querySelector("[id$='-result']");
           if (resultEl) {
             resultEl.textContent = total > 0
               ? "= " + new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",minimumFractionDigits:0}).format(total)
               : "";
           }
-          // Actualizar el campo de monto con el total
           if (total > 0) {
             const amountInput = card.querySelector(".income-amount-input");
             if (amountInput) amountInput.value = total;
@@ -553,24 +547,28 @@
         updateSummary();
       });
 
-      container.addEventListener("click", e => {
+      cont.addEventListener("click", e => {
         const card = e.target.closest(".income-card");
         if (!card) return;
 
-        // Toggle proporcional
-        if (e.target.dataset.field === "proportional") {
-          e.target.classList.toggle("on");
+        // Toggle proporcional — el botón puede tener ::after, usar closest
+        const toggleBtn = e.target.closest(".toggle-switch");
+        if (toggleBtn) {
+          toggleBtn.classList.toggle("on");
+          return;
         }
 
         // Toggle form avanzado
-        if (e.target.dataset.action === "toggle-advanced") {
+        if (e.target.closest("[data-action='toggle-advanced']")) {
+          const btn     = e.target.closest("[data-action='toggle-advanced']");
           const advForm = card.querySelector(".advanced-form");
           const isOpen  = advForm.classList.toggle("open");
-          e.target.textContent = isOpen ? "Ocultar form avanzado" : "Form avanzado (cantidad × valor)";
+          btn.textContent = isOpen ? "Ocultar form avanzado" : "Form avanzado (cantidad × valor)";
+          return;
         }
 
-        // Eliminar fila
-        if (e.target.classList.contains("btn-danger")) {
+        // Eliminar card
+        if (e.target.closest(".btn-danger")) {
           card.remove();
           updateSummary();
         }
@@ -583,7 +581,9 @@
       div.innerHTML = incomeCardHTML({}, Date.now());
       container.appendChild(div.firstElementChild);
       bindIncomeCardEvents();
-      container.lastElementChild.querySelector(".income-name-input").focus();
+      // Focus en el último nombre
+      const cards = container.querySelectorAll(".income-card");
+      if (cards.length) cards[cards.length-1].querySelector(".income-name-input")?.focus();
     }
 
     // ── Totales en tiempo real ────────────────────────────
@@ -628,13 +628,7 @@
         if (val > 0) categoriesData[inp.dataset.cat] = val;
       });
 
-      const incomeRows = document.querySelectorAll("#income-form .income-row");
-      const incomeData = {};
-      incomeRows.forEach(row => {
-        const name   = row.querySelector(".income-name-input")?.value.trim();
-        const amount = Number(row.querySelector(".budget-input")?.value) || 0;
-        if (name && amount > 0) incomeData[name] = amount;
-      });
+      // legacy removed
 
       if (!Object.keys(categoriesData).length && !incomeData.length) {
         showToast("Ingresa al menos un valor para guardar.", "error"); return;
