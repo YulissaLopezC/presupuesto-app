@@ -257,8 +257,12 @@
   <script type="module">
     import { login, register, onAuthChange } from "../modules/auth.js";
 
+    // Flag para evitar redirección prematura durante el registro
+    let isRegistering = false;
+
     // Si ya hay sesión activa, ir directo al dashboard
     onAuthChange((user) => {
+      if (isRegistering) return; // esperar a que register() termine
       const BASE = window.location.pathname.replace(/\/pages\/.*$/, "");
       if (user) window.location.href = BASE + "/pages/dashboard.html";
     });
@@ -328,11 +332,16 @@
 
       btn.disabled = true;
       btn.textContent = "Creando cuenta...";
+      isRegistering = true;
 
       try {
         await register(email, pass1);
-        // onAuthChange redirige al dashboard
+        // Registro completo incluyendo categorías por defecto — ahora sí redirigir
+        isRegistering = false;
+        const BASE = window.location.pathname.replace(/\/pages\/.*$/, "");
+        window.location.href = BASE + "/pages/dashboard.html";
       } catch (err) {
+        isRegistering = false;
         btn.disabled = false;
         btn.textContent = "Crear cuenta";
         errEl.textContent = translateFirebaseError(err.code);
