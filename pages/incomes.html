@@ -180,8 +180,8 @@
       <label class="form-label">Fuente</label>
       <input type="text" class="form-input" id="field-source"
              placeholder="Ej: Guillo, Sociedad, Freelance..." maxlength="60"
-             list="sources-list"/>
-      <datalist id="sources-list"></datalist>
+             list="sources-datalist"/>
+      <datalist id="sources-datalist"></datalist>
     </div>
 
     <div class="form-group">
@@ -431,7 +431,7 @@
         ...incomes.map(i => i.source),
         ...normalizeIncome(budget?.income).map(i => i.name)
       ])];
-      document.getElementById("sources-list").innerHTML =
+      document.getElementById("sources-datalist").innerHTML =
         sources.map(s => `<option value="${s}">`).join("");
     }
 
