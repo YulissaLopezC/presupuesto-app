@@ -290,19 +290,25 @@
       }).join("");
     }
 
+      // Normalizar income a array [{name, amount, ...}]
+      function normalizeIncome(income) {
+        if (!income || typeof income !== "object") return [];
+        if (Array.isArray(income)) {
+          return income.filter(i => i && i.name && Number(i.amount) > 0);
+        }
+        return Object.entries(income)
+          .filter(([k, v]) => isNaN(Number(k)) && !["month","updatedAt"].includes(k))
+          .map(([name, val]) => {
+            if (typeof val === "object" && val !== null) return { name, ...val };
+            if (typeof val === "number") return { name, amount: val, type: "fijo", proportional: false };
+            return null;
+          })
+          .filter(i => i && Number(i.amount) > 0);
+      }
     // ── Resumen ───────────────────────────────────────────
     function renderSummary() {
       const totalReal     = incomes.reduce((s, i) => s + Number(i.amount), 0);
-      let incomeArr;
-      if (Array.isArray(budget?.income)) {
-        incomeArr = budget.income.filter(i => i && i.name && Number(i.amount) > 0);
-      } else if (typeof budget?.income === "object" && budget?.income !== null) {
-        incomeArr = Object.entries(budget.income)
-          .filter(([k, v]) => typeof v === "number" && isNaN(Number(k)))
-          .map(([name, amount]) => ({ name, amount }));
-      } else {
-        incomeArr = [];
-      }
+      const incomeArr  = normalizeIncome(budget?.income);
       const totalBudgeted = incomeArr.reduce((s, i) => s + Number(i.amount || 0), 0);
       document.getElementById("sum-real").textContent     = formatCOP(totalReal);
       document.getElementById("sum-budgeted").textContent = formatCOP(totalBudgeted);
@@ -376,7 +382,7 @@
     function populateSourcesSuggestions() {
       const sources = [...new Set([
         ...incomes.map(i => i.source),
-        ...Object.keys(budget?.income || {})
+        ...normalizeIncome(budget?.income).map(i => i.name)
       ])];
       document.getElementById("sources-list").innerHTML =
         sources.map(s => `<option value="${s}">`).join("");

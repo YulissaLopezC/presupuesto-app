@@ -277,9 +277,16 @@ export async function deleteGoal(uid, goalId) {
 
 export async function syncProportionalIncomes(uid, month) {
   const budget = await getBudget(uid, month);
-  if (!budget?.income || !Array.isArray(budget.income)) return [];
+  if (!budget?.income || typeof budget.income !== "object") return [];
 
-  const proportionals = budget.income.filter(i => i.proportional && i.amount > 0);
+  // Normalizar income — objeto {name: {amount, proportional, ...}}
+  const incomeEntries = Array.isArray(budget.income)
+    ? budget.income.filter(i => i?.name)
+    : Object.entries(budget.income)
+        .filter(([k, v]) => isNaN(Number(k)) && typeof v === "object" && v !== null)
+        .map(([name, val]) => ({ name, ...val }));
+
+  const proportionals = incomeEntries.filter(i => i.proportional && Number(i.amount) > 0);
   if (!proportionals.length) return [];
 
   // Días transcurridos del mes hasta hoy
@@ -354,7 +361,7 @@ export async function syncProportionalIncomes(uid, month) {
 // Obtener solo los ingresos proporcionales del presupuesto de un mes
 export async function getProportionalSummary(uid, month) {
   const budget = await getBudget(uid, month);
-  if (!budget?.income || !Array.isArray(budget.income)) return [];
+  if (!budget?.income || typeof budget.income !== "object") return [];
 
   const [y, m] = month.split("-").map(Number);
   const today   = new Date();
@@ -367,8 +374,15 @@ export async function getProportionalSummary(uid, month) {
   else if (today > lastDay)  daysPassed = daysInMonth;
   else                       daysPassed = today.getDate();
 
-  return budget.income
-    .filter(i => i.proportional && i.amount > 0)
+  // Normalizar income para getProportionalSummary
+  const incomeEntries2 = Array.isArray(budget.income)
+    ? budget.income.filter(i => i?.name)
+    : Object.entries(budget.income)
+        .filter(([k, v]) => isNaN(Number(k)) && typeof v === "object" && v !== null)
+        .map(([name, val]) => ({ name, ...val }));
+
+  return incomeEntries2
+    .filter(i => i.proportional && Number(i.amount) > 0)
     .map(i => ({
       name:          i.name,
       type:          i.type,

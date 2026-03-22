@@ -446,19 +446,25 @@
     // ── Panel Ingresos ────────────────────────────────────
     function renderIncomeForm() {
       const container   = document.getElementById("income-form");
-      const savedIncome = currentBudget?.income || [];
+      const savedIncome = currentBudget?.income || {};
 
-      // Soporte legado: si income era objeto {name: amount}, convertir a array
-      // Filtrar solo entradas donde el valor sea un número (ignorar campos de Firestore)
-      let entries;
-      if (Array.isArray(savedIncome)) {
-        entries = savedIncome;
-      } else if (typeof savedIncome === "object" && savedIncome !== null) {
+      // Normalizar a array de objetos {name, amount, type, proportional, ...}
+      let entries = [];
+      if (typeof savedIncome === "object" && savedIncome !== null && !Array.isArray(savedIncome)) {
         entries = Object.entries(savedIncome)
-          .filter(([key, val]) => typeof val === "number" && !["month","updatedAt"].includes(key))
-          .map(([name, amount]) => ({ name, amount, type: "fijo", proportional: false }));
-      } else {
-        entries = [];
+          .filter(([key, val]) => !["month","updatedAt"].includes(key) && isNaN(Number(key)))
+          .map(([name, val]) => {
+            // Formato nuevo: {amount, type, proportional, ...}
+            if (typeof val === "object" && val !== null) {
+              return { name, ...val };
+            }
+            // Formato muy antiguo: {name: amount_number}
+            if (typeof val === "number") {
+              return { name, amount: val, type: "fijo", proportional: false };
+            }
+            return null;
+          })
+          .filter(Boolean);
       }
 
       container.innerHTML = entries.map((inc, i) => incomeCardHTML(inc, i)).join("");
@@ -638,9 +644,9 @@
         if (val > 0) categoriesData[inp.dataset.cat] = val;
       });
 
-      // Recoger ingresos (nueva estructura array)
+      // Recoger ingresos — objeto keyed por nombre (Firestore no soporta arrays de objetos)
       const incomeCards = document.querySelectorAll("#income-form .income-card");
-      const incomeData  = [];
+      const incomeData  = {};
       incomeCards.forEach(card => {
         const name         = card.querySelector(".income-name-input")?.value.trim();
         const amount       = Number(card.querySelector(".income-amount-input")?.value) || 0;
@@ -650,15 +656,15 @@
         const unitValue    = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
         const daysInMonth  = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
         if (name && amount > 0) {
-          const entry = { name, amount, type, proportional,
+          const entry = { amount, type, proportional,
             dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
           if (qty > 0)       entry.qty       = qty;
           if (unitValue > 0) entry.unitValue = unitValue;
-          incomeData.push(entry);
+          incomeData[name] = entry;
         }
       });
 
-      if (!Object.keys(categoriesData).length && !incomeData.length) {
+      if (!Object.keys(categoriesData).length && !Object.keys(incomeData).length) {
         showToast("Ingresa al menos un valor para guardar.", "error"); return;
       }
 
@@ -669,7 +675,7 @@
         showToast("Presupuesto guardado.", "success");
         document.getElementById("copy-banner").style.display = "none";
         // Sincronizar ingresos proporcionales
-        if (incomeData.some(i => i.proportional)) {
+        if (Object.values(incomeData).some(i => i.proportional)) {
           await syncProportionalIncomes(uid, selectedMonth);
         }
       } catch (err) {
