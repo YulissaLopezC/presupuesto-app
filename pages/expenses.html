@@ -380,7 +380,7 @@
     function populateWalletSelect() {
       const sel = document.getElementById("field-wallet");
       sel.innerHTML = `<option value="">Sin cajita asignada</option>` +
-        wallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon || "🏦"} ${w.name}</option>`).join("");
+        wallets.map(w => `<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon || "🏦"} ${w.name}</option>`).join("");
     }
 
     // ── Populate select de categorías ─────────────────────
@@ -446,6 +446,7 @@
       const walletId    = document.getElementById("field-wallet").value;
       const walletOpt   = document.querySelector(`#field-wallet option[value="${walletId}"]`);
       const walletName  = walletOpt?.dataset.name || "";
+      const walletType  = walletOpt?.dataset.type || "ahorro";
       const description = document.getElementById("field-description").value.trim();
       const btn         = document.getElementById("btn-save");
 
@@ -458,7 +459,7 @@
       btn.textContent = "Guardando...";
 
       try {
-        const data = { date, category, amount, description, walletId, walletName };
+        const data = { date, category, amount, description, walletId, walletName, walletType };
         if (editingId) {
           const old = allExpenses.find(x => x.id === editingId);
           await updateExpense(uid, editingId, old, data);

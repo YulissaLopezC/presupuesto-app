@@ -38,16 +38,16 @@ function userDoc(uid, colName, docId) {
 export async function addExpense(uid, data) {
   const expenseRef = doc(userCol(uid, "expenses"));
   const walletRef  = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+  const amount     = Number(data.amount);
+  // walletType debe venir en data desde el frontend
+  const isCredit   = data.walletType === "credito";
+  // Crédito: gasto SUBE saldo (más deuda) → +amount
+  // Ahorro/efectivo: gasto BAJA saldo → -amount
+  const delta      = isCredit ? amount : -amount;
 
   await runTransaction(db, async (tx) => {
-    tx.set(expenseRef, {
-      ...data,
-      amount: Number(data.amount),
-      createdAt: serverTimestamp()
-    });
-    if (walletRef) {
-      tx.update(walletRef, { balance: increment(-Number(data.amount)) });
-    }
+    tx.set(expenseRef, { ...data, amount, createdAt: serverTimestamp() });
+    if (walletRef) tx.update(walletRef, { balance: increment(delta) });
   });
   return expenseRef;
 }
@@ -68,19 +68,19 @@ export async function getExpenses(uid, filters = {}) {
 }
 
 export async function updateExpense(uid, expenseId, oldData, newData) {
-  // Revierte el efecto del gasto viejo en la cajita y aplica el nuevo
   await runTransaction(db, async (tx) => {
     const expRef = userDoc(uid, "expenses", expenseId);
-
-    // Revertir cajita anterior si existía
+    // Revertir cajita anterior (operación inversa)
     if (oldData.walletId) {
-      const oldWalletRef = userDoc(uid, "wallets", oldData.walletId);
-      tx.update(oldWalletRef, { balance: increment(Number(oldData.amount)) });
+      const oldIsCredit = oldData.walletType === "credito";
+      tx.update(userDoc(uid, "wallets", oldData.walletId),
+        { balance: increment(oldIsCredit ? -Number(oldData.amount) : Number(oldData.amount)) });
     }
     // Aplicar cajita nueva
     if (newData.walletId) {
-      const newWalletRef = userDoc(uid, "wallets", newData.walletId);
-      tx.update(newWalletRef, { balance: increment(-Number(newData.amount)) });
+      const newIsCredit = newData.walletType === "credito";
+      tx.update(userDoc(uid, "wallets", newData.walletId),
+        { balance: increment(newIsCredit ? Number(newData.amount) : -Number(newData.amount)) });
     }
     tx.update(expRef, { ...newData, amount: Number(newData.amount) });
   });
@@ -89,10 +89,11 @@ export async function updateExpense(uid, expenseId, oldData, newData) {
 export async function deleteExpense(uid, expenseId, expenseData) {
   await runTransaction(db, async (tx) => {
     const expRef = userDoc(uid, "expenses", expenseId);
-    // Revertir el descuento en la cajita
     if (expenseData?.walletId) {
-      const walletRef = userDoc(uid, "wallets", expenseData.walletId);
-      tx.update(walletRef, { balance: increment(Number(expenseData.amount)) });
+      const isCredit = expenseData.walletType === "credito";
+      // Revertir = operación inversa al gasto original
+      tx.update(userDoc(uid, "wallets", expenseData.walletId),
+        { balance: increment(isCredit ? -Number(expenseData.amount) : Number(expenseData.amount)) });
     }
     tx.delete(expRef);
   });
