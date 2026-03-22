@@ -232,8 +232,12 @@ export async function addTransfer(uid, data) {
     // Para crédito origen: el pago reduce la deuda (balance baja)
     // Para crédito destino: la transferencia aumenta la deuda (balance sube)
     // Para ahorro/efectivo: balance normal
-    const fromDelta = fromWallet.type === "credito" ? -amount : -amount;
-    const toDelta   = toWallet.type   === "credito" ?  amount :  amount;
+    // Crédito origen (ej. usar tarjeta para transferir): saldo sube (más deuda)
+    // Ahorro/efectivo origen: saldo baja
+    const fromDelta = fromWallet.type === "credito" ? amount : -amount;
+    // Crédito destino (ej. pagar tarjeta): saldo baja (menos deuda)
+    // Ahorro/efectivo destino: saldo sube
+    const toDelta   = toWallet.type   === "credito" ? -amount : amount;
 
     tx.update(fromRef, { balance: increment(fromDelta) });
     tx.update(toRef,   { balance: increment(toDelta) });
