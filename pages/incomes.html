@@ -113,45 +113,36 @@
     }
     .amount-wrapper .form-input { padding-left: 26px; }
 
-    /* ── Card por fuente ────────────────────────────────── */
-    .source-card {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px; margin-bottom: 10px;
+    /* ── Lista por fuente (estilo registro) ─────────────── */
+    .source-item {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      padding: 13px 0; border-bottom: 1px solid var(--border);
     }
-    .source-card-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 12px;
+    .source-item:last-child { border-bottom: none; }
+    .source-left { flex: 1; min-width: 0; }
+    .source-name { font-size: 14px; color: var(--text); }
+    .source-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .source-prop-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .source-prop-note span { color: var(--info); font-weight: 500; }
+    .source-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
+    .source-received {
+      font-family: "DM Serif Display", serif;
+      font-size: 16px; letter-spacing: -0.3px; color: var(--info);
     }
-    .source-name { font-size: 15px; color: var(--text); font-weight: 400; }
+    .source-budgeted { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .source-diff { font-size: 11px; margin-top: 1px; }
+    .source-diff.pos { color: var(--accent); }
+    .source-diff.neg { color: var(--danger); }
+    .source-diff.ok  { color: var(--muted); }
     .source-type-badge {
-      font-size: 10px; font-weight: 500; padding: 2px 8px;
-      border-radius: 99px; flex-shrink: 0;
+      font-size: 10px; font-weight: 500; padding: 1px 6px;
+      border-radius: 99px; margin-left: 6px; vertical-align: middle;
     }
     .source-type-badge.fijo           { background: rgba(74,127,181,0.12); color: var(--info); }
-    .source-type-badge.no_operacional { background: rgba(201,124,46,0.12); color: var(--warning); }
+    .source-type-badge.no_operacional { background: rgba(201,124,46,0.12);  color: var(--warning); }
     .source-type-badge.extraordinario { background: rgba(212,96,138,0.10); color: var(--accent); }
     .source-type-badge.prop           { background: rgba(74,127,181,0.12); color: var(--info); }
-    .source-amounts {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px; margin-bottom: 10px;
-    }
-    .source-col-label {
-      font-size: 10px; font-weight: 500; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;
-    }
-    .source-col-val {
-      font-family: "DM Serif Display", serif; font-size: 15px; letter-spacing: -0.3px;
-    }
-    .source-col-val.budgeted { color: var(--text); }
-    .source-col-val.received { color: var(--info); }
-    .source-col-val.diff-pos { color: var(--accent); }
-    .source-col-val.diff-neg { color: var(--danger); }
-    .source-col-val.diff-ok  { color: var(--muted); }
-    .source-prop-note {
-      font-size: 11px; color: var(--muted);
-      margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
-    }
-    .source-prop-note span { color: var(--info); font-weight: 500; }
   </style>
 </head>
 <body>
@@ -187,8 +178,12 @@
 
     <!-- Por fuente de ingreso -->
     <div id="sources-section" style="display:none;">
-      <h3 style="margin-bottom:12px;">Por fuente de ingreso</h3>
-      <div id="sources-list"></div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <h3>Por fuente de ingreso</h3>
+        </div>
+        <div id="sources-list"></div>
+      </div>
     </div>
 
     <!-- Lista de ingresos registrados -->
@@ -387,52 +382,51 @@
       ].join("");
     }
 
-    function sourceCardHTML(inc, received, prop) {
-      const budgeted  = Number(inc.amount || 0);
-      const diff      = received - budgeted;
-      const pct       = budgeted > 0 ? Math.min(received / budgeted, 1) : 0;
-      const barCls    = pct >= 1 ? "" : pct >= 0.8 ? "warn" : "";
-      const barColor  = pct >= 1 ? "var(--accent)" : "var(--info)";
+    function sourceCardHTML(inc, receivedManual, prop) {
+      const budgeted = Number(inc.amount || 0);
 
+      // Para proporcionales: "recibido" = devengado hasta hoy
+      // Para normales: "recibido" = suma de ingresos reales registrados
+      const received  = inc.proportional && prop ? prop.accruedAmount : receivedManual;
+
+      const diff      = received - budgeted;
       const diffVal   = Math.abs(diff);
-      const diffCls   = diff > 0 ? "diff-pos" : diff < 0 ? "diff-neg" : "diff-ok";
-      const diffLabel = diff > 0 ? `+${formatCOP(diffVal)} extra` : diff < 0 ? `-${formatCOP(diffVal)} pendiente` : "Completo ✓";
+      const diffCls   = diff > 0 ? "pos" : diff < 0 ? "neg" : "ok";
+      const diffLabel = diff > 0 ? `+${formatCOP(diffVal)} extra`
+                      : diff < 0 ? `-${formatCOP(diffVal)} pendiente`
+                      : "Completo ✓";
 
       const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
       const typeLabel  = inc.proportional
         ? (typeLabels[inc.type] || inc.type) + " · Proporcional"
         : (typeLabels[inc.type] || inc.type);
 
+      const propNote = prop
+        ? `<div class="source-prop-note">
+             Devengado: <span>${formatCOP(prop.accruedAmount)}</span>
+             · ${prop.daysPassed}/${prop.daysInMonth} días
+             · <span>${formatCOP(prop.dailyAmount)}/día</span>
+           </div>`
+        : "";
+
+      const subLine = inc.proportional ? "" :
+        receivedManual > 0 ? `<div class="source-sub">Registrado manualmente</div>` : "";
+
       return `
-        <div class="source-card">
-          <div class="source-card-header">
-            <span class="source-name">${inc.name}</span>
-            <span class="source-type-badge ${inc.proportional ? "prop" : inc.type}">${typeLabel}</span>
+        <div class="source-item">
+          <div class="source-left">
+            <div class="source-name">
+              ${inc.name}
+              <span class="source-type-badge ${inc.proportional ? "prop" : inc.type}">${typeLabel}</span>
+            </div>
+            ${subLine}
+            ${propNote}
           </div>
-          <div class="source-amounts">
-            <div class="source-col">
-              <div class="source-col-label">Presupuestado</div>
-              <div class="source-col-val budgeted">${budgeted > 0 ? formatCOP(budgeted) : "—"}</div>
-            </div>
-            <div class="source-col">
-              <div class="source-col-label">Recibido</div>
-              <div class="source-col-val received">${formatCOP(received)}</div>
-            </div>
-            <div class="source-col">
-              <div class="source-col-label">Diferencia</div>
-              <div class="source-col-val ${diffCls}">${budgeted > 0 ? diffLabel : "—"}</div>
-            </div>
+          <div class="source-right">
+            <div class="source-received">${formatCOP(received)}</div>
+            ${budgeted > 0 ? `<div class="source-budgeted">de ${formatCOP(budgeted)}</div>` : ""}
+            ${budgeted > 0 ? `<div class="source-diff ${diffCls}">${diffLabel}</div>` : ""}
           </div>
-          ${budgeted > 0 ? `
-            <div class="progress-bar">
-              <div class="progress-fill ${barCls}" style="width:${pct*100}%;background:${barColor};"></div>
-            </div>` : ""}
-          ${prop ? `
-            <div class="source-prop-note">
-              Devengado hoy: <span>${formatCOP(prop.accruedAmount)}</span>
-              · ${prop.daysPassed} de ${prop.daysInMonth} días
-              · <span>${formatCOP(prop.dailyAmount)}/día</span>
-            </div>` : ""}
         </div>`;
     }
 
