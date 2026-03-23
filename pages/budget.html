@@ -895,6 +895,13 @@
         }
       });
 
+      // Recoger metadata proporcional de categorías
+      const categoryMeta = {};
+      document.querySelectorAll("[data-field='prop-toggle']").forEach(btn => {
+        const catName = btn.dataset.catName;
+        if (catName) categoryMeta[catName] = { proportional: btn.classList.contains("on") };
+      });
+
       if (!Object.keys(categoriesData).length && !Object.keys(incomeData).length) {
         showToast("Ingresa al menos un valor para guardar.", "error"); return;
       }
