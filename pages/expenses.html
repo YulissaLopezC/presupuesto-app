@@ -231,6 +231,14 @@
         <option value="">Sin cajita asignada</option>
       </select>
     </div>
+    <!-- Solo visible para categorías de ahorro/inversión -->
+    <div class="form-group" id="savings-wallet-group" style="display:none;">
+      <label class="form-label">¿A cuál cajita de ahorro va? <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
+      <select class="form-select" id="field-savings-wallet">
+        <option value="">Sin cajita destino</option>
+      </select>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Descripción <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
       <input type="text" class="form-input" id="field-description" placeholder="Nota adicional..." maxlength="120"/>
@@ -269,6 +277,7 @@
     [categories, wallets] = await Promise.all([getCategories(uid), getWallets(uid)]);
     populateCategorySelect();
     populateWalletSelect();
+    populateSavingsWalletSelect();
     await loadAll();
 
     // ── Tabs ──────────────────────────────────────────────
@@ -381,6 +390,7 @@
                 <div class="item-cat">${e.category}</div>
                 ${e.description  ? `<div class="item-desc">${e.description}</div>`   : ""}
                 ${e.walletName   ? `<div class="item-wallet">← ${e.walletName}</div>` : ""}
+                ${e.toWalletName ? `<div class="item-wallet" style="color:var(--info);">→ ${e.toWalletName}</div>` : ""}
               </div>
               <div class="item-right">
                 <div class="item-amount-expense">${formatCOP(e.amount)}</div>
@@ -516,9 +526,11 @@
       document.getElementById("field-source").value              = "";
       document.getElementById("field-amount").value              = "";
       document.getElementById("field-wallet").value              = "";
+      document.getElementById("field-savings-wallet").value      = "";
       document.getElementById("field-description").value         = "";
       document.getElementById("expense-category-group").style.display = isGastos ? "block" : "none";
       document.getElementById("income-source-group").style.display    = isGastos ? "none"  : "block";
+      document.getElementById("savings-wallet-group").style.display   = "none";
       document.getElementById("wallet-label").textContent        = isGastos ? "¿De cuál cajita salió?" : "¿A cuál cajita entró?";
       populateSourcesSuggestions();
       openDrawer();
@@ -528,18 +540,31 @@
       const e = allExpenses.find(x => x.id === id);
       if (!e) return;
       editingId = id;
+      const cat      = categories.find(c => c.name === e.category);
+      const isSavings = cat?.type === "AHORRO O INVERSIÓN";
       document.getElementById("drawer-title").textContent        = "Editar gasto";
       document.getElementById("btn-save").textContent            = "Actualizar gasto";
       document.getElementById("field-date").value                = e.date;
       document.getElementById("field-category").value            = e.category;
       document.getElementById("field-amount").value              = e.amount;
       document.getElementById("field-wallet").value              = e.walletId || "";
+      document.getElementById("field-savings-wallet").value      = e.toWalletId || "";
       document.getElementById("field-description").value         = e.description || "";
       document.getElementById("expense-category-group").style.display = "block";
       document.getElementById("income-source-group").style.display    = "none";
+      document.getElementById("savings-wallet-group").style.display   = isSavings ? "block" : "none";
       document.getElementById("wallet-label").textContent        = "¿De cuál cajita salió?";
       openDrawer();
     }
+
+    // Detectar si la categoría es de ahorro/inversión
+    document.getElementById("field-category").addEventListener("change", e => {
+      const catName  = e.target.value;
+      const cat      = categories.find(c => c.name === catName);
+      const isSavings = cat?.type === "AHORRO O INVERSIÓN";
+      document.getElementById("savings-wallet-group").style.display = isSavings ? "block" : "none";
+      if (!isSavings) document.getElementById("field-savings-wallet").value = "";
+    });
 
     function openDrawer() {
       document.getElementById("drawer-overlay").classList.add("open");
@@ -568,9 +593,12 @@
 
       try {
         if (isGastos) {
-          const category = document.getElementById("field-category").value;
+          const category      = document.getElementById("field-category").value;
+          const toWalletId    = document.getElementById("field-savings-wallet").value;
+          const toWalletOpt   = document.querySelector(`#field-savings-wallet option[value="${toWalletId}"]`);
+          const toWalletName  = toWalletOpt?.dataset.name || "";
           if (!category) { showToast("Selecciona una categoría.", "error"); btn.disabled = false; btn.textContent = editingId ? "Actualizar gasto" : "Guardar gasto"; return; }
-          const data = { date, category, amount, description: desc, walletId, walletName, walletType };
+          const data = { date, category, amount, description: desc, walletId, walletName, walletType, toWalletId, toWalletName };
           if (editingId) {
             const old = allExpenses.find(x => x.id === editingId);
             await updateExpense(uid, editingId, old, data);
@@ -635,6 +663,13 @@
       const sel = document.getElementById("field-wallet");
       sel.innerHTML = `<option value="">Sin cajita asignada</option>` +
         wallets.map(w => `<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||"🏦"} ${w.name}</option>`).join("");
+    }
+
+    function populateSavingsWalletSelect() {
+      const sel = document.getElementById("field-savings-wallet");
+      const savingsWallets = wallets.filter(w => w.type === "ahorro");
+      sel.innerHTML = `<option value="">Sin cajita destino</option>` +
+        savingsWallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon||"🏦"} ${w.name} · ${formatCOP(w.balance||0)}</option>`).join("");
     }
 
     function populateSourcesSuggestions() {

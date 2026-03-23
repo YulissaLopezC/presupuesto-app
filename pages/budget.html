@@ -362,7 +362,7 @@
 
   <script type="module">
     import { requireAuth }   from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, syncProportionalIncomes } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, renameCategoryInExpenses, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatMonth, lastMonths } from "../assets/utils.js";
 
@@ -478,35 +478,40 @@
     document.getElementById("categories-form").addEventListener("blur", async e => {
       const nameInput = e.target.closest(".budget-name-input");
       if (!nameInput) return;
-      const catId       = nameInput.dataset.catId;
-      const originalName= nameInput.dataset.originalName;
-      const newName     = nameInput.value.trim();
+      const catId        = nameInput.dataset.catId;
+      const originalName = nameInput.dataset.originalName;
+      const newName      = nameInput.value.trim();
       if (!newName || newName === originalName) {
-        nameInput.value = originalName; // revert if empty
+        nameInput.value = originalName;
         return;
       }
-      // Check duplicate
+      // Verificar duplicado
       if (categories.find(c => c.name.toLowerCase() === newName.toLowerCase() && c.id !== catId)) {
         showToast("Ya existe una categoría con ese nombre.", "error");
         nameInput.value = originalName;
         return;
       }
       try {
-        await updateCategory(uid, catId, { name: newName, type: categories.find(c => c.id === catId)?.type });
-        // Update data-cat in budget input and data-original-name
+        const cat = categories.find(c => c.id === catId);
+        // 1. Actualizar categoría en Firestore
+        await updateCategory(uid, catId, { name: newName, type: cat?.type });
+        // 2. Renombrar en gastos del mes actual
+        const count = await renameCategoryInExpenses(uid, selectedMonth, originalName, newName);
+        // 3. Actualizar referencias locales
         const row = nameInput.closest(".budget-row");
         const budgetInput = row?.querySelector(".budget-input");
         if (budgetInput) budgetInput.dataset.cat = newName;
         nameInput.dataset.originalName = newName;
-        // Update local categories array
-        const cat = categories.find(c => c.id === catId);
         if (cat) cat.name = newName;
-        showToast(`Renombrada a "${newName}".`, "success");
+        const msg = count > 0
+          ? `Renombrada a "${newName}" · ${count} gasto${count !== 1 ? "s" : ""} actualizado${count !== 1 ? "s" : ""}.`
+          : `Renombrada a "${newName}".`;
+        showToast(msg, "success");
       } catch (err) {
         showToast("Error al renombrar.", "error");
         nameInput.value = originalName;
       }
-    }, true); // use capture for blur
+    }, true);
 
     // Enter en el input inline guarda la categoría
     document.getElementById("categories-form").addEventListener("keydown", e => {

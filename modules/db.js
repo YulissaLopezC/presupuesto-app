@@ -16,7 +16,7 @@ import {
   addDoc, setDoc, updateDoc, deleteDoc,
   getDocs, getDoc,
   query, where, orderBy,
-  serverTimestamp, increment, runTransaction
+  serverTimestamp, increment, runTransaction, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { db } from "../firebase-config.js";
@@ -36,18 +36,19 @@ function userDoc(uid, colName, docId) {
 // Al agregar un gasto, descuenta el monto de la cajita en una transacción atómica
 
 export async function addExpense(uid, data) {
-  const expenseRef = doc(userCol(uid, "expenses"));
-  const walletRef  = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
-  const amount     = Number(data.amount);
-  // walletType debe venir en data desde el frontend
-  const isCredit   = data.walletType === "credito";
-  // Crédito: gasto SUBE saldo (más deuda) → +amount
-  // Ahorro/efectivo: gasto BAJA saldo → -amount
-  const delta      = isCredit ? amount : -amount;
+  const expenseRef  = doc(userCol(uid, "expenses"));
+  const walletRef   = data.walletId   ? userDoc(uid, "wallets", data.walletId)   : null;
+  const savingsRef  = data.toWalletId ? userDoc(uid, "wallets", data.toWalletId) : null;
+  const amount      = Number(data.amount);
+  const isCredit    = data.walletType === "credito";
+  const delta       = isCredit ? amount : -amount;
 
   await runTransaction(db, async (tx) => {
     tx.set(expenseRef, { ...data, amount, createdAt: serverTimestamp() });
+    // Descontar de cajita origen
     if (walletRef) tx.update(walletRef, { balance: increment(delta) });
+    // Sumar a cajita de ahorro destino (si se seleccionó)
+    if (savingsRef) tx.update(savingsRef, { balance: increment(amount) });
   });
   return expenseRef;
 }
@@ -491,4 +492,20 @@ export async function getProportionalSummary(uid, month) {
       accruedAmount: Math.round((i.amount / daysInMonth) * daysPassed),
       pct:           daysPassed / daysInMonth
     }));
+}
+
+// ── Renombrar categoría en gastos del mes ─────────────────
+export async function renameCategoryInExpenses(uid, month, oldName, newName) {
+  const q    = query(
+    userCol(uid, "expenses"),
+    where("date", ">=", month + "-01"),
+    where("date", "<=", month + "-31"),
+    where("category", "==", oldName)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return 0;
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => batch.update(d.ref, { category: newName }));
+  await batch.commit();
+  return snap.docs.length;
 }
