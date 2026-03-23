@@ -70,10 +70,12 @@
       display: flex; align-items: center;
       background: var(--surface2); border: 1px solid var(--border);
       border-radius: 10px; padding: 10px 12px;
-      margin-bottom: 6px; gap: 12px;
+      margin-bottom: 6px; gap: 8px;
       transition: border-color 0.15s;
     }
     .budget-row:focus-within { border-color: var(--border2); }
+    .budget-name-input:focus { color: var(--accent); }
+    .budget-name-input:hover { color: var(--text); }
 
     .budget-row-name {
       flex: 1; font-size: 14px; color: var(--text);
@@ -360,7 +362,7 @@
 
   <script type="module">
     import { requireAuth }   from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, addCategory, syncProportionalIncomes } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatMonth, lastMonths } from "../assets/utils.js";
 
@@ -389,6 +391,24 @@
     });
 
     document.getElementById("categories-form").addEventListener("click", async e => {
+      // Botón eliminar categoría
+      const delBtn = e.target.closest(".btn-delete-cat");
+      if (delBtn) {
+        const catId   = delBtn.dataset.catId;
+        const catName = delBtn.dataset.catName;
+        if (!confirm(`¿Eliminar la categoría "${catName}"?\nLos gastos existentes con esta categoría no se borran.`)) return;
+        try {
+          await deleteCategory(uid, catId);
+          showToast(`"${catName}" eliminada.`, "success");
+          categories = await getCategories(uid);
+          renderCategoriesForm();
+          updateSummary();
+        } catch (err) {
+          showToast("Error al eliminar.", "error"); console.error(err);
+        }
+        return;
+      }
+
       // Botón "+ Agregar categoría"
       const addBtn = e.target.closest(".btn-add-cat");
       if (addBtn) {
@@ -453,6 +473,40 @@
         return;
       }
     });
+
+    // Renombrar categoría al salir del campo nombre
+    document.getElementById("categories-form").addEventListener("blur", async e => {
+      const nameInput = e.target.closest(".budget-name-input");
+      if (!nameInput) return;
+      const catId       = nameInput.dataset.catId;
+      const originalName= nameInput.dataset.originalName;
+      const newName     = nameInput.value.trim();
+      if (!newName || newName === originalName) {
+        nameInput.value = originalName; // revert if empty
+        return;
+      }
+      // Check duplicate
+      if (categories.find(c => c.name.toLowerCase() === newName.toLowerCase() && c.id !== catId)) {
+        showToast("Ya existe una categoría con ese nombre.", "error");
+        nameInput.value = originalName;
+        return;
+      }
+      try {
+        await updateCategory(uid, catId, { name: newName, type: categories.find(c => c.id === catId)?.type });
+        // Update data-cat in budget input and data-original-name
+        const row = nameInput.closest(".budget-row");
+        const budgetInput = row?.querySelector(".budget-input");
+        if (budgetInput) budgetInput.dataset.cat = newName;
+        nameInput.dataset.originalName = newName;
+        // Update local categories array
+        const cat = categories.find(c => c.id === catId);
+        if (cat) cat.name = newName;
+        showToast(`Renombrada a "${newName}".`, "success");
+      } catch (err) {
+        showToast("Error al renombrar.", "error");
+        nameInput.value = originalName;
+      }
+    }, true); // use capture for blur
 
     // Enter en el input inline guarda la categoría
     document.getElementById("categories-form").addEventListener("keydown", e => {
@@ -539,13 +593,19 @@
             </div>
             ${cats.map(cat => `
               <div class="budget-row">
-                <span class="budget-row-name">${cat.name}</span>
+                <input type="text" class="budget-name-input" 
+                  data-cat-id="${cat.id}" data-original-name="${cat.name}"
+                  value="${cat.name}" placeholder="Nombre..."
+                  style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;min-width:0;"/>
                 <div class="budget-input-wrap">
                   <span class="sym">$</span>
                   <input type="number" min="0" class="budget-input"
                     data-cat="${cat.name}" data-type-cls="${type.cls}"
                     value="${savedCats[cat.name] || ""}" placeholder="0"/>
                 </div>
+                <button class="btn-delete-cat" data-cat-id="${cat.id}" data-cat-name="${cat.name}"
+                  title="Eliminar" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:14px;padding:4px 6px;flex-shrink:0;transition:color 0.15s;"
+                  onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted2)'">✕</button>
               </div>`).join("")}
             <div class="inline-cat-container"></div>
             <button class="btn-add-cat" data-type-key="${type.key}" data-type-cls="${type.cls}">
