@@ -328,9 +328,11 @@
         renderTotalBanner("expense");
         populateCategoryFilters(categories.map(c => c.name), "");
         renderPropExpenses();
+        renderExpenses();
       } else {
         renderTotalBanner("income");
         populateCategoryFilters([...new Set(allIncomes.filter(i => !i.isProportional).map(i => i.source))], "income");
+        renderIncomes();
       }
     }
 
