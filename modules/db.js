@@ -515,3 +515,58 @@ export async function renameCategoryInExpenses(uid, month, oldName, newName) {
   await batch.commit();
   return snap.docs.length;
 }
+
+// ── GASTOS PROPORCIONALES (solo informativo, no escribe) ──
+//
+// Lee las categorías marcadas como proporcionales en el presupuesto
+// y calcula cuánto va devengado hasta hoy.
+// También cruza con los gastos reales registrados para mostrar el pendiente.
+
+export async function getProportionalExpensesSummary(uid, month, realExpenses = []) {
+  const budget = await getBudget(uid, month);
+  if (!budget?.categories) return [];
+
+  const [y, m]  = month.split("-").map(Number);
+  const today   = new Date();
+  const firstDay = new Date(y, m - 1, 1);
+  const lastDay  = new Date(y, m, 0);
+  const daysInMonth = lastDay.getDate();
+
+  let daysPassed;
+  if (today < firstDay)     daysPassed = 0;
+  else if (today > lastDay) daysPassed = daysInMonth;
+  else                      daysPassed = today.getDate();
+
+  // Necesitamos saber qué categorías tienen proportional=true
+  // Eso está en categories/{id} pero también en budget.categoryMeta
+  // Por simplicidad, lo guardamos en budget.categoryMeta: { "Transporte": { proportional: true } }
+  const meta = budget.categoryMeta || {};
+
+  return Object.entries(budget.categories)
+    .filter(([name]) => meta[name]?.proportional)
+    .map(([name, budgetedAmount]) => {
+      const amount      = Number(budgetedAmount || 0);
+      const dailyAmount = Math.round(amount / daysInMonth);
+      const accrued     = Math.round(dailyAmount * daysPassed);
+
+      // Sumar gastos reales de esta categoría en el mes
+      const realTotal = realExpenses
+        .filter(e => e.category === name)
+        .reduce((s, e) => s + Number(e.amount), 0);
+
+      const pending = Math.max(accrued - realTotal, 0);
+
+      return {
+        name,
+        amount,
+        dailyAmount,
+        daysPassed,
+        daysInMonth,
+        accrued,
+        realTotal,
+        pending,
+        pct: amount > 0 ? Math.min(accrued / amount, 1) : 0
+      };
+    })
+    .filter(s => s.amount > 0);
+}

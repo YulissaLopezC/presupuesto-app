@@ -111,6 +111,26 @@
     .dev-name   { font-size: 13px; color: var(--text); }
     .dev-days   { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
+    /* ── Devengado gastos ────────────────────────────────── */
+    .prop-exp-card {
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .prop-exp-card:last-child { border-bottom: none; }
+    .prop-exp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .prop-exp-name   { font-size: 14px; color: var(--text); }
+    .prop-exp-amount { font-family: "DM Serif Display", serif; font-size: 16px; color: var(--warning); }
+    .prop-exp-days   { font-size: 11px; color: var(--muted); margin-top: 4px; margin-bottom: 8px; }
+    .prop-exp-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .prop-exp-pending { font-size: 12px; color: var(--accent); font-weight: 500; }
+    .btn-register-prop {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 6px 12px;
+      font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-register-prop:hover { background: var(--accent2); }
+    .btn-register-prop:disabled { opacity: 0.5; cursor: default; }
+
     /* ── Amount wrapper ──────────────────────────────────── */
     .amount-wrapper { position: relative; }
     .amount-wrapper .sym { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none; }
@@ -163,6 +183,13 @@
 
     <!-- Panel Gastos -->
     <div id="panel-gastos">
+      <!-- Devengado gastos -->
+      <div id="prop-expenses-section" style="display:none;">
+        <div class="card" style="margin-bottom:14px;">
+          <h3 style="margin-bottom:10px;">Devengado del mes</h3>
+          <div id="prop-expenses-list"></div>
+        </div>
+      </div>
       <div id="expenses-list">
         <div class="skeleton" style="height:200px;border-radius:14px;"></div>
       </div>
@@ -252,13 +279,15 @@
       addExpense, getExpenses, updateExpense, deleteExpense,
       addIncome,  getIncomes,  updateIncome,  deleteIncome,
       getCategories, getWallets, getBudget,
-      syncProportionalIncomes, getProportionalSummary
+      syncProportionalIncomes, getProportionalSummary,
+      getProportionalExpensesSummary
     } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatDate, today } from "../assets/utils.js";
 
     let uid, selectedMonth;
     let allExpenses = [], allIncomes = [], categories = [], wallets = [], budget = null;
+    let propExpenses = [];
     let propSummary = [];
     let editingId = null, activeFilter = "", activeTab = "gastos";
 
@@ -298,6 +327,7 @@
       if (isGastos) {
         renderTotalBanner("expense");
         populateCategoryFilters(categories.map(c => c.name), "");
+        renderPropExpenses();
       } else {
         renderTotalBanner("income");
         populateCategoryFilters([...new Set(allIncomes.filter(i => !i.isProportional).map(i => i.source))], "income");
@@ -317,10 +347,12 @@
       allIncomes  = inc;
       budget      = bud;
       propSummary = prop;
+      propExpenses = await getProportionalExpensesSummary(uid, selectedMonth, allExpenses);
 
       if (activeTab === "gastos") {
         renderTotalBanner("expense");
         populateCategoryFilters(categories.map(c => c.name), "");
+        renderPropExpenses();
         renderExpenses();
       } else {
         renderTotalBanner("income");
@@ -371,6 +403,73 @@
     filtersEl.addEventListener("mouseleave", () => { isDragging = false; filtersEl.style.cursor = "grab"; });
     filtersEl.addEventListener("mouseup",    () => { isDragging = false; filtersEl.style.cursor = "grab"; });
     filtersEl.addEventListener("mousemove",  e => { if (!isDragging) return; e.preventDefault(); filtersEl.scrollLeft = scrollLeft - (e.pageX - filtersEl.offsetLeft - startX); });
+
+    // ── Render devengado gastos ───────────────────────────
+    function renderPropExpenses() {
+      const section = document.getElementById("prop-expenses-section");
+      const listEl  = document.getElementById("prop-expenses-list");
+      if (!propExpenses.length) { section.style.display = "none"; return; }
+      section.style.display = "block";
+
+      listEl.innerHTML = propExpenses.map(s => {
+        const pct    = Math.min(s.pct, 1);
+        const barCls = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
+        const noPending = s.pending <= 0;
+        return `
+          <div class="prop-exp-card">
+            <div class="prop-exp-header">
+              <span class="prop-exp-name">${s.name}</span>
+              <span class="prop-exp-amount">${formatCOP(s.accrued)}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill ${barCls}" style="width:${pct*100}%;"></div>
+            </div>
+            <div class="prop-exp-days">
+              ${s.daysPassed} de ${s.daysInMonth} días · ${formatCOP(s.dailyAmount)}/día · presupuesto ${formatCOP(s.amount)}
+            </div>
+            <div class="prop-exp-footer">
+              <span class="prop-exp-pending">
+                ${noPending
+                  ? `✓ Registrado completo`
+                  : `Pendiente de registrar: ${formatCOP(s.pending)}`}
+              </span>
+              <button class="btn-register-prop"
+                data-cat="${s.name}" data-amount="${s.pending}"
+                ${noPending ? "disabled" : ""}>
+                Registrar gasto
+              </button>
+            </div>
+          </div>`;
+      }).join("");
+
+      // Click en "Registrar gasto" → pre-llenar drawer
+      listEl.addEventListener("click", e => {
+        const btn = e.target.closest(".btn-register-prop");
+        if (!btn || btn.disabled) return;
+        const cat    = btn.dataset.cat;
+        const amount = btn.dataset.amount;
+        // Cambiar a tab gastos si no estamos ahí
+        if (activeTab !== "gastos") switchTab("gastos");
+        // Pre-llenar drawer
+        editingId = null;
+        document.getElementById("drawer-title").textContent        = "Registrar gasto";
+        document.getElementById("btn-save").textContent            = "Guardar gasto";
+        document.getElementById("field-date").value                = today();
+        document.getElementById("field-category").value            = cat;
+        document.getElementById("field-amount").value              = amount;
+        document.getElementById("field-wallet").value              = "";
+        document.getElementById("field-description").value         = `${cat} - proporcional ${selectedMonth}`;
+        document.getElementById("expense-category-group").style.display = "block";
+        document.getElementById("income-source-group").style.display    = "none";
+        document.getElementById("wallet-label").textContent        = "¿De cuál cajita salió?";
+        // Check if savings category
+        const catObj    = categories.find(c => c.name === cat);
+        const isSavings = catObj?.type === "AHORRO O INVERSIÓN";
+        document.getElementById("savings-wallet-group").style.display = isSavings ? "block" : "none";
+        document.getElementById("field-savings-wallet").value          = "";
+        openDrawer();
+      }, { once: false });
+    }
 
     // ── Render gastos ─────────────────────────────────────
     function renderExpenses() {

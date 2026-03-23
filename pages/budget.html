@@ -155,6 +155,27 @@
       z-index: 80;
     }
 
+    /* ── Toggle proporcional en fila de categoría ───────── */
+    .prop-toggle-btn {
+      width: 28px; height: 16px; background: var(--border2);
+      border-radius: 8px; position: relative; cursor: pointer;
+      transition: background 0.2s; flex-shrink: 0; border: none;
+      padding: 0;
+    }
+    .prop-toggle-btn.on { background: var(--accent); }
+    .prop-toggle-btn::after {
+      content: ""; position: absolute;
+      width: 12px; height: 12px; background: #fff;
+      border-radius: 50%; top: 2px; left: 2px;
+      transition: transform 0.2s;
+    }
+    .prop-toggle-btn.on::after { transform: translateX(12px); }
+    .prop-toggle-wrap {
+      display: flex; align-items: center; gap: 5px;
+      flex-shrink: 0;
+    }
+    .prop-toggle-label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
     /* ── Agregar categoría inline ───────────────────────── */
     .btn-add-cat {
       width: 100%; padding: 9px; margin-top: 4px; margin-bottom: 8px;
@@ -391,6 +412,13 @@
     });
 
     document.getElementById("categories-form").addEventListener("click", async e => {
+      // Toggle proporcional
+      const propBtn = e.target.closest("[data-field='prop-toggle']");
+      if (propBtn) {
+        propBtn.classList.toggle("on");
+        return;
+      }
+
       // Botón eliminar categoría
       const delBtn = e.target.closest(".btn-delete-cat");
       if (delBtn) {
@@ -580,6 +608,7 @@
       noticeEl.style.display = "none"; // always hide — buttons handle adding
 
       const savedCats = currentBudget?.categories || {};
+      const meta      = currentBudget?.categoryMeta  || {};
       const TYPES = [
         { key: "GASTO BÁSICO",       cls: "basico",      label: "Gasto básico" },
         { key: "GASTO NO ESENCIAL",  cls: "no-esencial", label: "Gasto no esencial" },
@@ -596,22 +625,29 @@
               <span class="type-section-label">${type.label}</span>
               <span class="type-section-total" id="type-total-${type.cls}">${formatCOP(typeTotal)}</span>
             </div>
-            ${cats.map(cat => `
-              <div class="budget-row">
-                <input type="text" class="budget-name-input" 
+            ${cats.map(cat => {
+              const isProp = meta[cat.name]?.proportional || false;
+              return `
+              <div class="budget-row" style="flex-wrap:wrap;gap:6px;">
+                <input type="text" class="budget-name-input"
                   data-cat-id="${cat.id}" data-original-name="${cat.name}"
                   value="${cat.name}" placeholder="Nombre..."
-                  style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;min-width:0;"/>
+                  style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;min-width:80px;"/>
                 <div class="budget-input-wrap">
                   <span class="sym">$</span>
                   <input type="number" min="0" class="budget-input"
                     data-cat="${cat.name}" data-type-cls="${type.cls}"
                     value="${savedCats[cat.name] || ""}" placeholder="0"/>
                 </div>
+                <div class="prop-toggle-wrap" title="Devenga día a día">
+                  <span class="prop-toggle-label">∼/día</span>
+                  <button type="button" class="prop-toggle-btn ${isProp ? "on" : ""}"
+                    data-cat-name="${cat.name}" data-field="prop-toggle"></button>
+                </div>
                 <button class="btn-delete-cat" data-cat-id="${cat.id}" data-cat-name="${cat.name}"
                   title="Eliminar" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:14px;padding:4px 6px;flex-shrink:0;transition:color 0.15s;"
                   onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted2)'">✕</button>
-              </div>`).join("")}
+              </div>`;}).join("")}
             <div class="inline-cat-container"></div>
             <button class="btn-add-cat" data-type-key="${type.key}" data-type-cls="${type.cls}">
               + Agregar categoría en ${type.label.toLowerCase()}
@@ -865,8 +901,8 @@
 
       btn.disabled = true; btn.textContent = "Guardando...";
       try {
-        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData });
-        currentBudget = { categories: categoriesData, income: incomeData };
+        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta });
+        currentBudget = { categories: categoriesData, income: incomeData, categoryMeta };
         showToast("Presupuesto guardado.", "success");
         document.getElementById("copy-banner").style.display = "none";
         // Sincronizar ingresos proporcionales
