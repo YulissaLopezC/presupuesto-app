@@ -153,6 +153,42 @@
       z-index: 80;
     }
 
+    /* ── Agregar categoría inline ───────────────────────── */
+    .btn-add-cat {
+      width: 100%; padding: 9px; margin-top: 4px; margin-bottom: 8px;
+      background: none; border: 1px dashed var(--border2);
+      border-radius: 8px; color: var(--muted);
+      font-family: "DM Sans", sans-serif; font-size: 12px;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+      text-align: center;
+    }
+    .btn-add-cat:hover { border-color: var(--accent); color: var(--accent); }
+
+    .inline-cat-form {
+      display: flex; gap: 6px; margin-top: 4px; margin-bottom: 8px;
+    }
+    .inline-cat-form input {
+      flex: 1; background: var(--bg); border: 1px solid var(--accent);
+      border-radius: 8px; padding: 8px 12px;
+      font-family: "DM Sans", sans-serif; font-size: 13px;
+      color: var(--text); outline: none;
+    }
+    .inline-cat-form input::placeholder { color: var(--muted); }
+    .btn-inline-save {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 8px 14px;
+      font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 500;
+      cursor: pointer; white-space: nowrap; transition: background 0.15s;
+    }
+    .btn-inline-save:hover { background: var(--accent2); }
+    .btn-inline-cancel {
+      background: none; border: 1px solid var(--border2); color: var(--muted);
+      border-radius: 8px; padding: 8px 10px;
+      font-family: "DM Sans", sans-serif; font-size: 12px;
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .btn-inline-cancel:hover { border-color: var(--danger); color: var(--danger); }
+
     /* ── No categorías aviso ─────────────────────────────── */
     .no-cats-notice {
       background: rgba(201,124,46,0.07);
@@ -324,7 +360,7 @@
 
   <script type="module">
     import { requireAuth }   from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, syncProportionalIncomes } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, addCategory, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
     import { formatCOP, currentMonth, formatMonth, lastMonths } from "../assets/utils.js";
 
@@ -349,6 +385,84 @@
       if (e.target.classList.contains("budget-input") && e.target.dataset.cat) {
         updateTypeTotal(e.target.dataset.typeCls);
         updateSummary();
+      }
+    });
+
+    document.getElementById("categories-form").addEventListener("click", async e => {
+      // Botón "+ Agregar categoría"
+      const addBtn = e.target.closest(".btn-add-cat");
+      if (addBtn) {
+        const typeKey = addBtn.dataset.typeKey;
+        const typeCls = addBtn.dataset.typeCls;
+        const section = addBtn.closest(".type-section");
+        const container = section.querySelector(".inline-cat-container");
+
+        // Evitar duplicados
+        if (container.querySelector(".inline-cat-form")) return;
+
+        addBtn.style.display = "none";
+        container.innerHTML = `
+          <div class="inline-cat-form">
+            <input type="text" placeholder="Nombre de la categoría..." maxlength="40" class="inline-cat-input" autofocus/>
+            <button class="btn-inline-save" data-type-key="${typeKey}" data-type-cls="${typeCls}">Agregar</button>
+            <button class="btn-inline-cancel">✕</button>
+          </div>`;
+        container.querySelector(".inline-cat-input").focus();
+        return;
+      }
+
+      // Cancelar inline form
+      const cancelBtn = e.target.closest(".btn-inline-cancel");
+      if (cancelBtn) {
+        const section   = cancelBtn.closest(".type-section");
+        const container = section.querySelector(".inline-cat-container");
+        container.innerHTML = "";
+        section.querySelector(".btn-add-cat").style.display = "";
+        return;
+      }
+
+      // Guardar nueva categoría inline
+      const saveBtn = e.target.closest(".btn-inline-save");
+      if (saveBtn) {
+        const section   = saveBtn.closest(".type-section");
+        const container = section.querySelector(".inline-cat-container");
+        const input     = container.querySelector(".inline-cat-input");
+        const name      = input?.value.trim();
+        const typeKey   = saveBtn.dataset.typeKey;
+        const typeCls   = saveBtn.dataset.typeCls;
+
+        if (!name) { showToast("Escribe el nombre de la categoría.", "error"); return; }
+
+        // Verificar duplicado
+        if (categories.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+          showToast("Ya existe una categoría con ese nombre.", "error"); return;
+        }
+
+        saveBtn.disabled = true; saveBtn.textContent = "...";
+        try {
+          await addCategory(uid, { name, type: typeKey });
+          showToast(`"${name}" agregada.`, "success");
+          // Recargar categorías y re-renderizar
+          categories = await getCategories(uid);
+          renderCategoriesForm();
+          updateSummary();
+        } catch (err) {
+          showToast("Error al crear categoría.", "error"); console.error(err);
+          saveBtn.disabled = false; saveBtn.textContent = "Agregar";
+        }
+        return;
+      }
+    });
+
+    // Enter en el input inline guarda la categoría
+    document.getElementById("categories-form").addEventListener("keydown", e => {
+      if (e.key === "Enter" && e.target.classList.contains("inline-cat-input")) {
+        const saveBtn = e.target.closest(".inline-cat-form")?.querySelector(".btn-inline-save");
+        if (saveBtn) saveBtn.click();
+      }
+      if (e.key === "Escape" && e.target.classList.contains("inline-cat-input")) {
+        const cancelBtn = e.target.closest(".inline-cat-form")?.querySelector(".btn-inline-cancel");
+        if (cancelBtn) cancelBtn.click();
       }
     });
 
@@ -404,12 +518,7 @@
       const container = document.getElementById("categories-form");
       const noticeEl  = document.getElementById("no-cats-notice");
 
-      if (!categories.length) {
-        noticeEl.style.display = "block";
-        container.innerHTML = "";
-        return;
-      }
-      noticeEl.style.display = "none";
+      noticeEl.style.display = "none"; // always hide — buttons handle adding
 
       const savedCats = currentBudget?.categories || {};
       const TYPES = [
@@ -420,10 +529,9 @@
 
       container.innerHTML = TYPES.map(type => {
         const cats = categories.filter(c => c.type === type.key);
-        if (!cats.length) return "";
         const typeTotal = cats.reduce((s, c) => s + (Number(savedCats[c.name]) || 0), 0);
         return `
-          <div class="type-section">
+          <div class="type-section" data-type-key="${type.key}">
             <div class="type-section-header">
               <div class="type-dot ${type.cls}"></div>
               <span class="type-section-label">${type.label}</span>
@@ -439,8 +547,30 @@
                     value="${savedCats[cat.name] || ""}" placeholder="0"/>
                 </div>
               </div>`).join("")}
+            <div class="inline-cat-container"></div>
+            <button class="btn-add-cat" data-type-key="${type.key}" data-type-cls="${type.cls}">
+              + Agregar categoría en ${type.label.toLowerCase()}
+            </button>
           </div>`;
       }).join("");
+
+      // También mostrar secciones vacías para agregar categorías nuevas
+      TYPES.forEach(type => {
+        const cats = categories.filter(c => c.type === type.key);
+        if (!cats.length) {
+          container.innerHTML += `
+            <div class="type-section" data-type-key="${type.key}">
+              <div class="type-section-header">
+                <div class="type-dot ${type.cls}"></div>
+                <span class="type-section-label">${type.label}</span>
+              </div>
+              <div class="inline-cat-container"></div>
+              <button class="btn-add-cat" data-type-key="${type.key}" data-type-cls="${type.cls}">
+                + Agregar categoría en ${type.label.toLowerCase()}
+              </button>
+            </div>`;
+        }
+      });
     }
 
     // ── Panel Ingresos ────────────────────────────────────
