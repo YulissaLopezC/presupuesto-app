@@ -111,6 +111,12 @@
     .amount-wrapper .form-input { padding-left: 26px; }
 
     .transfer-arrow { text-align: center; font-size: 20px; color: var(--muted); margin: 4px 0; }
+
+    /* ── Cajita archivada ────────────────────────────────── */
+    .wallet-card.archived {
+      opacity: 0.5; border-style: dashed; cursor: default;
+    }
+    .wallet-card.archived:hover { border-color: var(--border); }
   </style>
 </head>
 <body>
@@ -130,6 +136,14 @@
     </button>
     <div id="wallets-list">
       <div class="skeleton" style="height:160px;border-radius:16px;"></div>
+    </div>
+
+    <!-- Cajitas archivadas -->
+    <div id="archived-section" style="display:none;margin-top:8px;">
+      <button id="btn-show-archived" style="background:none;border:none;color:var(--muted);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px 0;text-decoration:underline;text-underline-offset:2px;">
+        Ver cajitas archivadas
+      </button>
+      <div id="archived-list" style="display:none;margin-top:8px;"></div>
     </div>
   </div>
 
@@ -212,7 +226,7 @@
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getWallets, addWallet, updateWallet, deleteWallet, addTransfer } from "../modules/db.js";
+    import { getWallets, addWallet, updateWallet, archiveWallet, restoreWallet, addTransfer } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js";
     import { formatCOP, today } from "../assets/utils.js";
 
@@ -240,9 +254,9 @@
       if (btn) selectEmoji(btn.dataset.emoji);
     });
     document.getElementById("wallets-list").addEventListener("click", e => {
-      const del  = e.target.closest(".btn-danger");
-      const card = e.target.closest(".wallet-card");
-      if (del)                                          handleDelete(del.dataset.id, del.dataset.name);
+      const archiveBtn = e.target.closest("[data-archive]");
+      const card       = e.target.closest(".wallet-card");
+      if (archiveBtn)                                   handleArchive(archiveBtn.dataset.archive, archiveBtn.dataset.name);
       else if (card && !e.target.closest("button"))    openEditDrawer(card.dataset.id);
     });
     document.addEventListener("keydown", e => {
@@ -252,7 +266,10 @@
     // ── Cargar ────────────────────────────────────────────
     async function loadWallets() {
       wallets = await getWallets(uid);
+      const allWallets = await getWallets(uid, true);
+      const archived   = allWallets.filter(w => w.archived);
       renderWallets();
+      renderArchived(archived);
       populateTransferSelects();
     }
 
@@ -284,6 +301,45 @@
         ...wallets.filter(w => w.type !== "credito"),
         ...wallets.filter(w => w.type === "credito")
       ].map(walletCardHTML).join("");
+    }
+
+    function renderArchived(archived) {
+      const section  = document.getElementById("archived-section");
+      const listEl   = document.getElementById("archived-list");
+      const btn      = document.getElementById("btn-show-archived");
+
+      if (!archived.length) { section.style.display = "none"; return; }
+      section.style.display = "block";
+
+      listEl.innerHTML = archived.map(w => `
+        <div class="wallet-card archived" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;opacity:0.5;">${w.icon || "🏦"}</span>
+            <div>
+              <div style="font-size:14px;color:var(--muted);">${w.name}</div>
+              <div style="font-size:11px;color:var(--muted2);">Archivada</div>
+            </div>
+          </div>
+          <button class="btn-ghost" style="font-size:12px;padding:6px 12px;" data-restore="${w.id}">Restaurar</button>
+        </div>`).join("");
+
+      // Toggle mostrar/ocultar
+      btn.onclick = () => {
+        const isOpen = listEl.style.display !== "none";
+        listEl.style.display = isOpen ? "none" : "block";
+        btn.textContent = isOpen ? "Ver cajitas archivadas" : "Ocultar archivadas";
+      };
+
+      // Restaurar
+      listEl.addEventListener("click", async e => {
+        const btn = e.target.closest("[data-restore]");
+        if (!btn) return;
+        try {
+          await restoreWallet(uid, btn.dataset.restore);
+          showToast("Cajita restaurada.", "success");
+          await loadWallets();
+        } catch (err) { showToast("Error al restaurar.", "error"); }
+      });
     }
 
     function walletCardHTML(w) {
@@ -320,7 +376,7 @@
               <div style="font-size:10px;color:var(--muted);margin-top:4px;">${Math.round(pct*100)}% del cupo usado</div>
             </div>
             <div class="wallet-footer">
-              <button class="btn-danger" data-id="${w.id}" data-name="${w.name}">Eliminar</button>
+              <button class="btn-ghost" style="font-size:12px;" data-archive="${w.id}" data-name="${w.name}">Archivar</button>
             </div>
           </div>`;
       }
@@ -342,7 +398,7 @@
           </div>
           ${w.notes ? `<div style="font-size:12px;color:var(--muted);">${w.notes}</div>` : ""}
           <div class="wallet-footer">
-            <button class="btn-danger" data-id="${w.id}" data-name="${w.name}">Eliminar</button>
+            <button class="btn-ghost" style="font-size:12px;" data-archive="${w.id}" data-name="${w.name}">Archivar</button>
           </div>
         </div>`;
     }
@@ -497,13 +553,13 @@
       }
     }
 
-    async function handleDelete(id, name) {
-      if (!confirm(`¿Eliminar la cajita "${name}"?`)) return;
+    async function handleArchive(id, name) {
+      if (!confirm(`¿Archivar la cajita "${name}"?\nPodrás restaurarla cuando quieras.`)) return;
       try {
-        await deleteWallet(uid, id);
-        showToast("Cajita eliminada.", "success");
+        await archiveWallet(uid, id);
+        showToast("Cajita archivada.", "success");
         await loadWallets();
-      } catch (err) { showToast("Error al eliminar.", "error"); }
+      } catch (err) { showToast("Error al archivar.", "error"); }
     }
 
     function openDrawer() {

@@ -181,9 +181,10 @@ export async function addWallet(uid, data) {
   });
 }
 
-export async function getWallets(uid) {
+export async function getWallets(uid, includeArchived = false) {
   const snap = await getDocs(userCol(uid, "wallets"));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const all  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return includeArchived ? all : all.filter(w => !w.archived);
 }
 
 export async function updateWallet(uid, walletId, data) {
@@ -197,6 +198,21 @@ export async function updateWallet(uid, walletId, data) {
   return updateDoc(userDoc(uid, "wallets", walletId), updates);
 }
 
+export async function archiveWallet(uid, walletId) {
+  return updateDoc(userDoc(uid, "wallets", walletId), {
+    archived: true,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function restoreWallet(uid, walletId) {
+  return updateDoc(userDoc(uid, "wallets", walletId), {
+    archived: false,
+    updatedAt: serverTimestamp()
+  });
+}
+
+// Solo para casos extremos — no expuesto en la UI
 export async function deleteWallet(uid, walletId) {
   return deleteDoc(userDoc(uid, "wallets", walletId));
 }
