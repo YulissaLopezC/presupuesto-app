@@ -90,11 +90,17 @@ export async function updateExpense(uid, expenseId, oldData, newData) {
 export async function deleteExpense(uid, expenseId, expenseData) {
   await runTransaction(db, async (tx) => {
     const expRef = userDoc(uid, "expenses", expenseId);
+    const amount = Number(expenseData.amount);
+    // Revertir cajita origen
     if (expenseData?.walletId) {
       const isCredit = expenseData.walletType === "credito";
-      // Revertir = operación inversa al gasto original
       tx.update(userDoc(uid, "wallets", expenseData.walletId),
-        { balance: increment(isCredit ? -Number(expenseData.amount) : Number(expenseData.amount)) });
+        { balance: increment(isCredit ? -amount : amount) });
+    }
+    // Revertir cajita destino de ahorro (si existía)
+    if (expenseData?.toWalletId) {
+      tx.update(userDoc(uid, "wallets", expenseData.toWalletId),
+        { balance: increment(-amount) });
     }
     tx.delete(expRef);
   });
