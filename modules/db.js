@@ -570,3 +570,105 @@ export async function getProportionalExpensesSummary(uid, month, realExpenses = 
     })
     .filter(s => s.amount > 0);
 }
+
+// ── PRÉSTAMOS (loans) ─────────────────────────────────────
+//
+// data: {
+//   debtorName:  "Juan Pérez",
+//   amount:      500000,
+//   date:        "2026-03-24",
+//   walletId:    "...",
+//   walletName:  "Banco",
+//   notes:       "Para arriendo"
+// }
+// Al crear, descuenta de la cajita origen.
+// Los abonos se guardan en loans/{id}/payments/{id}
+
+export async function addLoan(uid, data) {
+  const loanRef  = doc(userCol(uid, "loans"));
+  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+  const amount    = Number(data.amount);
+
+  await runTransaction(db, async (tx) => {
+    tx.set(loanRef, {
+      ...data,
+      amount,
+      amountPaid: 0,
+      status: "pendiente",
+      createdAt: serverTimestamp()
+    });
+    if (walletRef) tx.update(walletRef, { balance: increment(-amount) });
+  });
+  return loanRef;
+}
+
+export async function getLoans(uid) {
+  const snap = await getDocs(userCol(uid, "loans"));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function updateLoan(uid, loanId, data) {
+  return updateDoc(userDoc(uid, "loans", loanId), data);
+}
+
+export async function deleteLoan(uid, loanId, loanData) {
+  await runTransaction(db, async (tx) => {
+    // Revertir el monto original a la cajita
+    if (loanData?.walletId) {
+      tx.update(userDoc(uid, "wallets", loanData.walletId),
+        { balance: increment(Number(loanData.amount)) });
+    }
+    tx.delete(userDoc(uid, "loans", loanId));
+  });
+}
+
+// ── ABONOS DE PRÉSTAMO (loan payments) ────────────────────
+export async function addLoanPayment(uid, loanId, data) {
+  const payRef    = doc(collection(db, "users", uid, "loans", loanId, "payments"));
+  const loanRef   = userDoc(uid, "loans", loanId);
+  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+  const amount    = Number(data.amount);
+
+  await runTransaction(db, async (tx) => {
+    const loanSnap = await tx.get(loanRef);
+    if (!loanSnap.exists()) throw new Error("Préstamo no encontrado");
+    const loan       = loanSnap.data();
+    const newPaid    = Number(loan.amountPaid || 0) + amount;
+    const newStatus  = newPaid >= Number(loan.amount) ? "pagado" : "pendiente";
+
+    tx.set(payRef, { ...data, amount, createdAt: serverTimestamp() });
+    tx.update(loanRef, { amountPaid: newPaid, status: newStatus });
+    if (walletRef) tx.update(walletRef, { balance: increment(amount) });
+  });
+  return payRef;
+}
+
+export async function getLoanPayments(uid, loanId) {
+  const snap = await getDocs(
+    collection(db, "users", uid, "loans", loanId, "payments")
+  );
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
+    return (b.date || "").localeCompare(a.date || "");
+  });
+}
+
+export async function deleteLoanPayment(uid, loanId, paymentId, paymentData) {
+  const payRef  = doc(db, "users", uid, "loans", loanId, "payments", paymentId);
+  const loanRef = userDoc(uid, "loans", loanId);
+  const amount  = Number(paymentData.amount);
+
+  await runTransaction(db, async (tx) => {
+    const loanSnap = await tx.get(loanRef);
+    if (!loanSnap.exists()) throw new Error("Préstamo no encontrado");
+    const loan      = loanSnap.data();
+    const newPaid   = Math.max(Number(loan.amountPaid || 0) - amount, 0);
+    const newStatus = newPaid >= Number(loan.amount) ? "pagado" : "pendiente";
+
+    tx.delete(payRef);
+    tx.update(loanRef, { amountPaid: newPaid, status: newStatus });
+    if (paymentData.walletId) {
+      tx.update(userDoc(uid, "wallets", paymentData.walletId),
+        { balance: increment(-amount) });
+    }
+  });
+}
