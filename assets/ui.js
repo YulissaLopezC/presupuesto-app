@@ -231,12 +231,20 @@ export function renderMonthSelector(containerId, currentMonth, onChange) {
   const nextBtn  = document.getElementById("ms-next");
   const labelEl  = document.getElementById("ms-label");
 
-  // No permitir ir más allá del mes actual
+  // Permitir navegar al mes siguiente si estamos en los últimos 5 días del mes
+  const today       = new Date();
+  const dayOfMonth  = today.getDate();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const canPlanNext = (daysInMonth - dayOfMonth) < 5; // últimos 5 días
+
   const [cy, cm] = currentMonth.split("-").map(Number);
+  // Mes máximo permitido: mes actual o siguiente si aplica
+  const maxYear  = canPlanNext ? (cm === 12 ? cy + 1 : cy) : cy;
+  const maxMonth = canPlanNext ? (cm === 12 ? 1 : cm + 1) : cm;
 
   function updateButtons() {
     const [sy, sm] = selected.split("-").map(Number);
-    nextBtn.disabled = (sy === cy && sm === cm);
+    nextBtn.disabled = (sy === maxYear && sm === maxMonth);
   }
 
   function shiftMonth(delta) {
