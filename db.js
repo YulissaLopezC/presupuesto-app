@@ -16,7 +16,7 @@ import {
   addDoc, setDoc, updateDoc, deleteDoc,
   getDocs, getDoc,
   query, where, orderBy,
-  serverTimestamp, increment, runTransaction
+  serverTimestamp, increment, runTransaction, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { db } from "../firebase-config.js";
@@ -36,22 +36,21 @@ function userDoc(uid, colName, docId) {
 // Al agregar un gasto, descuenta el monto de la cajita en una transacción atómica
 
 export async function addExpense(uid, data) {
-  const expenseRef = doc(userCol(uid, "expenses"));
-  const walletRef  = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+  const expenseRef  = doc(userCol(uid, "expenses"));
+  const walletRef   = data.walletId   ? userDoc(uid, "wallets", data.walletId)   : null;
+  const savingsRef  = data.toWalletId ? userDoc(uid, "wallets", data.toWalletId) : null;
+  const amount      = Number(data.amount);
+  const isCredit    = data.walletType === "credito";
+  const delta       = isCredit ? amount : -amount;
 
   await runTransaction(db, async (tx) => {
-    tx.set(expenseRef, {
-      ...data,
-      amount: Number(data.amount),
-      createdAt: serverTimestamp()
-    });
-    if (walletRef) {
-      // Crédito: gasto SUBE el saldo (más deuda)
-      // Ahorro/efectivo: gasto BAJA el saldo
-      const walletSnap = await tx.get(walletRef);
-      const isCredit   = walletSnap.exists() && walletSnap.data().type === "credito";
-      tx.update(walletRef, { balance: increment(isCredit ? Number(data.amount) : -Number(data.amount)) });
-    }
+    // Reads primero
+    const toWalletSnap = savingsRef ? await tx.get(savingsRef) : null;
+    const toIsCredit   = toWalletSnap?.exists() && toWalletSnap.data().type === "credito";
+    // Writes después
+    tx.set(expenseRef, { ...data, amount, createdAt: serverTimestamp() });
+    if (walletRef)   tx.update(walletRef,  { balance: increment(delta) });
+    if (savingsRef)  tx.update(savingsRef, { balance: increment(toIsCredit ? -amount : amount) });
   });
   return expenseRef;
 }
@@ -74,21 +73,17 @@ export async function getExpenses(uid, filters = {}) {
 export async function updateExpense(uid, expenseId, oldData, newData) {
   await runTransaction(db, async (tx) => {
     const expRef = userDoc(uid, "expenses", expenseId);
-
-    // Revertir cajita anterior
+    // Revertir cajita anterior (operación inversa)
     if (oldData.walletId) {
-      const oldWalletRef  = userDoc(uid, "wallets", oldData.walletId);
-      const oldWalletSnap = await tx.get(oldWalletRef);
-      const oldIsCredit   = oldWalletSnap.exists() && oldWalletSnap.data().type === "credito";
-      // Revertir = operación inversa
-      tx.update(oldWalletRef, { balance: increment(oldIsCredit ? -Number(oldData.amount) : Number(oldData.amount)) });
+      const oldIsCredit = oldData.walletType === "credito";
+      tx.update(userDoc(uid, "wallets", oldData.walletId),
+        { balance: increment(oldIsCredit ? -Number(oldData.amount) : Number(oldData.amount)) });
     }
     // Aplicar cajita nueva
     if (newData.walletId) {
-      const newWalletRef  = userDoc(uid, "wallets", newData.walletId);
-      const newWalletSnap = await tx.get(newWalletRef);
-      const newIsCredit   = newWalletSnap.exists() && newWalletSnap.data().type === "credito";
-      tx.update(newWalletRef, { balance: increment(newIsCredit ? Number(newData.amount) : -Number(newData.amount)) });
+      const newIsCredit = newData.walletType === "credito";
+      tx.update(userDoc(uid, "wallets", newData.walletId),
+        { balance: increment(newIsCredit ? Number(newData.amount) : -Number(newData.amount)) });
     }
     tx.update(expRef, { ...newData, amount: Number(newData.amount) });
   });
@@ -96,14 +91,19 @@ export async function updateExpense(uid, expenseId, oldData, newData) {
 
 export async function deleteExpense(uid, expenseId, expenseData) {
   await runTransaction(db, async (tx) => {
-    const expRef = userDoc(uid, "expenses", expenseId);
+    const expRef  = userDoc(uid, "expenses", expenseId);
+    const amount  = Number(expenseData.amount);
+    const toRef   = expenseData?.toWalletId ? userDoc(uid, "wallets", expenseData.toWalletId) : null;
+    // Reads primero
+    const toSnap  = toRef ? await tx.get(toRef) : null;
+    const toIsCredit = toSnap?.exists() && toSnap.data().type === "credito";
+    // Writes después
     if (expenseData?.walletId) {
-      const walletRef  = userDoc(uid, "wallets", expenseData.walletId);
-      const walletSnap = await tx.get(walletRef);
-      const isCredit   = walletSnap.exists() && walletSnap.data().type === "credito";
-      // Revertir = operación inversa al gasto original
-      tx.update(walletRef, { balance: increment(isCredit ? -Number(expenseData.amount) : Number(expenseData.amount)) });
+      const isCredit = expenseData.walletType === "credito";
+      tx.update(userDoc(uid, "wallets", expenseData.walletId),
+        { balance: increment(isCredit ? -amount : amount) });
     }
+    if (toRef) tx.update(toRef, { balance: increment(toIsCredit ? amount : -amount) });
     tx.delete(expRef);
   });
 }
@@ -190,9 +190,10 @@ export async function addWallet(uid, data) {
   });
 }
 
-export async function getWallets(uid) {
+export async function getWallets(uid, includeArchived = false) {
   const snap = await getDocs(userCol(uid, "wallets"));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const all  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return includeArchived ? all : all.filter(w => !w.archived);
 }
 
 export async function updateWallet(uid, walletId, data) {
@@ -206,6 +207,21 @@ export async function updateWallet(uid, walletId, data) {
   return updateDoc(userDoc(uid, "wallets", walletId), updates);
 }
 
+export async function archiveWallet(uid, walletId) {
+  return updateDoc(userDoc(uid, "wallets", walletId), {
+    archived: true,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function restoreWallet(uid, walletId) {
+  return updateDoc(userDoc(uid, "wallets", walletId), {
+    archived: false,
+    updatedAt: serverTimestamp()
+  });
+}
+
+// Solo para casos extremos — no expuesto en la UI
 export async function deleteWallet(uid, walletId) {
   return deleteDoc(userDoc(uid, "wallets", walletId));
 }
@@ -241,8 +257,12 @@ export async function addTransfer(uid, data) {
     // Para crédito origen: el pago reduce la deuda (balance baja)
     // Para crédito destino: la transferencia aumenta la deuda (balance sube)
     // Para ahorro/efectivo: balance normal
-    const fromDelta = fromWallet.type === "credito" ? -amount : -amount;
-    const toDelta   = toWallet.type   === "credito" ?  amount :  amount;
+    // Crédito origen (ej. usar tarjeta para transferir): saldo sube (más deuda)
+    // Ahorro/efectivo origen: saldo baja
+    const fromDelta = fromWallet.type === "credito" ? amount : -amount;
+    // Crédito destino (ej. pagar tarjeta): saldo baja (menos deuda)
+    // Ahorro/efectivo destino: saldo sube
+    const toDelta   = toWallet.type   === "credito" ? -amount : amount;
 
     tx.update(fromRef, { balance: increment(fromDelta) });
     tx.update(toRef,   { balance: increment(toDelta) });
@@ -480,4 +500,177 @@ export async function getProportionalSummary(uid, month) {
       accruedAmount: Math.round((i.amount / daysInMonth) * daysPassed),
       pct:           daysPassed / daysInMonth
     }));
+}
+
+// ── Renombrar categoría en gastos del mes ─────────────────
+export async function renameCategoryInExpenses(uid, month, oldName, newName) {
+  const q    = query(
+    userCol(uid, "expenses"),
+    where("date", ">=", month + "-01"),
+    where("date", "<=", month + "-31"),
+    where("category", "==", oldName)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return 0;
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => batch.update(d.ref, { category: newName }));
+  await batch.commit();
+  return snap.docs.length;
+}
+
+// ── GASTOS PROPORCIONALES (solo informativo, no escribe) ──
+//
+// Lee las categorías marcadas como proporcionales en el presupuesto
+// y calcula cuánto va devengado hasta hoy.
+// También cruza con los gastos reales registrados para mostrar el pendiente.
+
+export async function getProportionalExpensesSummary(uid, month, realExpenses = []) {
+  const budget = await getBudget(uid, month);
+  if (!budget?.categories) return [];
+
+  const [y, m]  = month.split("-").map(Number);
+  const today   = new Date();
+  const firstDay = new Date(y, m - 1, 1);
+  const lastDay  = new Date(y, m, 0);
+  const daysInMonth = lastDay.getDate();
+
+  let daysPassed;
+  if (today < firstDay)     daysPassed = 0;
+  else if (today > lastDay) daysPassed = daysInMonth;
+  else                      daysPassed = today.getDate();
+
+  // Necesitamos saber qué categorías tienen proportional=true
+  // Eso está en categories/{id} pero también en budget.categoryMeta
+  // Por simplicidad, lo guardamos en budget.categoryMeta: { "Transporte": { proportional: true } }
+  const meta = budget.categoryMeta || {};
+
+  return Object.entries(budget.categories)
+    .filter(([name]) => meta[name]?.proportional)
+    .map(([name, budgetedAmount]) => {
+      const amount      = Number(budgetedAmount || 0);
+      const dailyAmount = Math.round(amount / daysInMonth);
+      const accrued     = Math.round(dailyAmount * daysPassed);
+
+      // Sumar gastos reales de esta categoría en el mes
+      const realTotal = realExpenses
+        .filter(e => e.category === name)
+        .reduce((s, e) => s + Number(e.amount), 0);
+
+      const pending = Math.max(accrued - realTotal, 0);
+
+      return {
+        name,
+        amount,
+        dailyAmount,
+        daysPassed,
+        daysInMonth,
+        accrued,
+        realTotal,
+        pending,
+        pct: amount > 0 ? Math.min(accrued / amount, 1) : 0
+      };
+    })
+    .filter(s => s.amount > 0);
+}
+
+// ── PRÉSTAMOS (loans) ─────────────────────────────────────
+//
+// data: {
+//   debtorName:  "Juan Pérez",
+//   amount:      500000,
+//   date:        "2026-03-24",
+//   walletId:    "...",
+//   walletName:  "Banco",
+//   notes:       "Para arriendo"
+// }
+// Al crear, descuenta de la cajita origen.
+// Los abonos se guardan en loans/{id}/payments/{id}
+
+export async function addLoan(uid, data) {
+  const loanRef  = doc(userCol(uid, "loans"));
+  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+  const amount    = Number(data.amount);
+
+  await runTransaction(db, async (tx) => {
+    tx.set(loanRef, {
+      ...data,
+      amount,
+      amountPaid: 0,
+      status: "pendiente",
+      createdAt: serverTimestamp()
+    });
+    if (walletRef) tx.update(walletRef, { balance: increment(-amount) });
+  });
+  return loanRef;
+}
+
+export async function getLoans(uid) {
+  const snap = await getDocs(userCol(uid, "loans"));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function updateLoan(uid, loanId, data) {
+  return updateDoc(userDoc(uid, "loans", loanId), data);
+}
+
+export async function deleteLoan(uid, loanId, loanData) {
+  await runTransaction(db, async (tx) => {
+    // Revertir el monto original a la cajita
+    if (loanData?.walletId) {
+      tx.update(userDoc(uid, "wallets", loanData.walletId),
+        { balance: increment(Number(loanData.amount)) });
+    }
+    tx.delete(userDoc(uid, "loans", loanId));
+  });
+}
+
+// ── ABONOS DE PRÉSTAMO (loan payments) ────────────────────
+export async function addLoanPayment(uid, loanId, data) {
+  const payRef    = doc(collection(db, "users", uid, "loans", loanId, "payments"));
+  const loanRef   = userDoc(uid, "loans", loanId);
+  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
+  const amount    = Number(data.amount);
+
+  await runTransaction(db, async (tx) => {
+    const loanSnap = await tx.get(loanRef);
+    if (!loanSnap.exists()) throw new Error("Préstamo no encontrado");
+    const loan       = loanSnap.data();
+    const newPaid    = Number(loan.amountPaid || 0) + amount;
+    const newStatus  = newPaid >= Number(loan.amount) ? "pagado" : "pendiente";
+
+    tx.set(payRef, { ...data, amount, createdAt: serverTimestamp() });
+    tx.update(loanRef, { amountPaid: newPaid, status: newStatus });
+    if (walletRef) tx.update(walletRef, { balance: increment(amount) });
+  });
+  return payRef;
+}
+
+export async function getLoanPayments(uid, loanId) {
+  const snap = await getDocs(
+    collection(db, "users", uid, "loans", loanId, "payments")
+  );
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
+    return (b.date || "").localeCompare(a.date || "");
+  });
+}
+
+export async function deleteLoanPayment(uid, loanId, paymentId, paymentData) {
+  const payRef  = doc(db, "users", uid, "loans", loanId, "payments", paymentId);
+  const loanRef = userDoc(uid, "loans", loanId);
+  const amount  = Number(paymentData.amount);
+
+  await runTransaction(db, async (tx) => {
+    const loanSnap = await tx.get(loanRef);
+    if (!loanSnap.exists()) throw new Error("Préstamo no encontrado");
+    const loan      = loanSnap.data();
+    const newPaid   = Math.max(Number(loan.amountPaid || 0) - amount, 0);
+    const newStatus = newPaid >= Number(loan.amount) ? "pagado" : "pendiente";
+
+    tx.delete(payRef);
+    tx.update(loanRef, { amountPaid: newPaid, status: newStatus });
+    if (paymentData.walletId) {
+      tx.update(userDoc(uid, "wallets", paymentData.walletId),
+        { balance: increment(-amount) });
+    }
+  });
 }
