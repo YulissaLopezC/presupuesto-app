@@ -260,7 +260,7 @@
     </div>
     <!-- Solo visible para categorías de ahorro/inversión -->
     <div class="form-group" id="savings-wallet-group" style="display:none;">
-      <label class="form-label">¿A cuál cajita de ahorro va? <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
+      <label class="form-label" id="savings-wallet-label">¿A cuál cajita va? <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
       <select class="form-select" id="field-savings-wallet">
         <option value="">Sin cajita destino</option>
       </select>
@@ -306,7 +306,7 @@
     [categories, wallets] = await Promise.all([getCategories(uid), getWallets(uid)]);
     populateCategorySelect();
     populateWalletSelect();
-    populateSavingsWalletSelect();
+    populateSavingsWalletSelect("");
     await loadAll();
 
     // ── Tabs ──────────────────────────────────────────────
@@ -642,7 +642,7 @@
       if (!e) return;
       editingId = id;
       const cat      = categories.find(c => c.name === e.category);
-      const isSavings = cat?.type === "AHORRO O INVERSIÓN";
+      const isSavings = cat?.type === "AHORRO O INVERSIÓN" || !!e.toWalletId;
       document.getElementById("drawer-title").textContent        = "Editar gasto";
       document.getElementById("btn-save").textContent            = "Actualizar gasto";
       document.getElementById("field-date").value                = e.date;
@@ -655,16 +655,24 @@
       document.getElementById("income-source-group").style.display    = "none";
       document.getElementById("savings-wallet-group").style.display   = isSavings ? "block" : "none";
       document.getElementById("wallet-label").textContent        = "¿De cuál cajita salió?";
+      if (isSavings) populateSavingsWalletSelect(cat?.type || "");
       openDrawer();
     }
 
-    // Detectar si la categoría es de ahorro/inversión
+    // Detectar si la categoría necesita cajita destino
     document.getElementById("field-category").addEventListener("change", e => {
-      const catName  = e.target.value;
-      const cat      = categories.find(c => c.name === catName);
-      const isSavings = cat?.type === "AHORRO O INVERSIÓN";
-      document.getElementById("savings-wallet-group").style.display = isSavings ? "block" : "none";
-      if (!isSavings) document.getElementById("field-savings-wallet").value = "";
+      const catName = e.target.value;
+      const cat     = categories.find(c => c.name === catName);
+      // Mostrar para ahorro/inversión y para categorías que implican pago/transferencia
+      const isAhorro  = cat?.type === "AHORRO O INVERSIÓN";
+      const isDeuda   = catName.toLowerCase().includes("deuda") ||
+                        catName.toLowerCase().includes("tarjeta") ||
+                        catName.toLowerCase().includes("pago") ||
+                        catName.toLowerCase().includes("credito");
+      const showDest  = isAhorro || isDeuda;
+      document.getElementById("savings-wallet-group").style.display = showDest ? "block" : "none";
+      if (!showDest) document.getElementById("field-savings-wallet").value = "";
+      else populateSavingsWalletSelect(cat?.type || "");
     });
 
     function openDrawer() {
@@ -766,11 +774,33 @@
         wallets.map(w => `<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||"🏦"} ${w.name}</option>`).join("");
     }
 
-    function populateSavingsWalletSelect() {
-      const sel = document.getElementById("field-savings-wallet");
-      const savingsWallets = wallets.filter(w => w.type === "ahorro");
-      sel.innerHTML = `<option value="">Sin cajita destino</option>` +
-        savingsWallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon||"🏦"} ${w.name} · ${formatCOP(w.balance||0)}</option>`).join("");
+    function populateSavingsWalletSelect(catType) {
+      const sel     = document.getElementById("field-savings-wallet");
+      const labelEl = document.getElementById("savings-wallet-label");
+      const normal  = wallets.filter(w => w.type !== "credito");
+      const credit  = wallets.filter(w => w.type === "credito");
+
+      let opts = `<option value="">Sin cajita destino</option>`;
+      if (normal.length) {
+        opts += `<optgroup label="Ahorro / Efectivo">` +
+          normal.map(w => `<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||"🏦"} ${w.name} · ${formatCOP(w.balance||0)}</option>`).join("") +
+          `</optgroup>`;
+      }
+      if (credit.length) {
+        opts += `<optgroup label="Tarjetas de crédito">` +
+          credit.map(w => {
+            const avail = Number(w.creditLimit||0) - Number(w.balance||0);
+            return `<option value="${w.id}" data-name="${w.name}" data-type="credito">${w.icon||"💳"} ${w.name} · Disponible: ${formatCOP(avail)}</option>`;
+          }).join("") +
+          `</optgroup>`;
+      }
+      sel.innerHTML = opts;
+
+      if (labelEl) {
+        labelEl.innerHTML = catType === "AHORRO O INVERSIÓN"
+          ? '¿A cuál cajita de ahorro va? <span style="color:var(--muted);font-weight:300;">(opcional)</span>'
+          : '¿A cuál cajita va el pago? <span style="color:var(--muted);font-weight:300;">(opcional)</span>';
+      }
     }
 
     function populateSourcesSuggestions() {

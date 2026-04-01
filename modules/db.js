@@ -47,8 +47,12 @@ export async function addExpense(uid, data) {
     tx.set(expenseRef, { ...data, amount, createdAt: serverTimestamp() });
     // Descontar de cajita origen
     if (walletRef) tx.update(walletRef, { balance: increment(delta) });
-    // Sumar a cajita de ahorro destino (si se seleccionó)
-    if (savingsRef) tx.update(savingsRef, { balance: increment(amount) });
+    // Cajita destino: ahorro suma, crédito resta deuda
+    if (savingsRef) {
+      const toWalletSnap = await tx.get(savingsRef);
+      const toIsCredit   = toWalletSnap.exists() && toWalletSnap.data().type === "credito";
+      tx.update(savingsRef, { balance: increment(toIsCredit ? -amount : amount) });
+    }
   });
   return expenseRef;
 }
@@ -97,10 +101,13 @@ export async function deleteExpense(uid, expenseId, expenseData) {
       tx.update(userDoc(uid, "wallets", expenseData.walletId),
         { balance: increment(isCredit ? -amount : amount) });
     }
-    // Revertir cajita destino de ahorro (si existía)
+    // Revertir cajita destino (ahorro o crédito)
     if (expenseData?.toWalletId) {
-      tx.update(userDoc(uid, "wallets", expenseData.toWalletId),
-        { balance: increment(-amount) });
+      const toRef  = userDoc(uid, "wallets", expenseData.toWalletId);
+      const toSnap = await tx.get(toRef);
+      const toIsCredit = toSnap.exists() && toSnap.data().type === "credito";
+      // Revertir = operación inversa: ahorro resta, crédito suma
+      tx.update(toRef, { balance: increment(toIsCredit ? amount : -amount) });
     }
     tx.delete(expRef);
   });
