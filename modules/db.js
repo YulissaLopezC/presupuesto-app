@@ -44,15 +44,13 @@ export async function addExpense(uid, data) {
   const delta       = isCredit ? amount : -amount;
 
   await runTransaction(db, async (tx) => {
+    // Reads primero
+    const toWalletSnap = savingsRef ? await tx.get(savingsRef) : null;
+    const toIsCredit   = toWalletSnap?.exists() && toWalletSnap.data().type === "credito";
+    // Writes después
     tx.set(expenseRef, { ...data, amount, createdAt: serverTimestamp() });
-    // Descontar de cajita origen
-    if (walletRef) tx.update(walletRef, { balance: increment(delta) });
-    // Cajita destino: ahorro suma, crédito resta deuda
-    if (savingsRef) {
-      const toWalletSnap = await tx.get(savingsRef);
-      const toIsCredit   = toWalletSnap.exists() && toWalletSnap.data().type === "credito";
-      tx.update(savingsRef, { balance: increment(toIsCredit ? -amount : amount) });
-    }
+    if (walletRef)   tx.update(walletRef,  { balance: increment(delta) });
+    if (savingsRef)  tx.update(savingsRef, { balance: increment(toIsCredit ? -amount : amount) });
   });
   return expenseRef;
 }
@@ -93,22 +91,19 @@ export async function updateExpense(uid, expenseId, oldData, newData) {
 
 export async function deleteExpense(uid, expenseId, expenseData) {
   await runTransaction(db, async (tx) => {
-    const expRef = userDoc(uid, "expenses", expenseId);
-    const amount = Number(expenseData.amount);
-    // Revertir cajita origen
+    const expRef  = userDoc(uid, "expenses", expenseId);
+    const amount  = Number(expenseData.amount);
+    const toRef   = expenseData?.toWalletId ? userDoc(uid, "wallets", expenseData.toWalletId) : null;
+    // Reads primero
+    const toSnap  = toRef ? await tx.get(toRef) : null;
+    const toIsCredit = toSnap?.exists() && toSnap.data().type === "credito";
+    // Writes después
     if (expenseData?.walletId) {
       const isCredit = expenseData.walletType === "credito";
       tx.update(userDoc(uid, "wallets", expenseData.walletId),
         { balance: increment(isCredit ? -amount : amount) });
     }
-    // Revertir cajita destino (ahorro o crédito)
-    if (expenseData?.toWalletId) {
-      const toRef  = userDoc(uid, "wallets", expenseData.toWalletId);
-      const toSnap = await tx.get(toRef);
-      const toIsCredit = toSnap.exists() && toSnap.data().type === "credito";
-      // Revertir = operación inversa: ahorro resta, crédito suma
-      tx.update(toRef, { balance: increment(toIsCredit ? amount : -amount) });
-    }
+    if (toRef) tx.update(toRef, { balance: increment(toIsCredit ? amount : -amount) });
     tx.delete(expRef);
   });
 }
