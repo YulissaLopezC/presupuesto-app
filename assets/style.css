@@ -148,6 +148,13 @@ body::before {
 }
 .topbar-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+.topbar-darkbtn {
+  background: none; border: none; font-size: 16px;
+  cursor: pointer; padding: 2px 6px; border-radius: 8px;
+  transition: background 0.15s; line-height: 1;
+}
+.topbar-darkbtn:hover { background: var(--surface2); }
+
 .btn-logout {
   background: none;
   border: 1px solid var(--border2);

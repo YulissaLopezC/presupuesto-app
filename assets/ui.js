@@ -11,15 +11,26 @@ import { lastMonths, formatMonth } from "./utils.js";
 export function renderTopbar(user) {
   const el = document.getElementById("topbar");
   if (!el) return;
+
+  // Aplicar modo oscuro guardado
+  const isDark = localStorage.getItem("darkMode") === "true";
+  if (isDark) document.body.classList.add("dark");
+
   el.innerHTML = `
-    <a href="../pages/dashboard.html" class="topbar-brand">💰 Mi Presupuesto</a>
+    <a href="../pages/dashboard.html" class="topbar-brand">🔥 Mi Presupuesto</a>
     <div class="topbar-user">
+      <button class="topbar-darkbtn" id="btn-darkmode" title="Modo oscuro">${isDark ? "☀️" : "🌙"}</button>
       <span class="topbar-email">${user.email}</span>
       <button class="btn-logout" id="btn-logout">Salir</button>
     </div>
   `;
   document.getElementById("btn-logout").addEventListener("click", async () => {
     await logout();
+  });
+  document.getElementById("btn-darkmode").addEventListener("click", () => {
+    const nowDark = document.body.classList.toggle("dark");
+    localStorage.setItem("darkMode", nowDark);
+    document.getElementById("btn-darkmode").textContent = nowDark ? "☀️" : "🌙";
   });
 }
 
