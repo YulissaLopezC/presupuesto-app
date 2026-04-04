@@ -42,6 +42,25 @@
   }
 }
 
+/* ── Modo oscuro manual (clase .dark en body) ─────────── */
+body.dark {
+  --bg:        #111111;
+  --surface:   #1a1a1a;
+  --surface2:  #222222;
+  --border:    #2e2e2e;
+  --border2:   #3a3a3a;
+  --text:      #e8e8e8;
+  --muted:     #888888;
+  --muted2:    #555555;
+  --accent:    #e87aaa;
+  --accent2:   #d45c90;
+  --danger:    #e07070;
+  --warning:   #e0a050;
+  --info:      #70a8e0;
+}
+
+body.dark::before { display: none; }
+
 body {
   background: var(--bg);
   color: var(--text);
