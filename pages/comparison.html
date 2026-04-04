@@ -173,7 +173,7 @@
   <script type="module">
     import { requireAuth }  from "../modules/auth.js";
     import { getExpenses, getBudget, getCategories } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js";
+    import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js?v=2";
     import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison, totalUsedPct } from "../assets/utils.js";
 
     let uid, selectedMonth, activeFilter = "all";

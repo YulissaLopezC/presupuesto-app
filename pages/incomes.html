@@ -245,7 +245,7 @@
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
     import { getIncomes, addIncome, updateIncome, deleteIncome, getWallets, getBudget, syncProportionalIncomes, getProportionalSummary } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js";
+    import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=2";
     import { formatCOP, currentMonth, formatDate, today } from "../assets/utils.js";
 
     let uid, selectedMonth, incomes = [], wallets = [], budget = null, propSummary = [], editingId = null;
