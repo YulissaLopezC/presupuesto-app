@@ -3,391 +3,213 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Presupuesto · Configurar</title>
+  <title>Presupuesto · Budget</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    /* ── Tabs Gastos / Ingresos ──────────────────────────── */
-    .tabs {
-      display: flex; background: var(--bg);
-      border-radius: 10px; padding: 4px;
-      margin-bottom: 20px; border: 1px solid var(--border);
-    }
-    .tab {
-      flex: 1; padding: 9px; text-align: center;
-      font-size: 13px; font-weight: 500; color: var(--muted);
-      cursor: pointer; border-radius: 7px;
-      transition: all 0.2s; user-select: none;
-    }
-    .tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+    body { background: #f0f4f8; }
+    body.dark { background: #111; }
 
-    /* ── Resumen totales arriba ───────────────────────────── */
-    .summary-bar {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px; margin-bottom: 20px;
-    }
-    .summary-item {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px;
-      text-align: center;
-    }
-    .summary-item .s-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .summary-item .s-value {
-      font-family: "DM Serif Display", serif;
-      font-size: 16px; letter-spacing: -0.3px; margin-top: 3px;
-    }
-    .s-value.inc { color: var(--info); }
-    .s-value.exp { color: var(--warning); }
-    .s-value.pos { color: var(--accent); }
-    .s-value.neg { color: var(--danger); }
+    /* ── Stats 3 cards ───────────────────────────────────── */
+    .stats-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 14px; }
+    .s3-card { background: #fff; border-radius: 14px; padding: 12px 12px 10px; }
+    body.dark .s3-card { background: #1a1a1a; }
+    .s3-card.active { background: #0f3460; }
+    .s3-lbl { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: #888; margin-bottom: 6px; }
+    .s3-card.active .s3-lbl { color: #7ab8e8; }
+    .s3-val { font-size: 14px; font-weight: 500; }
+    .s3-val.inc { color: #185fa5; }
+    .s3-val.exp { color: #c0392b; }
+    .s3-val.bal { color: #fff; }
+    .s3-bar { height: 3px; border-radius: 99px; margin-top: 8px; }
 
-    /* ── Grupos de categorías ────────────────────────────── */
-    .type-section { margin-bottom: 6px; }
+    /* ── Tabs ────────────────────────────────────────────── */
+    .budget-tabs { display: flex; background: #e8edf2; border-radius: 10px; padding: 3px; margin: 0 14px 14px; }
+    body.dark .budget-tabs { background: #222; }
+    .budget-tab { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; color: #888; user-select: none; transition: all 0.15s; }
+    .budget-tab.active { background: #fff; color: #1a1a2e; }
+    body.dark .budget-tab.active { background: #1a1a1a; color: #e8e8e8; }
 
-    .type-section-header {
-      display: flex; align-items: center; gap: 8px;
-      padding: 12px 0 8px;
-    }
-    .type-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-    }
-    .type-dot.basico      { background: var(--accent); }
-    .type-dot.no-esencial { background: var(--warning); }
-    .type-dot.ahorro      { background: var(--info); }
-
-    .type-section-label {
-      font-size: 11px; font-weight: 500; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.07em;
-    }
-    .type-section-total {
-      margin-left: auto; font-size: 12px; color: var(--muted);
-      font-family: "DM Serif Display", serif;
-    }
-
-    /* ── Fila de categoría editable ─────────────────────── */
-    .budget-row {
-      display: flex; align-items: center;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 10px 12px;
-      margin-bottom: 6px; gap: 8px;
-      transition: border-color 0.15s;
-    }
-    .budget-row:focus-within { border-color: var(--border2); }
-    .budget-name-input:focus { color: var(--accent); }
-    .budget-name-input:hover { color: var(--text); }
-
-    .budget-row-name {
-      flex: 1; font-size: 14px; color: var(--text);
-      min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .budget-input-wrap { position: relative; flex-shrink: 0; width: 130px; }
-    .budget-input-wrap .sym {
-      position: absolute; left: 10px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 12px; color: var(--muted); pointer-events: none;
-    }
-    .budget-input {
-      width: 100%; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 8px 10px 8px 22px;
-      font-family: "DM Serif Display", serif;
-      font-size: 14px; color: var(--text);
-      outline: none; text-align: right;
-      transition: border-color 0.15s;
-    }
-    .budget-input:focus { border-color: var(--accent); }
-    .budget-input::placeholder { color: var(--muted2); font-family: "DM Sans", sans-serif; font-size: 13px; }
-
-    /* ── Filas de fuentes de ingreso ─────────────────────── */
-    .income-row {
-      display: flex; align-items: center;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 10px 12px;
-      margin-bottom: 6px; gap: 10px;
-    }
-    .income-name-input {
-      flex: 1; background: transparent; border: none;
-      font-family: "DM Sans", sans-serif; font-size: 14px;
-      color: var(--text); outline: none;
-    }
-    .income-name-input::placeholder { color: var(--muted2); }
-
-    /* ── Botón copiar mes anterior ───────────────────────── */
+    /* ── Banner copiar mes ───────────────────────────────── */
     .copy-banner {
-      display: flex; align-items: center; justify-content: space-between;
-      background: rgba(212,96,138,0.06);
-      border: 1px solid rgba(212,96,138,0.2);
-      border-radius: 12px; padding: 12px 14px;
-      margin-bottom: 16px;
+      margin: 0 14px 12px; background: #e6f1fb; border-radius: 12px;
+      padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;
     }
-    .copy-banner p { font-size: 13px; color: var(--accent); }
-    .copy-banner span { font-size: 11px; color: var(--muted); display: block; margin-top: 1px; }
+    .copy-banner-txt { font-size: 12px; color: #185fa5; }
+    .copy-banner-btn { font-size: 12px; color: #185fa5; font-weight: 500; background: none; border: none; cursor: pointer; font-family: "DM Sans", sans-serif; }
 
-    .btn-copy {
-      background: rgba(212,96,138,0.1); border: 1px solid rgba(212,96,138,0.25);
-      color: var(--accent); border-radius: 8px;
-      padding: 7px 12px; font-size: 12px; font-weight: 500;
-      font-family: "DM Sans", sans-serif; cursor: pointer;
-      white-space: nowrap; transition: background 0.15s;
-      flex-shrink: 0; margin-left: 10px;
+    /* ── Sección por tipo ────────────────────────────────── */
+    .type-section { margin: 0 14px 14px; }
+    .type-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 0 2px; }
+    .type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .type-dot.basico    { background: #185fa5; }
+    .type-dot.noesencial { background: #c0392b; }
+    .type-dot.ahorro    { background: #3b6d11; }
+    .type-lbl { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.06em; flex: 1; }
+    .type-total { font-size: 12px; font-weight: 500; color: var(--text); }
+
+    /* ── Fila de categoría ───────────────────────────────── */
+    .cat-row-card {
+      background: #fff; border-radius: 12px; padding: 11px 12px;
+      margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
     }
-    .btn-copy:hover { background: rgba(212,96,138,0.18); }
-
-    /* ── Botón agregar ingreso ────────────────────────────── */
-    .btn-add-row {
-      width: 100%; padding: 10px;
-      background: none; border: 1px dashed var(--border2);
-      border-radius: 10px; color: var(--muted);
-      font-family: "DM Sans", sans-serif; font-size: 13px;
-      cursor: pointer; transition: border-color 0.15s, color 0.15s;
-      margin-bottom: 6px;
+    body.dark .cat-row-card { background: #1a1a1a; }
+    .cat-ico-box { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .cat-name-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 500;
+      color: var(--text); min-width: 0;
     }
-    .btn-add-row:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* ── Sticky save bar ─────────────────────────────────── */
-    .save-bar {
-      position: sticky; bottom: 68px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 12px 16px; margin: 0 -16px;
-      z-index: 80;
+    .cat-right-wrap { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .val-pill { display: flex; align-items: center; gap: 3px; background: #f0f4f8; border-radius: 8px; padding: 5px 8px; }
+    body.dark .val-pill { background: #222; }
+    .val-pill-sym { font-size: 11px; color: #888; }
+    .val-pill-input {
+      font-size: 13px; font-weight: 500; color: #1a1a2e; border: none;
+      background: transparent; outline: none; width: 72px; text-align: right;
+      font-family: "DM Sans", sans-serif;
     }
-
-    /* ── Toggle proporcional en fila de categoría ───────── */
+    body.dark .val-pill-input { color: #e8e8e8; }
+    .day-lbl { font-size: 10px; color: #aaa; white-space: nowrap; }
     .prop-toggle-btn {
-      width: 28px; height: 16px; background: var(--border2);
-      border-radius: 8px; position: relative; cursor: pointer;
-      transition: background 0.2s; flex-shrink: 0; border: none;
-      padding: 0;
+      width: 28px; height: 16px; background: #ddd; border-radius: 99px;
+      position: relative; cursor: pointer; border: none; padding: 0; flex-shrink: 0;
+      transition: background 0.2s;
     }
-    .prop-toggle-btn.on { background: var(--accent); }
+    .prop-toggle-btn.on { background: #0f3460; }
     .prop-toggle-btn::after {
-      content: ""; position: absolute;
-      width: 12px; height: 12px; background: #fff;
-      border-radius: 50%; top: 2px; left: 2px;
+      content: ""; position: absolute; width: 12px; height: 12px;
+      background: #fff; border-radius: 50%; top: 2px; left: 2px;
       transition: transform 0.2s;
     }
     .prop-toggle-btn.on::after { transform: translateX(12px); }
-    .prop-toggle-wrap {
-      display: flex; align-items: center; gap: 5px;
-      flex-shrink: 0;
-    }
-    .prop-toggle-label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+    .cat-del-btn { background: none; border: none; color: #cdd5e0; font-size: 14px; cursor: pointer; padding: 0 2px; transition: color 0.15s; }
+    .cat-del-btn:hover { color: #c0392b; }
 
-    /* ── Agregar categoría inline ───────────────────────── */
-    .btn-add-cat {
-      width: 100%; padding: 9px; margin-top: 4px; margin-bottom: 8px;
-      background: none; border: 1px dashed var(--border2);
-      border-radius: 8px; color: var(--muted);
-      font-family: "DM Sans", sans-serif; font-size: 12px;
-      cursor: pointer; transition: border-color 0.15s, color 0.15s;
-      text-align: center;
+    /* ── Agregar categoría ───────────────────────────────── */
+    .add-cat-btn {
+      width: 100%; border: 1.5px dashed #cdd5e0; border-radius: 12px;
+      padding: 11px; display: flex; align-items: center; justify-content: center;
+      gap: 7px; background: none; cursor: pointer; font-family: "DM Sans", sans-serif;
+      margin-bottom: 6px; transition: border-color 0.15s;
     }
-    .btn-add-cat:hover { border-color: var(--accent); color: var(--accent); }
+    .add-cat-btn:hover { border-color: #0f3460; }
+    .add-cat-btn span { font-size: 12px; color: #888; }
 
-    .inline-cat-form {
-      display: flex; gap: 6px; margin-top: 4px; margin-bottom: 8px;
-    }
-    .inline-cat-form input {
-      flex: 1; background: var(--bg); border: 1px solid var(--accent);
-      border-radius: 8px; padding: 8px 12px;
-      font-family: "DM Sans", sans-serif; font-size: 13px;
-      color: var(--text); outline: none;
-    }
-    .inline-cat-form input::placeholder { color: var(--muted); }
-    .btn-inline-save {
-      background: var(--accent); color: #fff; border: none;
-      border-radius: 8px; padding: 8px 14px;
-      font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 500;
-      cursor: pointer; white-space: nowrap; transition: background 0.15s;
-    }
-    .btn-inline-save:hover { background: var(--accent2); }
-    .btn-inline-cancel {
-      background: none; border: 1px solid var(--border2); color: var(--muted);
-      border-radius: 8px; padding: 8px 10px;
-      font-family: "DM Sans", sans-serif; font-size: 12px;
-      cursor: pointer; transition: border-color 0.15s;
-    }
-    .btn-inline-cancel:hover { border-color: var(--danger); color: var(--danger); }
-
-    /* ── No categorías aviso ─────────────────────────────── */
-    .no-cats-notice {
-      background: rgba(201,124,46,0.07);
-      border: 1px solid rgba(201,124,46,0.25);
-      border-radius: 12px; padding: 14px 16px;
-      font-size: 13px; color: var(--warning); line-height: 1.5;
-      margin-bottom: 16px;
-    }
-
-    /* ── Filas de ingreso mejoradas ──────────────────────── */
+    /* ── Ingresos form ───────────────────────────────────── */
     .income-card {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; padding: 14px; margin-bottom: 8px;
+      background: #fff; border-radius: 12px; padding: 12px 14px;
+      margin-bottom: 8px;
     }
-    .income-card-header {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-    }
+    body.dark .income-card { background: #1a1a1a; }
+    .income-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .income-name-input {
-      flex: 1; background: transparent; border: none;
-      font-family: "DM Sans", sans-serif; font-size: 14px;
-      color: var(--text); outline: none; min-width: 0;
-    }
-    .income-name-input::placeholder { color: var(--muted2); }
-    .income-type-select {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 5px 10px;
-      font-family: "DM Sans", sans-serif; font-size: 11px;
-      color: var(--muted); outline: none; cursor: pointer;
-      appearance: none; flex-shrink: 0;
-    }
-    .income-type-select option { background: var(--surface); }
-
-    .income-card-body { display: flex; gap: 8px; align-items: flex-start; }
-    .income-amount-wrap { flex: 1; position: relative; }
-    .income-amount-wrap .sym {
-      position: absolute; left: 10px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 12px; color: var(--muted); pointer-events: none;
+      flex: 1; border: none; outline: none; font-family: "DM Sans", sans-serif;
+      font-size: 13px; font-weight: 500; color: var(--text); background: transparent; min-width: 0;
     }
     .income-amount-input {
-      width: 100%; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 8px 10px 8px 22px;
-      font-family: "DM Serif Display", serif;
-      font-size: 14px; color: var(--text);
-      outline: none; text-align: right;
+      border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: #fff; outline: none; width: 110px; text-align: right;
     }
-    .income-amount-input:focus { border-color: var(--accent); }
-
-    /* Toggle proporcional */
-    .prop-toggle {
-      display: flex; align-items: center; gap: 6px;
-      margin-top: 10px; padding-top: 10px;
-      border-top: 1px solid var(--border);
+    body.dark .income-amount-input { background: #222; border-color: #333; }
+    .income-meta { display: flex; align-items: center; gap: 8px; }
+    .income-type-select {
+      flex: 1; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 5px 8px;
+      font-size: 11px; font-family: "DM Sans", sans-serif; color: #888;
+      background: #fff; outline: none;
     }
-    .prop-toggle label { font-size: 12px; color: var(--muted); cursor: pointer; flex: 1; }
+    body.dark .income-type-select { background: #222; border-color: #333; }
     .toggle-switch {
-      width: 32px; height: 18px; background: var(--border2);
-      border-radius: 9px; position: relative; cursor: pointer;
-      transition: background 0.2s; flex-shrink: 0; border: none;
+      width: 28px; height: 16px; background: #ddd; border-radius: 99px;
+      position: relative; cursor: pointer; flex-shrink: 0;
+      transition: background 0.2s;
     }
-    .toggle-switch.on { background: var(--accent); }
+    .toggle-switch.on { background: #3b6d11; }
     .toggle-switch::after {
-      content: ""; position: absolute;
-      width: 14px; height: 14px; background: #fff;
-      border-radius: 50%; top: 2px; left: 2px;
+      content: ""; position: absolute; width: 12px; height: 12px;
+      background: #fff; border-radius: 50%; top: 2px; left: 2px;
       transition: transform 0.2s;
     }
-    .toggle-switch.on::after { transform: translateX(14px); }
+    .toggle-switch.on::after { transform: translateX(12px); }
+    .toggle-prop-lbl { font-size: 10px; color: #888; white-space: nowrap; }
+    .income-del-btn { background: none; border: none; color: #cdd5e0; font-size: 14px; cursor: pointer; transition: color 0.15s; }
+    .income-del-btn:hover { color: #c0392b; }
+    .add-income-btn {
+      width: 100%; border: 1.5px dashed #cdd5e0; border-radius: 12px;
+      padding: 11px; display: flex; align-items: center; justify-content: center;
+      gap: 7px; background: none; cursor: pointer; font-family: "DM Sans", sans-serif;
+      margin-bottom: 6px;
+    }
+    .add-income-btn span { font-size: 12px; color: #888; }
 
-    /* Form avanzado */
-    .advanced-form {
-      margin-top: 10px; padding-top: 10px;
-      border-top: 1px solid var(--border);
+    /* ── Save button ─────────────────────────────────────── */
+    .save-budget-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: calc(100% - 28px); margin: 4px 14px 90px; padding: 14px;
+      background: #0f3460; color: #fff; border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 500; cursor: pointer; font-family: "DM Sans", sans-serif;
+    }
+    .save-budget-btn:hover { background: #1a4a7a; }
+
+    /* ── Inline add form ─────────────────────────────────── */
+    .inline-add-form {
+      background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 6px;
       display: none;
     }
-    .advanced-form.open { display: block; }
-    .advanced-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .advanced-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .advanced-result { font-size: 12px; color: var(--accent); margin-top: 6px; font-weight: 500; }
-    .btn-advanced {
-      background: none; border: none; color: var(--muted);
-      font-size: 11px; font-family: "DM Sans", sans-serif;
-      cursor: pointer; padding: 0; text-decoration: underline;
-      text-underline-offset: 2px;
+    body.dark .inline-add-form { background: #1a1a1a; }
+    .inline-add-form.open { display: block; }
+    .inline-add-input {
+      width: 100%; border: none; border-bottom: 1.5px solid #e2e8f0; padding: 6px 0;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: transparent; outline: none; margin-bottom: 10px;
     }
-    .btn-advanced:hover { color: var(--text); }
-
-    /* Badges de tipo */
-    .type-badge {
-      font-size: 10px; font-weight: 500; padding: 2px 7px;
-      border-radius: 99px; flex-shrink: 0;
-    }
-    .type-badge.fijo          { background: rgba(74,127,181,0.12); color: var(--info); }
-    .type-badge.no_operacional{ background: rgba(201,124,46,0.12); color: var(--warning); }
-    .type-badge.extraordinario{ background: rgba(212,96,138,0.10); color: var(--accent); }
+    .inline-add-actions { display: flex; gap: 8px; }
+    .inline-add-confirm { flex: 1; padding: 8px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
+    .inline-add-cancel { padding: 8px 14px; background: #f0f4f8; color: #888; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar"></div>
+  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
 
-  <div class="page">
-    <div style="margin-bottom:16px;">
-      <h2>Presupuesto</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:4px;">
-        Define cuánto planeas gastar e ingresar cada mes.
-      </p>
+  <div style="max-width:680px;margin:0 auto;">
+    <div id="month-selector-container" style="display:flex;justify-content:center;padding:12px 0 0;"></div>
+
+    <div class="stats-3" id="stats-3">
+      <div class="skeleton" style="height:68px;border-radius:14px;"></div>
+      <div class="skeleton" style="height:68px;border-radius:14px;"></div>
+      <div class="skeleton" style="height:68px;border-radius:14px;"></div>
     </div>
 
-    <!-- Selector de mes -->
-    <div id="month-selector-container" style="margin-bottom:16px;"></div>
-
-    <!-- Copiar mes anterior -->
-    <div id="copy-banner" style="display:none;" class="copy-banner">
-      <div>
-        <p>Copiar del mes anterior</p>
-        <span id="copy-banner-sub"></span>
-      </div>
-      <button class="btn-copy" id="btn-copy">Copiar</button>
+    <div class="budget-tabs">
+      <div class="budget-tab active" id="tab-gastos">Gastos</div>
+      <div class="budget-tab" id="tab-ingresos">Ingresos</div>
     </div>
 
-    <!-- Resumen totales -->
-    <div class="summary-bar" id="summary-bar">
-      <div class="summary-item">
-        <div class="s-label">Ingresos</div>
-        <div class="s-value inc" id="sum-income">$ 0</div>
-      </div>
-      <div class="summary-item">
-        <div class="s-label">Gastos</div>
-        <div class="s-value exp" id="sum-expenses">$ 0</div>
-      </div>
-      <div class="summary-item">
-        <div class="s-label">Balance</div>
-        <div class="s-value pos" id="sum-balance">$ 0</div>
-      </div>
+    <div id="copy-banner" class="copy-banner" style="display:none;">
+      <span class="copy-banner-txt">¿Copiar presupuesto del mes anterior?</span>
+      <button class="copy-banner-btn" id="btn-copy-prev">Copiar</button>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" id="tab-gastos">Gastos</div>
-      <div class="tab"        id="tab-ingresos">Ingresos</div>
-    </div>
+    <div id="expenses-form"></div>
+    <div id="income-form" style="display:none;"></div>
 
-    <!-- Panel Gastos -->
-    <div id="panel-gastos">
-      <div id="no-cats-notice" style="display:none;" class="no-cats-notice">
-        No tienes categorías configuradas.
-        <a href="./categories.html" style="color:var(--warning);font-weight:500;"> Ir a Categorías →</a>
-      </div>
-      <div id="categories-form"></div>
-    </div>
-
-    <!-- Panel Ingresos -->
-    <div id="panel-ingresos" style="display:none;">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
-        Fuentes de ingreso esperadas para el mes.
-      </p>
-      <div id="income-form"></div>
-      <button class="btn-add-row" id="btn-add-income">+ Agregar fuente de ingreso</button>
-    </div>
-
-    <!-- Sticky save -->
-    <div class="save-bar">
-      <button class="btn-primary" id="btn-save" >Guardar presupuesto</button>
-    </div>
+    <button class="save-budget-btn" id="btn-save">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Guardar presupuesto
+    </button>
   </div>
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script type="module">
-    import { requireAuth }   from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, renameCategoryInExpenses, syncProportionalIncomes } from "../modules/db.js";
+    import { requireAuth } from "../modules/auth.js";
+    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, currentMonth, formatMonth, lastMonths } from "../assets/utils.js";
+    import { currentMonth, formatMonth, formatCOP } from "../assets/utils.js";
 
-    let uid, selectedMonth, categories = [], currentBudget = null;
+    let uid, selectedMonth, currentBudget = null, categories = [], activeTab = "gastos";
 
     const user = await requireAuth();
     uid = user.uid;
@@ -395,532 +217,346 @@
 
     renderTopbar(user);
     renderBottomNav("budget");
-    renderMonthSelector("month-selector-container", selectedMonth, (m) => {
+    renderMonthSelector("month-selector-container", selectedMonth, async m => {
       selectedMonth = m;
-      loadBudget();
+      await loadBudget();
     });
 
     categories = await getCategories(uid);
     await loadBudget();
 
-    // ── Event delegation — un solo listener por contenedor ─
-    document.getElementById("categories-form").addEventListener("input", e => {
-      if (e.target.classList.contains("budget-input") && e.target.dataset.cat) {
-        updateTypeTotal(e.target.dataset.typeCls);
-        updateSummary();
-      }
-    });
-
-    document.getElementById("categories-form").addEventListener("click", async e => {
-      // Toggle proporcional
-      const propBtn = e.target.closest("[data-field='prop-toggle']");
-      if (propBtn) {
-        propBtn.classList.toggle("on");
-        return;
-      }
-
-      // Botón eliminar categoría
-      const delBtn = e.target.closest(".btn-delete-cat");
-      if (delBtn) {
-        const catId   = delBtn.dataset.catId;
-        const catName = delBtn.dataset.catName;
-        if (!confirm(`¿Eliminar la categoría "${catName}"?\nLos gastos existentes con esta categoría no se borran.`)) return;
-        try {
-          await deleteCategory(uid, catId);
-          showToast(`"${catName}" eliminada.`, "success");
-          categories = await getCategories(uid);
-          renderCategoriesForm();
-          updateSummary();
-        } catch (err) {
-          showToast("Error al eliminar.", "error"); console.error(err);
-        }
-        return;
-      }
-
-      // Botón "+ Agregar categoría"
-      const addBtn = e.target.closest(".btn-add-cat");
-      if (addBtn) {
-        const typeKey = addBtn.dataset.typeKey;
-        const typeCls = addBtn.dataset.typeCls;
-        const section = addBtn.closest(".type-section");
-        const container = section.querySelector(".inline-cat-container");
-
-        // Evitar duplicados
-        if (container.querySelector(".inline-cat-form")) return;
-
-        addBtn.style.display = "none";
-        container.innerHTML = `
-          <div class="inline-cat-form">
-            <input type="text" placeholder="Nombre de la categoría..." maxlength="40" class="inline-cat-input" autofocus/>
-            <button class="btn-inline-save" data-type-key="${typeKey}" data-type-cls="${typeCls}">Agregar</button>
-            <button class="btn-inline-cancel">✕</button>
-          </div>`;
-        container.querySelector(".inline-cat-input").focus();
-        return;
-      }
-
-      // Cancelar inline form
-      const cancelBtn = e.target.closest(".btn-inline-cancel");
-      if (cancelBtn) {
-        const section   = cancelBtn.closest(".type-section");
-        const container = section.querySelector(".inline-cat-container");
-        container.innerHTML = "";
-        section.querySelector(".btn-add-cat").style.display = "";
-        return;
-      }
-
-      // Guardar nueva categoría inline
-      const saveBtn = e.target.closest(".btn-inline-save");
-      if (saveBtn) {
-        const section   = saveBtn.closest(".type-section");
-        const container = section.querySelector(".inline-cat-container");
-        const input     = container.querySelector(".inline-cat-input");
-        const name      = input?.value.trim();
-        const typeKey   = saveBtn.dataset.typeKey;
-        const typeCls   = saveBtn.dataset.typeCls;
-
-        if (!name) { showToast("Escribe el nombre de la categoría.", "error"); return; }
-
-        // Verificar duplicado
-        if (categories.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-          showToast("Ya existe una categoría con ese nombre.", "error"); return;
-        }
-
-        saveBtn.disabled = true; saveBtn.textContent = "...";
-        try {
-          await addCategory(uid, { name, type: typeKey });
-          showToast(`"${name}" agregada.`, "success");
-          // Recargar categorías y re-renderizar
-          categories = await getCategories(uid);
-          renderCategoriesForm();
-          updateSummary();
-        } catch (err) {
-          showToast("Error al crear categoría.", "error"); console.error(err);
-          saveBtn.disabled = false; saveBtn.textContent = "Agregar";
-        }
-        return;
-      }
-    });
-
-    // Renombrar categoría al salir del campo nombre
-    document.getElementById("categories-form").addEventListener("blur", async e => {
-      const nameInput = e.target.closest(".budget-name-input");
-      if (!nameInput) return;
-      const catId        = nameInput.dataset.catId;
-      const originalName = nameInput.dataset.originalName;
-      const newName      = nameInput.value.trim();
-      if (!newName || newName === originalName) {
-        nameInput.value = originalName;
-        return;
-      }
-      // Verificar duplicado
-      if (categories.find(c => c.name.toLowerCase() === newName.toLowerCase() && c.id !== catId)) {
-        showToast("Ya existe una categoría con ese nombre.", "error");
-        nameInput.value = originalName;
-        return;
-      }
-      try {
-        const cat = categories.find(c => c.id === catId);
-        // 1. Actualizar categoría en Firestore
-        await updateCategory(uid, catId, { name: newName, type: cat?.type });
-        // 2. Renombrar en gastos del mes actual
-        const count = await renameCategoryInExpenses(uid, selectedMonth, originalName, newName);
-        // 3. Actualizar referencias locales
-        const row = nameInput.closest(".budget-row");
-        const budgetInput = row?.querySelector(".budget-input");
-        if (budgetInput) budgetInput.dataset.cat = newName;
-        nameInput.dataset.originalName = newName;
-        if (cat) cat.name = newName;
-        const msg = count > 0
-          ? `Renombrada a "${newName}" · ${count} gasto${count !== 1 ? "s" : ""} actualizado${count !== 1 ? "s" : ""}.`
-          : `Renombrada a "${newName}".`;
-        showToast(msg, "success");
-      } catch (err) {
-        showToast("Error al renombrar.", "error");
-        nameInput.value = originalName;
-      }
-    }, true);
-
-    // Enter en el input inline guarda la categoría
-    document.getElementById("categories-form").addEventListener("keydown", e => {
-      if (e.key === "Enter" && e.target.classList.contains("inline-cat-input")) {
-        const saveBtn = e.target.closest(".inline-cat-form")?.querySelector(".btn-inline-save");
-        if (saveBtn) saveBtn.click();
-      }
-      if (e.key === "Escape" && e.target.classList.contains("inline-cat-input")) {
-        const cancelBtn = e.target.closest(".inline-cat-form")?.querySelector(".btn-inline-cancel");
-        if (cancelBtn) cancelBtn.click();
-      }
-    });
-
     // Tabs
-    document.getElementById("tab-gastos").addEventListener("click",   () => switchTab("gastos"));
+    document.getElementById("tab-gastos").addEventListener("click", () => switchTab("gastos"));
     document.getElementById("tab-ingresos").addEventListener("click", () => switchTab("ingresos"));
 
-    // Botón agregar ingreso
-    document.getElementById("btn-add-income").addEventListener("click", addIncomeRow);
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById("tab-gastos").classList.toggle("active", tab === "gastos");
+      document.getElementById("tab-ingresos").classList.toggle("active", tab === "ingresos");
+      document.getElementById("expenses-form").style.display = tab === "gastos" ? "block" : "none";
+      document.getElementById("income-form").style.display  = tab === "ingresos" ? "block" : "none";
+    }
 
-    // Botón guardar
-    document.getElementById("btn-save").addEventListener("click", saveBudget);
-
-    // ── Cargar presupuesto ────────────────────────────────
     async function loadBudget() {
       currentBudget = await getBudget(uid, selectedMonth);
-      renderCategoriesForm();
+      renderStats();
+      renderExpensesForm();
       renderIncomeForm();
-      updateSummary();
-      await checkCopyBanner();
+      checkCopyBanner();
     }
 
-    // ── Banner copiar mes anterior ────────────────────────
+    // ── Stats 3 cards ─────────────────────────────────────
+    function renderStats() {
+      const cats     = currentBudget?.categories || {};
+      const totalExp = Object.values(cats).reduce((s,v) => s+Number(v), 0);
+      const inc      = currentBudget?.income || {};
+      const totalInc = typeof inc === "object" && !Array.isArray(inc)
+        ? Object.values(inc).reduce((s,v) => s+Number(v?.amount||v||0), 0) : 0;
+      const bal      = totalInc - totalExp;
+      const balCls   = bal >= 0 ? "#3b6d11" : "#c0392b";
+
+      document.getElementById("stats-3").innerHTML = `
+        <div class="s3-card">
+          <div class="s3-lbl">Ingresos</div>
+          <div class="s3-val inc">${fmtShort(totalInc)}</div>
+          <div class="s3-bar" style="background:#b5d4f4;"></div>
+        </div>
+        <div class="s3-card">
+          <div class="s3-lbl">Gastos</div>
+          <div class="s3-val exp">${fmtShort(totalExp)}</div>
+          <div class="s3-bar" style="background:#f5c6c6;"></div>
+        </div>
+        <div class="s3-card active">
+          <div class="s3-lbl">Balance</div>
+          <div class="s3-val bal" style="color:${bal>=0?'#7fddaa':'#ffaaaa'}">${bal>=0?"+":""}${fmtShort(bal)}</div>
+          <div class="s3-bar" style="background:rgba(255,255,255,0.2);"></div>
+        </div>`;
+    }
+
+    function fmtShort(v) {
+      const abs = Math.abs(v);
+      const sign = v < 0 ? "-" : "";
+      if (abs >= 1000000) return sign + "$" + (abs/1000000).toFixed(1) + "M";
+      if (abs >= 1000)    return sign + "$" + Math.round(abs/1000) + "k";
+      return sign + "$" + Math.round(abs);
+    }
+
+    // ── Copy banner ───────────────────────────────────────
     async function checkCopyBanner() {
-      const months = lastMonths(12);
-      const idx = months.indexOf(selectedMonth);
-      if (idx < 0 || idx >= months.length - 1) {
-        document.getElementById("copy-banner").style.display = "none";
-        return;
+      const banner = document.getElementById("copy-banner");
+      if (currentBudget?.categories && Object.keys(currentBudget.categories).length) {
+        banner.style.display = "none"; return;
       }
-      const prevMonth  = months[idx + 1];
-      const prevBudget = await getBudget(uid, prevMonth);
-      if (prevBudget && !currentBudget) {
-        document.getElementById("copy-banner-sub").textContent = `Desde ${formatMonth(prevMonth)}`;
-        document.getElementById("copy-banner").style.display = "flex";
-        document.getElementById("btn-copy").onclick = () => copyFromMonth(prevBudget);
-      } else {
-        document.getElementById("copy-banner").style.display = "none";
-      }
+      const [y, m] = selectedMonth.split("-").map(Number);
+      const pm = m === 1 ? 12 : m - 1;
+      const py = m === 1 ? y - 1 : y;
+      const prevMonth = `${py}-${String(pm).padStart(2,"0")}`;
+      const prev = await getBudget(uid, prevMonth);
+      banner.style.display = prev ? "flex" : "none";
+
+      document.getElementById("btn-copy-prev").onclick = async () => {
+        if (!prev) return;
+        await setBudget(uid, selectedMonth, {
+          categories: prev.categories || {},
+          income: prev.income || {},
+          categoryMeta: prev.categoryMeta || {}
+        });
+        banner.style.display = "none";
+        await loadBudget();
+        showToast("Presupuesto copiado.", "success");
+      };
     }
 
-    async function copyFromMonth(prevBudget) {
-      currentBudget = { categories: { ...prevBudget.categories }, income: { ...prevBudget.income } };
-      renderCategoriesForm();
-      renderIncomeForm();
-      updateSummary();
-      document.getElementById("copy-banner").style.display = "none";
-      showToast("Presupuesto copiado. Guarda para confirmar.", "success");
-    }
+    // ── TIPOS de categoría ────────────────────────────────
+    const TYPES = [
+      { key: "GASTO BÁSICO",       label: "Gasto básico",       dot: "basico",    bg: "#e6f1fb", stroke: "#185fa5" },
+      { key: "GASTO NO ESENCIAL",  label: "Gasto no esencial",  dot: "noesencial",bg: "#fbeaf0", stroke: "#993556" },
+      { key: "AHORRO O INVERSIÓN", label: "Ahorro o inversión", dot: "ahorro",    bg: "#eaf3de", stroke: "#3b6d11" },
+    ];
 
-    // ── Panel Gastos ──────────────────────────────────────
-    function renderCategoriesForm() {
-      const container = document.getElementById("categories-form");
-      const noticeEl  = document.getElementById("no-cats-notice");
-
-      noticeEl.style.display = "none"; // always hide — buttons handle adding
-
+    // ── Expenses form ─────────────────────────────────────
+    function renderExpensesForm() {
       const savedCats = currentBudget?.categories || {};
-      const meta      = currentBudget?.categoryMeta  || {};
-      const TYPES = [
-        { key: "GASTO BÁSICO",       cls: "basico",      label: "Gasto básico" },
-        { key: "GASTO NO ESENCIAL",  cls: "no-esencial", label: "Gasto no esencial" },
-        { key: "AHORRO O INVERSIÓN", cls: "ahorro",      label: "Ahorro o inversión" }
-      ];
+      const meta      = currentBudget?.categoryMeta || {};
+      const el        = document.getElementById("expenses-form");
 
-      container.innerHTML = TYPES.map(type => {
+      el.innerHTML = TYPES.map(type => {
         const cats = categories.filter(c => c.type === type.key);
-        const typeTotal = cats.reduce((s, c) => s + (Number(savedCats[c.name]) || 0), 0);
+        const typeTotal = cats.reduce((s,c) => s + Number(savedCats[c.name]||0), 0);
         return `
-          <div class="type-section" data-type-key="${type.key}">
-            <div class="type-section-header">
-              <div class="type-dot ${type.cls}"></div>
-              <span class="type-section-label">${type.label}</span>
-              <span class="type-section-total" id="type-total-${type.cls}">${formatCOP(typeTotal)}</span>
+          <div class="type-section">
+            <div class="type-hdr">
+              <div class="type-dot ${type.dot}"></div>
+              <span class="type-lbl">${type.label}</span>
+              <span class="type-total">${formatCOP(typeTotal)}</span>
             </div>
             ${cats.map(cat => {
               const isProp = meta[cat.name]?.proportional || false;
               return `
-              <div class="budget-row" style="flex-wrap:wrap;gap:6px;">
-                <input type="text" class="budget-name-input"
-                  data-cat-id="${cat.id}" data-original-name="${cat.name}"
-                  value="${cat.name}" placeholder="Nombre..."
-                  style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;min-width:80px;"/>
-                <div class="budget-input-wrap">
-                  <span class="sym">$</span>
-                  <input type="number" min="0" class="budget-input"
-                    data-cat="${cat.name}" data-type-cls="${type.cls}"
-                    value="${savedCats[cat.name] || ""}" placeholder="0"/>
-                </div>
-                <div class="prop-toggle-wrap" title="Devenga día a día">
-                  <span class="prop-toggle-label">∼/día</span>
-                  <button type="button" class="prop-toggle-btn ${isProp ? "on" : ""}"
-                    data-cat-name="${cat.name}" data-field="prop-toggle"></button>
-                </div>
-                <button class="btn-delete-cat" data-cat-id="${cat.id}" data-cat-name="${cat.name}"
-                  title="Eliminar" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:14px;padding:4px 6px;flex-shrink:0;transition:color 0.15s;"
-                  onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted2)'">✕</button>
-              </div>`;}).join("")}
-            <div class="inline-cat-container"></div>
-            <button class="btn-add-cat" data-type-key="${type.key}" data-type-cls="${type.cls}">
-              + Agregar categoría en ${type.label.toLowerCase()}
+                <div class="cat-row-card">
+                  <div class="cat-ico-box" style="background:${type.bg};">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${type.stroke}" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  </div>
+                  <input type="text" class="cat-name-input budget-name-input"
+                    data-cat-id="${cat.id}" data-original-name="${cat.name}"
+                    value="${cat.name}" placeholder="Nombre..."/>
+                  <div class="cat-right-wrap">
+                    <div class="val-pill">
+                      <span class="val-pill-sym">$</span>
+                      <input type="number" min="0" class="val-pill-input budget-input"
+                        data-cat="${cat.name}" value="${savedCats[cat.name]||""}" placeholder="0"/>
+                    </div>
+                    <span class="day-lbl">~/día</span>
+                    <button type="button" class="prop-toggle-btn ${isProp?"on":""}"
+                      data-cat-name="${cat.name}" data-field="prop-toggle"></button>
+                    <button class="cat-del-btn btn-delete-cat"
+                      data-cat-id="${cat.id}" data-cat-name="${cat.name}">✕</button>
+                  </div>
+                </div>`;
+            }).join("")}
+            <div class="inline-add-form" id="inline-add-${type.key.replace(/\s/g,"-")}">
+              <input type="text" class="inline-add-input" placeholder="Nombre de la categoría..."/>
+              <div class="inline-add-actions">
+                <button class="inline-add-confirm" data-type="${type.key}">Agregar</button>
+                <button class="inline-add-cancel" data-type="${type.key}">Cancelar</button>
+              </div>
+            </div>
+            <button class="add-cat-btn" data-add-type="${type.key}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Agregar en ${type.label.toLowerCase()}</span>
             </button>
           </div>`;
       }).join("");
 
-      // También mostrar secciones vacías para agregar categorías nuevas
-      TYPES.forEach(type => {
-        const cats = categories.filter(c => c.type === type.key);
-        if (!cats.length) {
-          container.innerHTML += `
-            <div class="type-section" data-type-key="${type.key}">
-              <div class="type-section-header">
-                <div class="type-dot ${type.cls}"></div>
-                <span class="type-section-label">${type.label}</span>
-              </div>
-              <div class="inline-cat-container"></div>
-              <button class="btn-add-cat" data-type-key="${type.key}" data-type-cls="${type.cls}">
-                + Agregar categoría en ${type.label.toLowerCase()}
-              </button>
-            </div>`;
-        }
-      });
+      // Event delegation
+      el.addEventListener("click", handleExpensesClick);
     }
 
-    // ── Panel Ingresos ────────────────────────────────────
-    function renderIncomeForm() {
-      const container   = document.getElementById("income-form");
-      const savedIncome = currentBudget?.income || {};
+    function handleExpensesClick(e) {
+      // Prop toggle
+      const propBtn = e.target.closest("[data-field='prop-toggle']");
+      if (propBtn) { propBtn.classList.toggle("on"); return; }
 
-      // Normalizar a array de objetos {name, amount, type, proportional, ...}
-      let entries = [];
-      if (typeof savedIncome === "object" && savedIncome !== null && !Array.isArray(savedIncome)) {
-        entries = Object.entries(savedIncome)
-          .filter(([key, val]) => !["month","updatedAt"].includes(key) && isNaN(Number(key)))
-          .map(([name, val]) => {
-            // Formato nuevo: {amount, type, proportional, ...}
-            if (typeof val === "object" && val !== null) {
-              return { name, ...val };
-            }
-            // Formato muy antiguo: {name: amount_number}
-            if (typeof val === "number") {
-              return { name, amount: val, type: "fijo", proportional: false };
-            }
-            return null;
-          })
-          .filter(Boolean);
+      // Delete cat
+      const delBtn = e.target.closest(".btn-delete-cat");
+      if (delBtn) {
+        if (!confirm(`¿Eliminar la categoría "${delBtn.dataset.catName}"?`)) return;
+        deleteCategory(uid, delBtn.dataset.catId).then(async () => {
+          categories = categories.filter(c => c.id !== delBtn.dataset.catId);
+          showToast("Categoría eliminada.", "success");
+          await loadBudget();
+        });
+        return;
       }
 
-      container.innerHTML = entries.map((inc, i) => incomeCardHTML(inc, i)).join("");
-      if (entries.length) bindIncomeCardEvents();
+      // Add cat button
+      const addBtn = e.target.closest("[data-add-type]");
+      if (addBtn) {
+        const type   = addBtn.dataset.addType;
+        const formId = "inline-add-" + type.replace(/\s/g, "-");
+        document.getElementById(formId).classList.add("open");
+        addBtn.style.display = "none";
+        return;
+      }
+
+      // Confirm add
+      const confirmBtn = e.target.closest(".inline-add-confirm");
+      if (confirmBtn) {
+        const type   = confirmBtn.dataset.type;
+        const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
+        const name   = formEl.querySelector(".inline-add-input").value.trim();
+        if (!name) { showToast("Escribe un nombre.", "error"); return; }
+        addCategory(uid, { name, type }).then(async () => {
+          showToast("Categoría agregada.", "success");
+          categories = await getCategories(uid);
+          await loadBudget();
+        });
+        return;
+      }
+
+      // Cancel add
+      const cancelBtn = e.target.closest(".inline-add-cancel");
+      if (cancelBtn) {
+        const type   = cancelBtn.dataset.type;
+        const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
+        formEl.classList.remove("open");
+        formEl.querySelector(".inline-add-input").value = "";
+        const addBtn2 = document.querySelector(`[data-add-type="${type}"]`);
+        if (addBtn2) addBtn2.style.display = "";
+        return;
+      }
     }
 
-    function incomeCardHTML(inc = {}, idx = Date.now()) {
-      const name         = inc.name || "";
-      const amount       = inc.amount || "";
-      const type         = inc.type || "fijo";
-      const proportional = inc.proportional || false;
-      const qty     = (inc.qty && inc.qty > 0)     ? inc.qty     : "";
-      const unitVal = (inc.unitValue && inc.unitValue > 0) ? inc.unitValue : "";
-      const id           = `ic-${idx}`;
+    // ── Income form ───────────────────────────────────────
+    function renderIncomeForm() {
+      const incomeData = currentBudget?.income || {};
+      function normalizeIncome(income) {
+        if (!income || typeof income !== "object") return [];
+        if (Array.isArray(income)) return income.filter(i => i?.name);
+        return Object.entries(income)
+          .filter(([k]) => isNaN(Number(k)) && !["month","updatedAt"].includes(k))
+          .map(([name, val]) => typeof val === "object" ? { name, ...val } : { name, amount: val, type: "fijo", proportional: false })
+          .filter(i => i.name);
+      }
+      const incArr = normalizeIncome(incomeData);
+      const daysInMonth = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
 
+      const el = document.getElementById("income-form");
+      el.innerHTML = `
+        <div style="margin:0 14px;">
+          <div id="income-cards">
+            ${incArr.map((inc, idx) => renderIncomeCard(inc, idx, daysInMonth)).join("")}
+          </div>
+          <button class="add-income-btn" id="btn-add-income">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Agregar fuente de ingreso</span>
+          </button>
+        </div>`;
+
+      document.getElementById("btn-add-income").addEventListener("click", () => {
+        const newInc = { name: "", amount: 0, type: "fijo", proportional: false };
+        const idx = document.querySelectorAll(".income-card").length;
+        const tmp = document.createElement("div");
+        tmp.innerHTML = renderIncomeCard(newInc, idx, daysInMonth);
+        document.getElementById("income-cards").appendChild(tmp.firstElementChild);
+        attachToggleListeners();
+      });
+
+      attachToggleListeners();
+    }
+
+    function renderIncomeCard(inc, idx, daysInMonth) {
       const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
-
       return `
-        <div class="income-card" id="${id}">
-          <div class="income-card-header">
-            <input type="text" class="income-name-input" placeholder="Fuente de ingreso" value="${name}"/>
-            <select class="income-type-select" data-field="type">
-              <option value="fijo"           ${type==="fijo"            ? "selected":""}>Fijo</option>
-              <option value="no_operacional" ${type==="no_operacional"  ? "selected":""}>No operacional</option>
-              <option value="extraordinario" ${type==="extraordinario"  ? "selected":""}>Extraordinario</option>
+        <div class="income-card">
+          <div class="income-row">
+            <input type="text" class="income-name-input" placeholder="Fuente de ingreso..." value="${inc.name||""}" maxlength="60"/>
+            <input type="number" class="income-amount-input" placeholder="0" value="${inc.amount||""}" min="0"/>
+            <button class="income-del-btn" onclick="this.closest('.income-card').remove()">✕</button>
+          </div>
+          <div class="income-meta">
+            <select class="income-type-select">
+              ${["fijo","no_operacional","extraordinario"].map(t =>
+                `<option value="${t}" ${inc.type===t?"selected":""}>${typeLabels[t]}</option>`
+              ).join("")}
             </select>
-            <button class="btn-danger" style="flex-shrink:0;">✕</button>
-          </div>
-
-          <div class="income-card-body">
-            <div class="income-amount-wrap">
-              <span class="sym">$</span>
-              <input type="number" min="0" class="income-amount-input" placeholder="0" value="${amount}" data-field="amount"/>
-            </div>
-          </div>
-
-          <!-- Toggle proporcional -->
-          <div class="prop-toggle">
-            <label>¿Se devenga día a día?</label>
-            <button type="button" class="toggle-switch ${proportional ? "on" : ""}" data-field="proportional" title="Activar proporcional por día"></button>
-          </div>
-
-          <!-- Form avanzado -->
-          <div class="advanced-form ${(qty > 0 || unitVal > 0) ? "open" : ""}">
-            <div class="advanced-row">
-              <div>
-                <div class="advanced-label">Cantidad</div>
-                <input type="number" min="0" class="form-input" style="padding:8px 10px;font-size:13px;" placeholder="0" value="${qty}" data-field="qty"/>
-              </div>
-              <div>
-                <div class="advanced-label">Valor unitario</div>
-                <div style="position:relative;">
-                  <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);">$</span>
-                  <input type="number" min="0" class="form-input" style="padding:8px 10px 8px 22px;font-size:13px;" placeholder="0" value="${unitVal}" data-field="unitValue"/>
-                </div>
-              </div>
-            </div>
-            <div class="advanced-result" id="${id}-result">${(qty > 0 && unitVal > 0) ? "= " + new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",minimumFractionDigits:0}).format(Number(qty)*Number(unitVal)) : ""}</div>
-          </div>
-
-          <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-            <button type="button" class="btn-advanced" data-action="toggle-advanced">
-              ${qty || unitVal ? "Ocultar form avanzado" : "Form avanzado (cantidad × valor)"}
-            </button>
+            <span class="toggle-prop-lbl">~/día</span>
+            <div class="toggle-switch ${inc.proportional?"on":""}" data-toggle></div>
           </div>
         </div>`;
     }
 
-    function bindIncomeCardEvents() {
-      // Usamos delegación en el contenedor padre para evitar duplicados
-      // Primero removemos listeners viejos clonando el nodo
-      const container = document.getElementById("income-form");
-      const fresh = container.cloneNode(true);
-      container.parentNode.replaceChild(fresh, container);
-      const cont = document.getElementById("income-form");
-
-      cont.addEventListener("input", e => {
-        const card = e.target.closest(".income-card");
-        if (!card) return;
-        const field = e.target.dataset.field;
-        if (field === "qty" || field === "unitValue") {
-          const qty     = Number(card.querySelector("[data-field='qty']")?.value) || 0;
-          const unitVal = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
-          const total   = qty * unitVal;
-          const resultEl = card.querySelector("[id$='-result']");
-          if (resultEl) {
-            resultEl.textContent = total > 0
-              ? "= " + new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",minimumFractionDigits:0}).format(total)
-              : "";
-          }
-          if (total > 0) {
-            const amountInput = card.querySelector(".income-amount-input");
-            if (amountInput) amountInput.value = total;
-          }
-        }
-        updateSummary();
+    function attachToggleListeners() {
+      document.querySelectorAll("[data-toggle]").forEach(el => {
+        el.onclick = () => el.classList.toggle("on");
       });
-
-      cont.addEventListener("click", e => {
-        const card = e.target.closest(".income-card");
-        if (!card) return;
-
-        // Toggle proporcional — el botón puede tener ::after, usar closest
-        const toggleBtn = e.target.closest(".toggle-switch");
-        if (toggleBtn) {
-          toggleBtn.classList.toggle("on");
-          return;
-        }
-
-        // Toggle form avanzado
-        if (e.target.closest("[data-action='toggle-advanced']")) {
-          const btn     = e.target.closest("[data-action='toggle-advanced']");
-          const advForm = card.querySelector(".advanced-form");
-          const isOpen  = advForm.classList.toggle("open");
-          btn.textContent = isOpen ? "Ocultar form avanzado" : "Form avanzado (cantidad × valor)";
-          return;
-        }
-
-        // Eliminar card
-        if (e.target.closest(".btn-danger")) {
-          card.remove();
-          updateSummary();
-        }
-      });
-    }
-
-    function addIncomeRow() {
-      const container = document.getElementById("income-form");
-      const div = document.createElement("div");
-      div.innerHTML = incomeCardHTML({}, Date.now());
-      container.appendChild(div.firstElementChild);
-      bindIncomeCardEvents();
-      // Focus en el último nombre
-      const cards = container.querySelectorAll(".income-card");
-      if (cards.length) cards[cards.length-1].querySelector(".income-name-input")?.focus();
-    }
-
-    // ── Totales en tiempo real ────────────────────────────
-    function updateTypeTotal(typeCls) {
-      const inputs = document.querySelectorAll(`.budget-input[data-type-cls="${typeCls}"]`);
-      const total  = Array.from(inputs).reduce((s, i) => s + (Number(i.value) || 0), 0);
-      const el = document.getElementById(`type-total-${typeCls}`);
-      if (el) el.textContent = formatCOP(total);
-    }
-
-    function updateSummary() {
-      const catInputs  = document.querySelectorAll(".budget-input[data-cat]");
-      const totalExp   = Array.from(catInputs).reduce((s, i) => s + (Number(i.value) || 0), 0);
-      const incomeCards = document.querySelectorAll("#income-form .income-card");
-      const totalIncome = Array.from(incomeCards).reduce((s, card) => {
-        return s + (Number(card.querySelector(".income-amount-input")?.value) || 0);
-      }, 0);
-      const balance = totalIncome - totalExp;
-      document.getElementById("sum-income").textContent   = formatCOP(totalIncome);
-      document.getElementById("sum-expenses").textContent = formatCOP(totalExp);
-      const balEl = document.getElementById("sum-balance");
-      balEl.textContent = formatCOP(Math.abs(balance));
-      balEl.className   = `s-value ${balance >= 0 ? "pos" : "neg"}`;
-    }
-
-    // ── Tabs ──────────────────────────────────────────────
-    function switchTab(tab) {
-      const isGastos = tab === "gastos";
-      document.getElementById("panel-gastos").style.display   = isGastos ? "block" : "none";
-      document.getElementById("panel-ingresos").style.display = isGastos ? "none"  : "block";
-      document.getElementById("tab-gastos").classList.toggle("active",   isGastos);
-      document.getElementById("tab-ingresos").classList.toggle("active", !isGastos);
     }
 
     // ── Guardar ───────────────────────────────────────────
+    document.getElementById("btn-save").addEventListener("click", saveBudget);
+
     async function saveBudget() {
       const btn = document.getElementById("btn-save");
-      const catInputs = document.querySelectorAll(".budget-input[data-cat]");
+
+      // Categorías
       const categoriesData = {};
-      catInputs.forEach(inp => {
+      document.querySelectorAll(".budget-input[data-cat]").forEach(inp => {
         const val = Number(inp.value) || 0;
         if (val > 0) categoriesData[inp.dataset.cat] = val;
       });
 
-      // Recoger ingresos — objeto keyed por nombre (Firestore no soporta arrays de objetos)
-      const incomeCards = document.querySelectorAll("#income-form .income-card");
-      const incomeData  = {};
-      incomeCards.forEach(card => {
-        const name         = card.querySelector(".income-name-input")?.value.trim();
-        const amount       = Number(card.querySelector(".income-amount-input")?.value) || 0;
-        const type         = card.querySelector(".income-type-select")?.value || "fijo";
-        const proportional = card.querySelector(".toggle-switch")?.classList.contains("on") || false;
-        const qty          = Number(card.querySelector("[data-field='qty']")?.value) || 0;
-        const unitValue    = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
-        const daysInMonth  = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
-        if (name && amount > 0) {
-          const entry = { amount, type, proportional,
-            dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
-          if (qty > 0)       entry.qty       = qty;
-          if (unitValue > 0) entry.unitValue = unitValue;
-          incomeData[name] = entry;
+      // Renombrar categorías
+      const renamePromises = [];
+      document.querySelectorAll(".budget-name-input").forEach(inp => {
+        const newName = inp.value.trim();
+        const oldName = inp.dataset.originalName;
+        const catId   = inp.dataset.catId;
+        if (newName && newName !== oldName) {
+          renamePromises.push(updateCategory(uid, catId, { name: newName }));
+          if (categoriesData[oldName] !== undefined) {
+            categoriesData[newName] = categoriesData[oldName];
+            delete categoriesData[oldName];
+          }
         }
       });
 
-      // Recoger metadata proporcional de categorías
+      // Props
       const categoryMeta = {};
       document.querySelectorAll("[data-field='prop-toggle']").forEach(btn => {
         const catName = btn.dataset.catName;
         if (catName) categoryMeta[catName] = { proportional: btn.classList.contains("on") };
       });
 
-      if (!Object.keys(categoriesData).length && !Object.keys(incomeData).length) {
-        showToast("Ingresa al menos un valor para guardar.", "error"); return;
-      }
+      // Ingresos
+      const daysInMonth = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
+      const incomeData  = {};
+      document.querySelectorAll(".income-card").forEach(card => {
+        const name         = card.querySelector(".income-name-input")?.value.trim();
+        const amount       = Number(card.querySelector(".income-amount-input")?.value) || 0;
+        const type         = card.querySelector(".income-type-select")?.value || "fijo";
+        const proportional = card.querySelector("[data-toggle]")?.classList.contains("on") || false;
+        if (name && amount > 0) {
+          incomeData[name] = { amount, type, proportional, dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
+        }
+      });
 
       btn.disabled = true; btn.textContent = "Guardando...";
       try {
+        await Promise.all(renamePromises);
         await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta });
         currentBudget = { categories: categoriesData, income: incomeData, categoryMeta };
+        categories = await getCategories(uid);
         showToast("Presupuesto guardado.", "success");
         document.getElementById("copy-banner").style.display = "none";
-        // Sincronizar ingresos proporcionales
         if (Object.values(incomeData).some(i => i.proportional)) {
           await syncProportionalIncomes(uid, selectedMonth);
         }
+        renderStats();
       } catch (err) {
-        showToast("Error al guardar. Intenta de nuevo.", "error");
-        console.error(err);
+        showToast("Error al guardar.", "error"); console.error(err);
       } finally {
-        btn.disabled = false; btn.textContent = "Guardar presupuesto";
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Guardar presupuesto`;
       }
     }
   </script>
