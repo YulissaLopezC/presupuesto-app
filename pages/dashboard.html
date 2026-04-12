@@ -102,12 +102,13 @@
     .card-link { font-size: 11px; color: #185fa5; text-decoration: none; cursor: pointer; }
 
     /* ── Barras semanales ────────────────────────────────── */
-    .bars-wrap { display: flex; gap: 6px; align-items: flex-end; height: 100px; }
+    .bars-wrap { display: flex; gap: 6px; align-items: flex-end; height: 120px; }
     .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
     .bar-pair { display: flex; gap: 2px; align-items: flex-end; width: 100%; flex: 1; position: relative; }
     .bar { border-radius: 3px 3px 0 0; flex: 1; min-height: 3px; position: relative; }
     .bar-b { background: #b5d4f4; }
     .bar-r { background: #0f3460; }
+    .bar-over { background: #c0392b; border-radius: 3px 3px 0 0; flex: 1; min-height: 3px; }
     body.dark .bar-b { background: #1a3a6a; }
     body.dark .bar-r { background: #5a8abc; }
     .bar-val-top {
@@ -191,8 +192,8 @@
           <div class="card-sub">Real vs presupuesto</div>
         </div>
       </div>
-      <div class="bars-wrap" id="weekly-bars" style="margin-top:18px;">
-        <div class="skeleton" style="height:80px;border-radius:8px;flex:1;"></div>
+      <div class="bars-wrap" id="weekly-bars" style="margin-top:20px;height:120px;">
+        <div class="skeleton" style="height:100px;border-radius:8px;flex:1;"></div>
       </div>
       <div class="chart-legend" id="chart-legend" style="display:none;">
         <div class="leg-item"><span class="leg-dot" style="background:#b5d4f4;"></span>Presupuesto</div>
@@ -353,16 +354,22 @@
         return "$" + Math.round(v);
       };
 
+      // Usar 90% fijo para presupuesto y escalar real relativo a él
       document.getElementById("weekly-bars").innerHTML = weeks.map((w,i) => {
-        const hReal   = Math.max(Math.round((w/maxVal)*100), 3);
-        const hBudget = Math.max(Math.round((weekBudget/maxVal)*100), 3);
+        const hBudget = 85;
+        const hReal   = weekBudget > 0
+          ? Math.max(Math.round((w / weekBudget) * hBudget), w > 0 ? 8 : 2)
+          : 2;
+        const overBudget = w > weekBudget;
         return `
           <div class="bar-col">
             <div class="bar-pair">
               <div class="bar bar-b" style="height:${hBudget}%;">
                 <span class="bar-val-top">${fmt(weekBudget)}</span>
               </div>
-              <div class="bar bar-r" style="height:${hReal}%;"></div>
+              <div class="bar ${overBudget ? "bar-over" : "bar-r"}" style="height:${hReal}%;">
+                ${w > 0 ? `<span class="bar-val-top" style="color:${overBudget?"#c0392b":"#0f3460"};">${fmt(w)}</span>` : ""}
+              </div>
             </div>
             <div class="bar-lbl">Sem ${i+1}</div>
           </div>`;
