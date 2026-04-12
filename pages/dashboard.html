@@ -8,212 +8,168 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    body { background: #f0f4f8; }
+    body { background: #f0f4f8; padding-bottom: 0; }
     body.dark { background: #111; }
 
-    /* ── Hero (navy) ─────────────────────────────────────── */
-    .hero-section {
-      background: #0f3460;
-      padding: 0 16px 28px;
-      position: relative;
+    /* ── Topbar fuera del hero ───────────────────────────── */
+    .dash-topbar {
+      background: #f0f4f8; padding: 12px 16px 0;
+      max-width: 680px; margin: 0 auto;
     }
-    body.dark .hero-section { background: #0a1f3d; }
+    body.dark .dash-topbar { background: #111; }
+    .dash-topbar .topbar { padding: 0; }
+
+    /* ── Hero card azul ──────────────────────────────────── */
+    .hero-card {
+      background: #0f3460; border-radius: 20px;
+      padding: 16px 18px 20px; margin: 12px 14px 0;
+      max-width: calc(680px - 28px);
+    }
+    body.dark .hero-card { background: #0a1f3d; }
+
+    .hero-month-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.12); border-radius: 99px;
+      padding: 5px 12px; margin-bottom: 12px;
+    }
+    .hero-month-pill .ms-arrow { color: #7aa3cc !important; }
+    .hero-month-pill .ms-label { color: #fff !important; font-size: 12px !important; min-width: 100px !important; }
 
     .hero-label {
-      font-size: 10px; font-weight: 500; color: #7aa3cc;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      margin-bottom: 4px;
+      font-size: 9px; font-weight: 500; color: #7aa3cc;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px;
     }
     .hero-amount {
-      font-size: 38px; font-weight: 500;
-      color: #ffffff; letter-spacing: -1.5px;
-      margin-bottom: 4px; line-height: 1.1;
+      font-size: 36px; font-weight: 500; color: #fff;
+      letter-spacing: -1.5px; margin-bottom: 4px; line-height: 1.1;
     }
     .hero-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: #1a4a7a; border-radius: 99px;
-      padding: 4px 10px; font-size: 11px; color: #7ab8e8;
-      margin-bottom: 14px;
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.12); border-radius: 99px;
+      padding: 3px 10px; font-size: 11px; color: #7ab8e8; margin-bottom: 12px;
     }
-    .hero-progress-wrap { margin-bottom: 14px; }
-    .hero-progress-labels {
+    .hero-prog-labels {
       display: flex; justify-content: space-between;
-      font-size: 11px; color: #7aa3cc; margin-bottom: 5px;
+      font-size: 10px; color: #7aa3cc; margin-bottom: 4px;
     }
-    .hero-progress-bar {
-      height: 5px; background: rgba(255,255,255,0.15);
-      border-radius: 99px; overflow: hidden;
+    .hero-prog-track {
+      height: 4px; background: rgba(255,255,255,0.15);
+      border-radius: 99px; overflow: hidden; margin-bottom: 14px;
     }
-    .hero-progress-fill {
-      height: 100%; border-radius: 99px;
-      background: #ffffff; transition: width 0.4s ease;
-    }
-    .hero-progress-fill.warn { background: #e0a050; }
-    .hero-progress-fill.over { background: #e07070; }
-
-    .hero-btns { display: flex; gap: 10px; align-items: center; }
+    .hero-prog-fill { height: 100%; background: #fff; border-radius: 99px; }
+    .hero-prog-fill.warn { background: #e0a050; }
+    .hero-prog-fill.over { background: #e07070; }
+    .hero-btns { display: flex; gap: 8px; align-items: center; }
     .hero-btn-main {
-      background: #ffffff; color: #0f3460;
-      border: none; border-radius: 99px;
-      padding: 9px 18px; font-size: 13px; font-weight: 500;
-      cursor: pointer; font-family: "DM Sans", sans-serif;
+      background: #fff; color: #0f3460; border: none;
+      border-radius: 99px; padding: 8px 16px;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif;
       text-decoration: none; display: inline-block;
     }
-    .hero-btn-arrow {
-      background: #1a4a7a; color: #ffffff;
-      border: none; border-radius: 50%;
-      width: 38px; height: 38px; font-size: 16px;
+    .hero-btn-sm {
+      background: rgba(255,255,255,0.15); color: #fff; border: none;
+      border-radius: 50%; width: 34px; height: 34px; font-size: 14px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; text-decoration: none;
+      text-decoration: none;
     }
-
-    /* ── Month selector en hero ──────────────────────────── */
-    #month-selector-container .ms-wrap {
-      background: rgba(255,255,255,0.12) !important;
-      border-color: rgba(255,255,255,0.15) !important;
-    }
-    #month-selector-container .ms-label { color: #ffffff !important; }
-    #month-selector-container .ms-arrow { color: #7aa3cc !important; }
-    #month-selector-container .ms-arrow:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
-
-    /* ── Topbar en hero ──────────────────────────────────── */
-    .topbar-hero {
-      background: #0f3460;
-      padding: 14px 16px 12px;
-    }
-    body.dark .topbar-hero { background: #0a1f3d; }
 
     /* ── Body ────────────────────────────────────────────── */
     .dash-body {
-      padding: 14px 14px 90px;
+      padding: 12px 14px 90px;
       display: flex; flex-direction: column; gap: 12px;
       max-width: 680px; margin: 0 auto;
     }
 
     /* ── Stats row ───────────────────────────────────────── */
     .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-card {
-      background: #ffffff; border-radius: 14px; padding: 12px 14px;
-    }
+    .stat-card { background: #fff; border-radius: 14px; padding: 12px 14px; }
     body.dark .stat-card { background: #1a1a1a; }
-    .stat-label {
-      font-size: 10px; color: #888; text-transform: uppercase;
-      letter-spacing: 0.05em; margin-bottom: 3px;
-    }
-    .stat-value { font-size: 18px; font-weight: 500; }
-    .stat-value.blue { color: #185fa5; }
-    .stat-value.green { color: #3b6d11; }
-    .stat-bar { height: 3px; border-radius: 99px; overflow: hidden; margin-top: 7px; }
-    .stat-bar-track { height: 100%; border-radius: 99px; }
-    .stat-sub { font-size: 10px; color: #888; margin-top: 4px; }
+    .stat-lbl { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+    .stat-val { font-size: 17px; font-weight: 500; }
+    .stat-val.blue { color: #185fa5; }
+    .stat-val.green { color: #3b6d11; }
+    .mini-bar { height: 3px; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .mini-fill { height: 100%; border-radius: 99px; }
+    .stat-sub { font-size: 10px; color: #888; margin-top: 3px; }
 
-    /* ── Cards ───────────────────────────────────────────── */
-    .dash-card {
-      background: #ffffff; border-radius: 16px; padding: 14px;
-    }
+    /* ── Dash cards ──────────────────────────────────────── */
+    .dash-card { background: #fff; border-radius: 16px; padding: 14px; }
     body.dark .dash-card { background: #1a1a1a; }
-    .dash-card-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 12px;
-    }
-    .dash-card-title { font-size: 14px; font-weight: 500; color: var(--text); }
-    .dash-card-link {
-      font-size: 11px; color: #185fa5; text-decoration: none; cursor: pointer;
-    }
+    .card-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .card-title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .card-sub { font-size: 10px; color: #888; margin-top: 1px; }
+    .card-link { font-size: 11px; color: #185fa5; text-decoration: none; cursor: pointer; }
 
     /* ── Barras semanales ────────────────────────────────── */
-    .bars-wrap { display: flex; gap: 8px; align-items: flex-end; height: 80px; }
-    .bar-col { display: flex; flex-direction: column; flex: 1; }
-    .bar-group { display: flex; gap: 3px; align-items: flex-end; flex: 1; }
-    .bar { border-radius: 4px 4px 0 0; flex: 1; min-height: 4px; }
-    .bar-budget { background: #b5d4f4; }
-    .bar-actual { background: #0f3460; }
-    body.dark .bar-budget { background: #2a4a7a; }
-    body.dark .bar-actual { background: #5a8abc; }
-    .bar-lbl { text-align: center; font-size: 10px; color: #888; margin-top: 5px; }
-    .chart-legend { display: flex; gap: 12px; margin-top: 8px; }
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-    .legend-item { font-size: 11px; color: #666; display: flex; align-items: center; }
+    .bars-wrap { display: flex; gap: 6px; align-items: flex-end; height: 100px; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .bar-pair { display: flex; gap: 2px; align-items: flex-end; width: 100%; flex: 1; position: relative; }
+    .bar { border-radius: 3px 3px 0 0; flex: 1; min-height: 3px; position: relative; }
+    .bar-b { background: #b5d4f4; }
+    .bar-r { background: #0f3460; }
+    body.dark .bar-b { background: #1a3a6a; }
+    body.dark .bar-r { background: #5a8abc; }
+    .bar-val-top {
+      position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; color: #888; white-space: nowrap;
+    }
+    .bar-lbl { font-size: 9px; color: #888; margin-top: 4px; }
+    .chart-legend { display: flex; gap: 10px; margin-top: 8px; }
+    .leg-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 3px; }
+    .leg-item { font-size: 10px; color: #666; display: flex; align-items: center; }
 
-    /* ── Donut + cajitas row ─────────────────────────────── */
+    /* ── Two col ─────────────────────────────────────────── */
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .donut-wrap { position: relative; width: 72px; height: 72px; margin: 0 auto 10px; }
-    .donut-center {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-    }
-    .donut-pct { font-size: 15px; font-weight: 500; color: var(--text); }
-    .donut-sub { font-size: 9px; color: #888; }
-    .donut-stat {
-      display: flex; justify-content: space-between;
-      font-size: 11px; margin-bottom: 3px;
-    }
-    .donut-stat-lbl { color: #888; }
-    .donut-stat-val { font-weight: 500; color: var(--text); }
-    .donut-stat-val.green { color: #3b6d11; }
-
-    /* Cajitas mini lista */
-    .wallet-mini { display: flex; flex-direction: column; gap: 7px; }
-    .wallet-mini-row {
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .wallet-mini-name { font-size: 11px; color: var(--text); }
-    .wallet-mini-sub { font-size: 10px; color: #888; }
-    .wallet-mini-val { font-size: 13px; font-weight: 500; }
-    .wallet-mini-val.blue { color: #185fa5; }
-    .wallet-mini-val.red { color: #a32d2d; }
-    .wallet-mini-link { font-size: 11px; color: #185fa5; cursor: pointer; margin-top: 8px; display: block; text-decoration: none; }
+    .donut-wrap { position: relative; width: 68px; height: 68px; margin: 0 auto 10px; }
+    .donut-ctr { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .donut-pct { font-size: 14px; font-weight: 500; color: var(--text); }
+    .donut-sub2 { font-size: 9px; color: #888; }
+    .d-stat { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 3px; }
+    .d-lbl { color: #888; }
+    .d-val { font-weight: 500; color: var(--text); }
+    .d-val.g { color: #3b6d11; }
+    .wall-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+    .wall-name { font-size: 11px; color: var(--text); }
+    .wall-sub { font-size: 9px; color: #888; }
+    .wall-val { font-size: 12px; font-weight: 500; }
+    .wall-val.b { color: #185fa5; }
+    .wall-val.r { color: #a32d2d; }
 
     /* ── Categorías top ──────────────────────────────────── */
     .cats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .cat-card {
-      border-radius: 12px; padding: 11px;
-      border: 0.5px solid #e8e8e8;
-    }
-    body.dark .cat-card { border-color: #2a2a2a; }
-    .cat-icon-box {
-      width: 30px; height: 30px; border-radius: 8px;
-      margin-bottom: 7px; display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
-    .cat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 3px; }
-    .cat-val { font-size: 14px; font-weight: 500; color: var(--text); }
+    .cat-top-card { border-radius: 12px; padding: 10px; border: 0.5px solid #e8e8e8; }
+    body.dark .cat-top-card { border-color: #2a2a2a; }
+    .cat-ico { width: 28px; height: 28px; border-radius: 7px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; }
+    .cat-top-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 3px; }
+    .cat-top-val { font-size: 13px; font-weight: 500; color: var(--text); }
 
-    /* ── Actividad reciente ──────────────────────────────── */
-    .act-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 0; border-bottom: 0.5px solid #f0f0f0;
-    }
-    body.dark .act-item { border-bottom-color: #2a2a2a; }
-    .act-item:last-child { border-bottom: none; }
-    .act-icon {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: #f0f4f8; display: flex;
-      align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    body.dark .act-icon { background: #2a2a2a; }
-    .act-info { flex: 1; min-width: 0; }
-    .act-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .act-sub { font-size: 11px; color: #888; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .act-right { text-align: right; flex-shrink: 0; }
-    .act-amount { font-size: 13px; font-weight: 500; }
-    .act-amount.neg { color: #a32d2d; }
-    .act-amount.pos { color: #3b6d11; }
-    .act-date { font-size: 10px; color: #888; margin-top: 1px; }
+    /* ── Progreso por categoría ──────────────────────────── */
+    .cat-prog-row { padding: 9px 0; border-bottom: 0.5px solid #f0f0f0; }
+    body.dark .cat-prog-row { border-bottom-color: #2a2a2a; }
+    .cat-prog-row:last-child { border-bottom: none; }
+    .cat-prog-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+    .cat-prog-name { font-size: 12px; color: var(--text); }
+    .cat-prog-amounts { font-size: 10px; color: #888; }
+    .cat-prog-amounts b { color: var(--text); font-weight: 500; }
+    .prog-bar { height: 4px; background: #f0f0f0; border-radius: 99px; overflow: hidden; }
+    body.dark .prog-bar { background: #2a2a2a; }
+    .prog-fill { height: 100%; border-radius: 99px; background: #0f3460; }
+    .prog-fill.warn { background: #e0a050; }
+    .prog-fill.over { background: #e07070; }
   </style>
 </head>
 <body>
-  <!-- Topbar en hero -->
-  <div class="topbar-hero">
-    <div id="topbar" class="topbar" style="padding:0;max-width:680px;margin:0 auto;"></div>
+  <!-- Topbar -->
+  <div class="dash-topbar">
+    <div id="topbar" class="topbar"></div>
   </div>
 
-  <!-- Hero section -->
-  <div class="hero-section">
-    <div style="max-width:680px;margin:0 auto;">
-      <div id="month-selector-container" style="margin-bottom:14px;padding-top:4px;"></div>
-      <div id="hero-content">
+  <!-- Hero card azul -->
+  <div style="max-width:680px;margin:0 auto;">
+    <div class="hero-card" id="hero-card">
+      <div id="month-selector-container"></div>
+      <div id="hero-inner">
         <div class="hero-label">Cargando...</div>
       </div>
     </div>
@@ -221,30 +177,27 @@
 
   <!-- Body -->
   <div class="dash-body">
-    <!-- Stats row -->
     <div class="stats-row" id="stats-row">
       <div class="skeleton" style="height:80px;border-radius:14px;"></div>
       <div class="skeleton" style="height:80px;border-radius:14px;"></div>
     </div>
 
-    <!-- Rendimiento semanal -->
     <div class="dash-card">
-      <div class="dash-card-header">
+      <div class="card-hdr">
         <div>
-          <div class="dash-card-title">Rendimiento semanal</div>
-          <div style="font-size:11px;color:#888;margin-top:1px;">Real vs presupuesto</div>
+          <div class="card-title">Rendimiento semanal</div>
+          <div class="card-sub">Real vs presupuesto</div>
         </div>
       </div>
-      <div class="bars-wrap" id="weekly-bars">
+      <div class="bars-wrap" id="weekly-bars" style="margin-top:18px;">
         <div class="skeleton" style="height:80px;border-radius:8px;flex:1;"></div>
       </div>
       <div class="chart-legend" id="chart-legend" style="display:none;">
-        <div class="legend-item"><span class="legend-dot" style="background:#b5d4f4;"></span>Presupuesto</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#0f3460;"></span>Real</div>
+        <div class="leg-item"><span class="leg-dot" style="background:#b5d4f4;"></span>Presupuesto</div>
+        <div class="leg-item"><span class="leg-dot" style="background:#0f3460;"></span>Real</div>
       </div>
     </div>
 
-    <!-- Donut + Cajitas -->
     <div class="two-col">
       <div class="dash-card" id="donut-card">
         <div class="skeleton" style="height:160px;border-radius:8px;"></div>
@@ -254,28 +207,26 @@
       </div>
     </div>
 
-    <!-- Categorías top -->
     <div class="dash-card">
-      <div class="dash-card-header">
-        <div class="dash-card-title">Categorías top</div>
-        <a href="./comparison.html" class="dash-card-link">Ver todo →</a>
+      <div class="card-hdr">
+        <div class="card-title">Categorías top</div>
+        <a href="./comparison.html" class="card-link">Ver todo →</a>
       </div>
       <div class="cats-grid" id="cats-grid">
-        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
       </div>
     </div>
 
-    <!-- Actividad reciente -->
     <div class="dash-card">
-      <div class="dash-card-header">
-        <div class="dash-card-title">Actividad reciente</div>
-        <a href="./expenses.html" class="dash-card-link">Ver todo →</a>
+      <div class="card-hdr">
+        <div class="card-title">Por categoría</div>
+        <a href="./comparison.html" class="card-link">Comparativo →</a>
       </div>
-      <div id="activity-list">
-        <div class="skeleton" style="height:140px;border-radius:8px;"></div>
+      <div id="cat-progress">
+        <div class="skeleton" style="height:160px;border-radius:8px;"></div>
       </div>
     </div>
   </div>
@@ -295,6 +246,8 @@
 
     renderTopbar(user);
     renderBottomNav("dashboard");
+
+    // Render month selector inside hero with white style
     renderMonthSelector("month-selector-container", selectedMonth, m => {
       selectedMonth = m;
       loadDashboard();
@@ -312,45 +265,42 @@
       ]);
       const propExpSummary = await getProportionalExpensesSummary(uid, selectedMonth, expenses);
 
-      renderHero(expenses, budget, incomes, propSummary, propExpSummary);
+      renderHero(expenses, budget);
       renderStats(expenses, budget, incomes);
       renderWeeklyBars(expenses, budget);
       renderDonut(expenses, budget);
       renderWalletsCard(wallets);
-      renderCatsTop(expenses, budget);
-      renderActivity(expenses, incomes);
+      renderCatsTop(expenses);
+      renderCatProgress(expenses, budget);
     }
 
     // ── Hero ──────────────────────────────────────────────
-    function renderHero(expenses, budget, incomes, propSummary, propExpSummary) {
-      const totalBudgeted = budget ? Object.values(budget.categories || {}).reduce((s,v) => s+Number(v), 0) : 0;
-      const totalSpent    = expenses.reduce((s,e) => s+Number(e.amount), 0);
+    function renderHero(expenses, budget) {
+      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
+      const totalSpent    = expenses.reduce((s,e)=>s+Number(e.amount),0);
       const saldo         = totalBudgeted - totalSpent;
-      const pctUsed       = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted, 1) : 0;
+      const pctUsed       = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted,1) : 0;
       const pctN          = Math.round(pctUsed*100);
       const barCls        = pctUsed >= 1 ? "over" : pctUsed >= 0.8 ? "warn" : "";
-      const isOver        = saldo < 0;
 
-      document.getElementById("hero-content").innerHTML = `
-        <div class="hero-label">Disponible del presupuesto · ${formatMonth(selectedMonth)}</div>
+      document.getElementById("hero-inner").innerHTML = `
+        <div class="hero-label">Disponible del presupuesto</div>
         <div class="hero-amount">${formatCOP(Math.abs(saldo))}</div>
         <div class="hero-badge">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7ab8e8" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
-          ${pctN}% del presupuesto ${isOver ? "excedido" : "usado"}
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#7ab8e8" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          ${pctN}% del presupuesto ${saldo < 0 ? "excedido" : "usado"}
         </div>
         ${totalBudgeted > 0 ? `
-          <div class="hero-progress-wrap">
-            <div class="hero-progress-labels">
-              <span>Gastado: ${formatCOP(totalSpent)}</span>
-              <span>${pctN}%</span>
-            </div>
-            <div class="hero-progress-bar">
-              <div class="hero-progress-fill ${barCls}" style="width:${pctUsed*100}%;"></div>
-            </div>
+          <div class="hero-prog-labels">
+            <span>Gastado: ${formatCOP(totalSpent)}</span>
+            <span>${pctN}%</span>
+          </div>
+          <div class="hero-prog-track">
+            <div class="hero-prog-fill ${barCls}" style="width:${pctUsed*100}%;"></div>
           </div>` : ""}
         <div class="hero-btns">
           <a href="./expenses.html" class="hero-btn-main">+ Registrar movimiento</a>
-          <a href="./expenses.html" class="hero-btn-arrow">↗</a>
+          <a href="./expenses.html" class="hero-btn-sm">↗</a>
         </div>`;
     }
 
@@ -364,29 +314,28 @@
 
       document.getElementById("stats-row").innerHTML = `
         <div class="stat-card">
-          <div class="stat-label">Presupuesto</div>
-          <div class="stat-value blue">${formatCOP(totalBudgeted)}</div>
-          <div class="stat-bar" style="background:#e6f1fb;">
-            <div class="stat-bar-track" style="width:${pctSpent*100}%;background:#185fa5;"></div>
+          <div class="stat-lbl">Presupuesto</div>
+          <div class="stat-val blue">${formatCOP(totalBudgeted)}</div>
+          <div class="mini-bar" style="background:#e6f1fb;">
+            <div class="mini-fill" style="width:${pctSpent*100}%;background:#185fa5;"></div>
           </div>
           <div class="stat-sub">${Math.round(pctSpent*100)}% gastado</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Ingresos reales</div>
-          <div class="stat-value green">${formatCOP(totalIncome)}</div>
-          <div class="stat-bar" style="background:#eaf3de;">
-            <div class="stat-bar-track" style="width:${pctIncome*100}%;background:#3b6d11;"></div>
+          <div class="stat-lbl">Ingresos reales</div>
+          <div class="stat-val green">${formatCOP(totalIncome)}</div>
+          <div class="mini-bar" style="background:#eaf3de;">
+            <div class="mini-fill" style="width:${pctIncome*100}%;background:#3b6d11;"></div>
           </div>
           <div class="stat-sub">${Math.round(pctIncome*100)}% del esperado</div>
         </div>`;
     }
 
-    // ── Barras semanales ──────────────────────────────────
+    // ── Barras semanales con valores ──────────────────────
     function renderWeeklyBars(expenses, budget) {
       const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
       const weekBudget    = totalBudgeted / 4;
 
-      // Agrupar gastos por semana del mes
       const weeks = [0,0,0,0];
       expenses.forEach(e => {
         const day = parseInt((e.date||"").split("-")[2]||"1");
@@ -395,20 +344,27 @@
       });
 
       const maxVal = Math.max(...weeks, weekBudget, 1);
-      const barsHTML = weeks.map((w,i) => {
-        const hReal   = Math.round((w/maxVal)*100);
-        const hBudget = Math.round((weekBudget/maxVal)*100);
+
+      const fmt = v => {
+        if (v >= 1000000) return "$" + (v/1000000).toFixed(1) + "M";
+        if (v >= 1000)    return "$" + Math.round(v/1000) + "k";
+        return "$" + Math.round(v);
+      };
+
+      document.getElementById("weekly-bars").innerHTML = weeks.map((w,i) => {
+        const hReal   = Math.max(Math.round((w/maxVal)*100), 3);
+        const hBudget = Math.max(Math.round((weekBudget/maxVal)*100), 3);
         return `
           <div class="bar-col">
-            <div class="bar-group" style="height:80px;">
-              <div class="bar bar-budget" style="height:${hBudget}%;"></div>
-              <div class="bar bar-actual" style="height:${hReal}%;"></div>
+            <div class="bar-pair">
+              <div class="bar bar-b" style="height:${hBudget}%;">
+                <span class="bar-val-top">${fmt(weekBudget)}</span>
+              </div>
+              <div class="bar bar-r" style="height:${hReal}%;"></div>
             </div>
             <div class="bar-lbl">Sem ${i+1}</div>
           </div>`;
       }).join("");
-
-      document.getElementById("weekly-bars").innerHTML = barsHTML;
       document.getElementById("chart-legend").style.display = "flex";
     }
 
@@ -418,108 +374,98 @@
       const totalSpent    = expenses.reduce((s,e)=>s+Number(e.amount),0);
       const pct           = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted,1) : 0;
       const pctN          = Math.round(pct*100);
-      const saldo         = totalBudgeted - totalSpent;
-      const circumference = 2 * Math.PI * 27;
+      const saldo         = Math.max(totalBudgeted - totalSpent, 0);
+      const circumference = 2 * Math.PI * 26;
       const dash          = pct * circumference;
       const strokeColor   = pct >= 1 ? "#e07070" : pct >= 0.8 ? "#e0a050" : "#0f3460";
 
       document.getElementById("donut-card").innerHTML = `
         <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;">Salud presupuesto</div>
         <div class="donut-wrap">
-          <svg width="72" height="72" viewBox="0 0 72 72">
-            <circle cx="36" cy="36" r="27" fill="none" stroke="#e8f0fa" stroke-width="9"/>
-            <circle cx="36" cy="36" r="27" fill="none" stroke="${strokeColor}" stroke-width="9"
-              stroke-dasharray="${dash} ${circumference}" stroke-dashoffset="${circumference/4}"
-              stroke-linecap="round" transform="rotate(-90 36 36)"/>
+          <svg width="68" height="68" viewBox="0 0 68 68">
+            <circle cx="34" cy="34" r="26" fill="none" stroke="#e8f0fa" stroke-width="8"/>
+            <circle cx="34" cy="34" r="26" fill="none" stroke="${strokeColor}" stroke-width="8"
+              stroke-dasharray="${dash} ${circumference}"
+              stroke-linecap="round" transform="rotate(-90 34 34)"/>
           </svg>
-          <div class="donut-center">
+          <div class="donut-ctr">
             <div class="donut-pct">${pctN}%</div>
-            <div class="donut-sub">usado</div>
+            <div class="donut-sub2">usado</div>
           </div>
         </div>
-        <div class="donut-stat"><span class="donut-stat-lbl">Límite</span><span class="donut-stat-val">${formatCOP(totalBudgeted)}</span></div>
-        <div class="donut-stat"><span class="donut-stat-lbl">Resta</span><span class="donut-stat-val green">${formatCOP(Math.max(saldo,0))}</span></div>`;
+        <div class="d-stat"><span class="d-lbl">Límite</span><span class="d-val">${formatCOP(totalBudgeted)}</span></div>
+        <div class="d-stat"><span class="d-lbl">Resta</span><span class="d-val g">${formatCOP(saldo)}</span></div>`;
     }
 
     // ── Cajitas card ──────────────────────────────────────
     function renderWalletsCard(wallets) {
-      const shown = wallets.slice(0, 3);
+      const shown = wallets.slice(0,3);
       document.getElementById("wallets-card").innerHTML = `
         <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;">Cajitas</div>
-        <div class="wallet-mini">
-          ${shown.map(w => {
-            const isCredit = w.type === "credito";
-            const val      = Number(w.balance||0);
-            return `
-              <div class="wallet-mini-row">
-                <div>
-                  <div class="wallet-mini-name">${w.icon||"🏦"} ${w.name}</div>
-                  <div class="wallet-mini-sub">${w.type||"ahorro"}</div>
-                </div>
-                <div class="wallet-mini-val ${isCredit ? "red" : "blue"}">${formatCOP(val)}</div>
-              </div>`;
-          }).join("")}
-        </div>
-        <a href="./wallets.html" class="wallet-mini-link">Ver todas →</a>`;
+        ${shown.map(w => `
+          <div class="wall-row">
+            <div>
+              <div class="wall-name">${w.icon||"🏦"} ${w.name}</div>
+              <div class="wall-sub">${w.type||"ahorro"}</div>
+            </div>
+            <div class="wall-val ${w.type==="credito"?"r":"b"}">${formatCOP(Number(w.balance||0))}</div>
+          </div>`).join("")}
+        <a href="./wallets.html" style="font-size:10px;color:#185fa5;cursor:pointer;margin-top:6px;display:block;text-decoration:none;">Ver todas →</a>`;
     }
 
     // ── Categorías top ────────────────────────────────────
-    function renderCatsTop(expenses, budget) {
-      const actual     = sumByCategory(expenses);
-      const catColors  = ["#e6f1fb","#eaf3de","#faeeda","#fbeaf0","#e1f5ee","#faeeda"];
-      const catStrokes = ["#185fa5","#3b6d11","#854f0b","#993556","#0f6e56","#854f0b"];
-      const sorted     = Object.entries(actual).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    function renderCatsTop(expenses) {
+      const actual  = sumByCategory(expenses);
+      const colors  = ["#eaf3de","#fbeaf0","#e6f1fb","#faeeda"];
+      const strokes = ["#3b6d11","#993556","#185fa5","#854f0b"];
+      const sorted  = Object.entries(actual).sort((a,b)=>b[1]-a[1]).slice(0,4);
 
       if (!sorted.length) {
         document.getElementById("cats-grid").innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Sin gastos este mes.</div>`;
         return;
       }
-
-      document.getElementById("cats-grid").innerHTML = sorted.map(([name, amount], i) => `
-        <div class="cat-card">
-          <div class="cat-icon-box" style="background:${catColors[i%catColors.length]};">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${catStrokes[i%catStrokes.length]}" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      document.getElementById("cats-grid").innerHTML = sorted.map(([name,amount],i) => `
+        <div class="cat-top-card">
+          <div class="cat-ico" style="background:${colors[i%colors.length]};">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${strokes[i%strokes.length]}" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           </div>
-          <div class="cat-lbl">${name}</div>
-          <div class="cat-val">${formatCOP(amount)}</div>
+          <div class="cat-top-lbl">${name}</div>
+          <div class="cat-top-val">${formatCOP(amount)}</div>
         </div>`).join("");
     }
 
-    // ── Actividad reciente (gastos + ingresos mezclados) ──
-    function renderActivity(expenses, incomes) {
-      const manualIncomes = incomes.filter(i => !i.isProportional);
-      const allItems = [
-        ...expenses.map(e => ({ ...e, _type: "expense" })),
-        ...manualIncomes.map(i => ({ ...i, _type: "income" }))
-      ].sort((a,b) => (b.date||"").localeCompare(a.date||"")).slice(0,5);
-
-      if (!allItems.length) {
-        document.getElementById("activity-list").innerHTML = `<div class="empty-state">Sin actividad este mes.</div>`;
+    // ── Progreso por categoría ────────────────────────────
+    function renderCatProgress(expenses, budget) {
+      const el = document.getElementById("cat-progress");
+      if (!budget?.categories) {
+        el.innerHTML = `<div class="empty-state"><p>Configura tu presupuesto para ver el progreso.</p>
+          <a href="./budget.html" style="font-size:12px;color:#185fa5;display:inline-block;margin-top:8px;">Configurar →</a></div>`;
         return;
       }
+      const actual     = sumByCategory(expenses);
+      const comparison = buildComparison(budget.categories, actual)
+        .filter(r => r.budgeted > 0)
+        .sort((a,b) => (b.pct||0) - (a.pct||0));
 
-      document.getElementById("activity-list").innerHTML = allItems.map(item => {
-        const isIncome = item._type === "income";
-        const label    = isIncome ? (item.source||"Ingreso") : (item.category||"Gasto");
-        const desc     = item.description || (isIncome ? item.walletName : item.walletName) || "";
-        const amount   = formatCOP(Number(item.amount||0));
+      if (!comparison.length) {
+        el.innerHTML = `<div class="empty-state">Sin datos de categorías.</div>`;
+        return;
+      }
+      el.innerHTML = comparison.map(row => {
+        const pct    = row.pct !== null ? Math.min(row.pct,1) : 0;
+        const pctN   = row.pct !== null ? Math.round(row.pct*100) : 0;
+        const barCls = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
         return `
-          <div class="act-item">
-            <div class="act-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                stroke="${isIncome?"#3b6d11":"#888"}" stroke-width="1.5" stroke-linecap="round">
-                ${isIncome
-                  ? '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'
-                  : '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>'}
-              </svg>
+          <div class="cat-prog-row">
+            <div class="cat-prog-hdr">
+              <span class="cat-prog-name">${row.category}</span>
+              <span class="cat-prog-amounts">
+                <b>${formatCOP(row.actual)}</b> / ${formatCOP(row.budgeted)}
+                <span style="margin-left:4px;color:${pctN>=100?"#e07070":"#888"}">${pctN}%</span>
+              </span>
             </div>
-            <div class="act-info">
-              <div class="act-name">${label}</div>
-              ${desc ? `<div class="act-sub">${desc}</div>` : ""}
-            </div>
-            <div class="act-right">
-              <div class="act-amount ${isIncome?"pos":"neg"}">${isIncome?"+":"-"}${amount}</div>
-              <div class="act-date">${formatDate(item.date)}</div>
+            <div class="prog-bar">
+              <div class="prog-fill ${barCls}" style="width:${pct*100}%;"></div>
             </div>
           </div>`;
       }).join("");
