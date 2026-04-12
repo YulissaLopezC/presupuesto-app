@@ -30,8 +30,7 @@
     /* ── Tabs ────────────────────────────────────────────── */
     .main-tabs {
       display: flex; background: #e8edf2; border-radius: 10px;
-      padding: 3px; margin: 12px 14px;
-      max-width: calc(680px - 28px);
+      padding: 3px; margin: 12px 0 0 0;
     }
     body.dark .main-tabs { background: #222; }
     .main-tab {
@@ -46,8 +45,7 @@
     /* ── Hero suma ───────────────────────────────────────── */
     .hero-sum {
       background: #0f3460; border-radius: 16px;
-      margin: 0 14px 12px; padding: 16px 18px;
-      max-width: calc(680px - 28px);
+      padding: 16px 18px;
     }
     body.dark .hero-sum { background: #0a1f3d; }
     .sum-lbl { font-size: 10px; color: #7aa3cc; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
@@ -197,9 +195,11 @@
     <div id="month-selector-container"></div>
   </div>
 
-  <div class="main-tabs" style="margin-top:12px;">
+  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
+  <div class="main-tabs" style="margin-top:12px;margin-left:0;margin-right:0;">
     <div class="main-tab active" id="tab-gastos">Gastos</div>
     <div class="main-tab" id="tab-ingresos">Ingresos</div>
+  </div>
   </div>
 
   <!-- Hero suma -->
@@ -210,7 +210,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="filters" id="item-filters">
+  <div class="filters" id="item-filters" style="max-width:680px;margin:0 auto;">
     <div class="chip active" data-cat="">Todos</div>
   </div>
 
