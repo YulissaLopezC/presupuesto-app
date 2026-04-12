@@ -144,6 +144,20 @@
     }
     .add-income-btn span { font-size: 12px; color: #888; }
 
+    /* ── Form avanzado ingresos ──────────────────────────── */
+    .adv-toggle-btn {
+      background: none; border: none; font-size: 11px; color: #888;
+      cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .field-lbl2 { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .income-adv-input {
+      width: 100%; padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: 12px; font-family: "DM Sans", sans-serif; color: #1a1a2e;
+      background: #fff; outline: none;
+    }
+    body.dark .income-adv-input { background: #222; border-color: #333; color: #e8e8e8; }
+
     /* ── Save button ─────────────────────────────────────── */
     .save-budget-btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -467,11 +481,16 @@
 
     function renderIncomeCard(inc, idx, daysInMonth) {
       const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
+      const qty       = inc.qty || 0;
+      const unitValue = inc.unitValue || 0;
+      const showAdv   = qty > 0 || unitValue > 0;
       return `
         <div class="income-card">
           <div class="income-row">
-            <input type="text" class="income-name-input" placeholder="Fuente de ingreso..." value="${inc.name||""}" maxlength="60"/>
-            <input type="number" class="income-amount-input" placeholder="0" value="${inc.amount||""}" min="0"/>
+            <input type="text" class="income-name-input" placeholder="Fuente de ingreso..."
+              value="${inc.name||""}" maxlength="60" style="font-weight:500;"/>
+            <input type="number" class="income-amount-input" placeholder="0"
+              value="${inc.amount||""}" min="0" data-field="amount"/>
             <button class="income-del-btn" onclick="this.closest('.income-card').remove()">✕</button>
           </div>
           <div class="income-meta">
@@ -483,12 +502,64 @@
             <span class="toggle-prop-lbl">~/día</span>
             <div class="toggle-switch ${inc.proportional?"on":""}" data-toggle></div>
           </div>
+          <div class="adv-toggle-row" style="margin-top:6px;">
+            <button type="button" class="adv-toggle-btn" data-open="${showAdv?'true':'false'}">
+              ${showAdv ? "▲ Ocultar cálculo" : "▼ Calcular por cantidad × valor"}
+            </button>
+          </div>
+          <div class="adv-form" style="display:${showAdv?'flex':'none'};gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+            <div style="flex:1;min-width:80px;">
+              <div class="field-lbl2">Cantidad</div>
+              <input type="number" class="income-adv-input" placeholder="0" min="0"
+                value="${qty||""}" data-field="qty"/>
+            </div>
+            <div style="color:#aaa;font-size:14px;padding-top:16px;">×</div>
+            <div style="flex:1;min-width:80px;">
+              <div class="field-lbl2">Valor unitario</div>
+              <input type="number" class="income-adv-input" placeholder="0" min="0"
+                value="${unitValue||""}" data-field="unitValue"/>
+            </div>
+            <div style="color:#aaa;font-size:14px;padding-top:16px;">=</div>
+            <div style="flex:1;min-width:80px;">
+              <div class="field-lbl2">Total</div>
+              <div class="adv-total" style="font-size:13px;font-weight:500;color:#0f3460;padding-top:18px;">
+                ${qty&&unitValue ? formatCOP(qty*unitValue) : "$0"}
+              </div>
+            </div>
+          </div>
         </div>`;
     }
 
     function attachToggleListeners() {
       document.querySelectorAll("[data-toggle]").forEach(el => {
         el.onclick = () => el.classList.toggle("on");
+      });
+
+      // Advanced form toggle
+      document.querySelectorAll(".adv-toggle-btn").forEach(btn => {
+        btn.onclick = () => {
+          const card   = btn.closest(".income-card");
+          const advFrm = card.querySelector(".adv-form");
+          const isOpen = btn.dataset.open === "true";
+          btn.dataset.open = isOpen ? "false" : "true";
+          btn.textContent  = isOpen ? "▼ Calcular por cantidad × valor" : "▲ Ocultar cálculo";
+          advFrm.style.display = isOpen ? "none" : "flex";
+        };
+      });
+
+      // Auto-calc total on qty/unitValue change
+      document.querySelectorAll(".adv-form").forEach(form => {
+        const card       = form.closest(".income-card");
+        const amountInp  = card.querySelector("[data-field='amount']");
+        const totalEl    = form.querySelector(".adv-total");
+        const recalc = () => {
+          const qty  = Number(form.querySelector("[data-field='qty']")?.value) || 0;
+          const unit = Number(form.querySelector("[data-field='unitValue']")?.value) || 0;
+          const tot  = qty * unit;
+          totalEl.textContent = formatCOP(tot);
+          if (tot > 0 && amountInp) amountInp.value = tot;
+        };
+        form.querySelectorAll(".income-adv-input").forEach(inp => inp.addEventListener("input", recalc));
       });
     }
 
@@ -535,8 +606,13 @@
         const amount       = Number(card.querySelector(".income-amount-input")?.value) || 0;
         const type         = card.querySelector(".income-type-select")?.value || "fijo";
         const proportional = card.querySelector("[data-toggle]")?.classList.contains("on") || false;
+        const qty       = Number(card.querySelector("[data-field='qty']")?.value) || 0;
+        const unitValue = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
         if (name && amount > 0) {
-          incomeData[name] = { amount, type, proportional, dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
+          const entry = { amount, type, proportional, dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
+          if (qty > 0)       entry.qty       = qty;
+          if (unitValue > 0) entry.unitValue = unitValue;
+          incomeData[name] = entry;
         }
       });
 
