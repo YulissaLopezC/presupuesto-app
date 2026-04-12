@@ -420,16 +420,16 @@
       const el = document.getElementById("item-filters");
       el.innerHTML = `<div class="chip active" data-cat="">Todos</div>` +
         names.map(n=>`<div class="chip" data-cat="${n}">${n}</div>`).join("");
-      el.addEventListener("click", e => {
+      el.onclick = e => {
         const chip = e.target.closest(".chip");
         if (!chip) return;
         el.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
         chip.classList.add("active");
         activeFilter = chip.dataset.cat;
         renderHeroSum();
-        if (isG) renderExpenses();
+        if (activeTab==="gastos") renderExpenses();
         else renderIncomes();
-      });
+      };
     }
 
     // ── Cat color map ─────────────────────────────────────
@@ -474,12 +474,12 @@
           }).join("")}
         </div>`).join("");
 
-      el.addEventListener("click", e => {
+      el.onclick = e => {
         const del = e.target.closest("[data-del]");
         const row = e.target.closest(".mov-item");
         if (del) handleDeleteExpense(del.dataset.del);
         else if (row && !e.target.closest("button")) openEditExpenseDrawer(row.dataset.id);
-      });
+      };
     }
 
     // ── Prop expenses ─────────────────────────────────────
@@ -499,7 +499,7 @@
           ${s.pending>0?`<button class="dev-reg-btn" data-cat="${s.name}" data-amount="${s.pending}">Registrar $${Math.round(s.pending/1000)}k pendientes</button>`:"<div style='font-size:10px;color:#3b6d11;margin-top:6px;'>✓ Registrado completo</div>"}
         </div>`).join("");
 
-      list.addEventListener("click", e => {
+      list.onclick = e => {
         const btn = e.target.closest(".dev-reg-btn");
         if (!btn) return;
         editingId=null;
@@ -517,7 +517,7 @@
         document.getElementById("savings-wallet-group").style.display=isSav?"block":"none";
         document.getElementById("field-savings-wallet").value="";
         openDrawer();
-      });
+      };
     }
 
     // ── Devengado ingresos ────────────────────────────────
@@ -605,10 +605,10 @@
             <button class="mov-del" data-del-inc="${i.id}">✕</button>
           </div>`).join("")}`).join("");
 
-      el.addEventListener("click", e => {
+      el.onclick = e => {
         const del=e.target.closest("[data-del-inc]");
         if (del) handleDeleteIncome(del.dataset.delInc);
-      });
+      };
     }
 
     // ── FAB ───────────────────────────────────────────────
