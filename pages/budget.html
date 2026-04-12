@@ -547,8 +547,8 @@
 
       // Cat calc auto-total
       document.querySelectorAll(".cat-calc-form").forEach(form => {
-        const wrap     = form.closest("div");
-        const amountInp = wrap.querySelector("[data-field='amount']");
+        const card      = form.closest(".cat-row-card");
+        const amountInp = card ? card.querySelector(".val-pill-input") : null;
         const totalEl   = form.querySelector(".cat-adv-total");
         const recalc = () => {
           const qty  = Number(form.querySelector("[data-field='qty']")?.value) || 0;
