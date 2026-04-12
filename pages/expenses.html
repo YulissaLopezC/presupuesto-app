@@ -322,6 +322,18 @@
     populateCategorySelect();
     populateWalletSelect();
     populateSavingsWalletSelect("");
+
+    // ── Cat color map ─────────────────────────────────────
+    const CAT_COLORS = {
+      "GASTO BÁSICO":       ["#e6f1fb","#185fa5"],
+      "GASTO NO ESENCIAL":  ["#faeeda","#854f0b"],
+      "AHORRO O INVERSIÓN": ["#eaf3de","#3b6d11"],
+    };
+    function getCatStyle(catName) {
+      const cat = categories.find(c=>c.name===catName);
+      return CAT_COLORS[cat?.type] || ["#f0f4f8","#888"];
+    }
+
     await loadAll();
 
     function renderMonthPill() {
@@ -430,17 +442,6 @@
         if (activeTab==="gastos") renderExpenses();
         else renderIncomes();
       };
-    }
-
-    // ── Cat color map ─────────────────────────────────────
-    const CAT_COLORS = {
-      "GASTO BÁSICO":       ["#e6f1fb","#185fa5"],
-      "GASTO NO ESENCIAL":  ["#faeeda","#854f0b"],
-      "AHORRO O INVERSIÓN": ["#eaf3de","#3b6d11"],
-    };
-    function getCatStyle(catName) {
-      const cat = categories.find(c=>c.name===catName);
-      return CAT_COLORS[cat?.type] || ["#f0f4f8","#888"];
     }
 
     // ── Render gastos ─────────────────────────────────────
