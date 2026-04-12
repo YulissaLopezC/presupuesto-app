@@ -35,10 +35,10 @@
     }
     body.dark .transfer-btn { background: #0a1f3d; }
 
-    .section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 18px 16px 10px; max-width: 680px; margin: 0 auto; }
+    .section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 10px; max-width: 680px; margin: 0 auto; padding-left: 0; padding-right: 0; }
     .section-title { font-size: 15px; font-weight: 500; color: var(--text); }
 
-    .wallet-list { display: flex; flex-direction: column; gap: 8px; padding: 0 14px; max-width: 680px; margin: 0 auto; }
+    .wallet-list { display: flex; flex-direction: column; gap: 8px; padding: 0; max-width: 680px; margin: 0 auto; }
     .wallet-item {
       background: #fff; border-radius: 14px; padding: 14px;
       display: flex; align-items: center; gap: 12px;
@@ -159,28 +159,35 @@
 <body>
   <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
 
-  <div class="page-hdr">
+  <div style="max-width:680px;margin:0 auto;">
+  <div class="page-hdr" style="padding:14px 0 0;">
     <div class="page-title">Cajitas</div>
     <div class="page-sub">Tus cuentas, ahorros y tarjetas</div>
   </div>
+  </div>
 
-  <div class="sum-row" id="sum-row">
+  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
+  <div class="sum-row" id="sum-row" style="margin:14px 0 0;">
     <div class="skeleton" style="height:80px;border-radius:16px;"></div>
     <div class="skeleton" style="height:80px;border-radius:16px;"></div>
   </div>
+  </div>
 
-  <button class="transfer-btn" id="btn-transfer">
+  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
+  <button class="transfer-btn" id="btn-transfer" style="margin:14px 0 0;width:100%;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
     Transferir entre cajitas
   </button>
-
-  <div class="section-hdr">
-    <div class="section-title">Cajitas activas</div>
   </div>
 
+  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
+  <div class="section-hdr" style="padding:18px 0 10px;">
+    <div class="section-title">Cajitas activas</div>
+  </div>
   <div class="wallet-list" id="wallet-list">
     <div class="skeleton" style="height:72px;border-radius:14px;"></div>
     <div class="skeleton" style="height:72px;border-radius:14px;"></div>
+  </div>
   </div>
 
   <button class="fab" id="fab">+</button>
