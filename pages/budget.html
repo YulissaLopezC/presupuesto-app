@@ -144,6 +144,20 @@
     }
     .add-income-btn span { font-size: 12px; color: #888; }
 
+    /* ── Cálculo avanzado gastos ─────────────────────────── */
+    .cat-calc-btn {
+      background: none; border: none; font-size: 10px; color: #aaa;
+      cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .cat-calc-form { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+    .cat-adv-input {
+      padding: 5px 7px; border: 1.5px solid #e2e8f0; border-radius: 7px;
+      font-size: 12px; font-family: "DM Sans", sans-serif; color: #1a1a2e;
+      background: #fff; outline: none;
+    }
+    body.dark .cat-adv-input { background: #222; border-color: #333; color: #e8e8e8; }
+
     /* ── Form avanzado ingresos ──────────────────────────── */
     .adv-toggle-btn {
       background: none; border: none; font-size: 11px; color: #888;
@@ -354,17 +368,29 @@
                   <input type="text" class="cat-name-input budget-name-input"
                     data-cat-id="${cat.id}" data-original-name="${cat.name}"
                     value="${cat.name}" placeholder="Nombre..."/>
-                  <div class="cat-right-wrap">
-                    <div class="val-pill">
-                      <span class="val-pill-sym">$</span>
-                      <input type="number" min="0" class="val-pill-input budget-input"
-                        data-cat="${cat.name}" value="${savedCats[cat.name]||""}" placeholder="0"/>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                    <div class="cat-right-wrap">
+                      <div class="val-pill">
+                        <span class="val-pill-sym">$</span>
+                        <input type="number" min="0" class="val-pill-input budget-input"
+                          data-cat="${cat.name}" value="${savedCats[cat.name]||""}" placeholder="0" data-field="amount"/>
+                      </div>
+                      <span class="day-lbl">~/día</span>
+                      <button type="button" class="prop-toggle-btn ${isProp?"on":""}"
+                        data-cat-name="${cat.name}" data-field="prop-toggle"></button>
+                      <button class="cat-del-btn btn-delete-cat"
+                        data-cat-id="${cat.id}" data-cat-name="${cat.name}">✕</button>
                     </div>
-                    <span class="day-lbl">~/día</span>
-                    <button type="button" class="prop-toggle-btn ${isProp?"on":""}"
-                      data-cat-name="${cat.name}" data-field="prop-toggle"></button>
-                    <button class="cat-del-btn btn-delete-cat"
-                      data-cat-id="${cat.id}" data-cat-name="${cat.name}">✕</button>
+                    <button type="button" class="cat-calc-btn" data-open="false">
+                      ▼ Calcular
+                    </button>
+                    <div class="cat-calc-form" style="display:none;gap:6px;align-items:center;">
+                      <input type="number" class="cat-adv-input" placeholder="Cant." min="0" data-field="qty" style="width:64px;"/>
+                      <span style="font-size:12px;color:#aaa;">×</span>
+                      <input type="number" class="cat-adv-input" placeholder="Valor" min="0" data-field="unitValue" style="width:84px;"/>
+                      <span style="font-size:12px;color:#aaa;">=</span>
+                      <span class="cat-adv-total" style="font-size:12px;font-weight:500;color:#0f3460;min-width:60px;text-align:right;">$0</span>
+                    </div>
                   </div>
                 </div>`;
             }).join("")}
@@ -481,16 +507,13 @@
 
     function renderIncomeCard(inc, idx, daysInMonth) {
       const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
-      const qty       = inc.qty || 0;
-      const unitValue = inc.unitValue || 0;
-      const showAdv   = qty > 0 || unitValue > 0;
       return `
         <div class="income-card">
           <div class="income-row">
             <input type="text" class="income-name-input" placeholder="Fuente de ingreso..."
               value="${inc.name||""}" maxlength="60" style="font-weight:500;"/>
             <input type="number" class="income-amount-input" placeholder="0"
-              value="${inc.amount||""}" min="0" data-field="amount"/>
+              value="${inc.amount||""}" min="0"/>
             <button class="income-del-btn" onclick="this.closest('.income-card').remove()">✕</button>
           </div>
           <div class="income-meta">
@@ -502,31 +525,6 @@
             <span class="toggle-prop-lbl">~/día</span>
             <div class="toggle-switch ${inc.proportional?"on":""}" data-toggle></div>
           </div>
-          <div class="adv-toggle-row" style="margin-top:6px;">
-            <button type="button" class="adv-toggle-btn" data-open="${showAdv?'true':'false'}">
-              ${showAdv ? "▲ Ocultar cálculo" : "▼ Calcular por cantidad × valor"}
-            </button>
-          </div>
-          <div class="adv-form" style="display:${showAdv?'flex':'none'};gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;">
-            <div style="flex:1;min-width:80px;">
-              <div class="field-lbl2">Cantidad</div>
-              <input type="number" class="income-adv-input" placeholder="0" min="0"
-                value="${qty||""}" data-field="qty"/>
-            </div>
-            <div style="color:#aaa;font-size:14px;padding-top:16px;">×</div>
-            <div style="flex:1;min-width:80px;">
-              <div class="field-lbl2">Valor unitario</div>
-              <input type="number" class="income-adv-input" placeholder="0" min="0"
-                value="${unitValue||""}" data-field="unitValue"/>
-            </div>
-            <div style="color:#aaa;font-size:14px;padding-top:16px;">=</div>
-            <div style="flex:1;min-width:80px;">
-              <div class="field-lbl2">Total</div>
-              <div class="adv-total" style="font-size:13px;font-weight:500;color:#0f3460;padding-top:18px;">
-                ${qty&&unitValue ? formatCOP(qty*unitValue) : "$0"}
-              </div>
-            </div>
-          </div>
         </div>`;
     }
 
@@ -535,23 +533,23 @@
         el.onclick = () => el.classList.toggle("on");
       });
 
-      // Advanced form toggle
-      document.querySelectorAll(".adv-toggle-btn").forEach(btn => {
+      // Cat calc toggle
+      document.querySelectorAll(".cat-calc-btn").forEach(btn => {
         btn.onclick = () => {
-          const card   = btn.closest(".income-card");
-          const advFrm = card.querySelector(".adv-form");
+          const wrap   = btn.closest("div");
+          const form   = wrap.querySelector(".cat-calc-form");
           const isOpen = btn.dataset.open === "true";
-          btn.dataset.open = isOpen ? "false" : "true";
-          btn.textContent  = isOpen ? "▼ Calcular por cantidad × valor" : "▲ Ocultar cálculo";
-          advFrm.style.display = isOpen ? "none" : "flex";
+          btn.dataset.open     = isOpen ? "false" : "true";
+          btn.textContent      = isOpen ? "▼ Calcular" : "▲ Ocultar";
+          form.style.display   = isOpen ? "none" : "flex";
         };
       });
 
-      // Auto-calc total on qty/unitValue change
-      document.querySelectorAll(".adv-form").forEach(form => {
-        const card       = form.closest(".income-card");
-        const amountInp  = card.querySelector("[data-field='amount']");
-        const totalEl    = form.querySelector(".adv-total");
+      // Cat calc auto-total
+      document.querySelectorAll(".cat-calc-form").forEach(form => {
+        const wrap     = form.closest("div");
+        const amountInp = wrap.querySelector("[data-field='amount']");
+        const totalEl   = form.querySelector(".cat-adv-total");
         const recalc = () => {
           const qty  = Number(form.querySelector("[data-field='qty']")?.value) || 0;
           const unit = Number(form.querySelector("[data-field='unitValue']")?.value) || 0;
@@ -559,7 +557,7 @@
           totalEl.textContent = formatCOP(tot);
           if (tot > 0 && amountInp) amountInp.value = tot;
         };
-        form.querySelectorAll(".income-adv-input").forEach(inp => inp.addEventListener("input", recalc));
+        form.querySelectorAll(".cat-adv-input").forEach(inp => inp.addEventListener("input", recalc));
       });
     }
 
@@ -606,13 +604,8 @@
         const amount       = Number(card.querySelector(".income-amount-input")?.value) || 0;
         const type         = card.querySelector(".income-type-select")?.value || "fijo";
         const proportional = card.querySelector("[data-toggle]")?.classList.contains("on") || false;
-        const qty       = Number(card.querySelector("[data-field='qty']")?.value) || 0;
-        const unitValue = Number(card.querySelector("[data-field='unitValue']")?.value) || 0;
         if (name && amount > 0) {
-          const entry = { amount, type, proportional, dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
-          if (qty > 0)       entry.qty       = qty;
-          if (unitValue > 0) entry.unitValue = unitValue;
-          incomeData[name] = entry;
+          incomeData[name] = { amount, type, proportional, dailyAmount: proportional ? Math.round(amount / daysInMonth) : 0 };
         }
       });
 
