@@ -142,28 +142,74 @@
     .fab:active { transform: scale(0.95); }
     .fab.income { background: #3b6d11; }
 
-    /* ── Drawer ──────────────────────────────────────────── */
+    /* ── Modal centrado ──────────────────────────────────── */
     .drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+      position: fixed; inset: 0; background: rgba(15,52,96,0.4);
+      z-index: 150; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
     }
     .drawer-overlay.open { opacity: 1; pointer-events: all; }
     .drawer {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--border);
-      border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
-      z-index: 160; transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.34,1.1,0.64,1);
-      max-width: 680px; margin: 0 auto; max-height: 92vh; overflow-y: auto;
+      background: #fff; border-radius: 16px;
+      padding: 24px 20px 20px; width: 100%; max-width: 400px;
+      z-index: 160; transform: scale(0.95); opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      max-height: 90vh; overflow-y: auto;
     }
-    .drawer.open { transform: translateY(0); }
-    .drawer-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 99px; margin: 0 auto 20px; }
-    .drawer-title { font-size: 18px; font-weight: 500; margin-bottom: 20px; color: var(--text); }
+    body.dark .drawer { background: #1a1a1a; }
+    .drawer-overlay.open .drawer { transform: scale(1); opacity: 1; }
+    .drawer-handle { display: none; }
+    .drawer-title { font-size: 18px; font-weight: 500; margin-bottom: 20px; color: #1a1a2e; }
+    body.dark .drawer-title { color: #e8e8e8; }
 
-    /* ── Amount wrapper ──────────────────────────────────── */
-    .amount-wrapper { position: relative; }
-    .amount-wrapper .sym { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #888; pointer-events: none; }
-    .amount-wrapper .form-input { padding-left: 26px; }
+    /* ── Modal header con X ──────────────────────────────── */
+    .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-close-btn { background: none; border: none; cursor: pointer; color: #888; font-size: 20px; line-height:1; padding: 0; }
+
+    /* ── Valor grande ────────────────────────────────────── */
+    .valor-block { background: #f0f4f8; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    body.dark .valor-block { background: #222; }
+    .valor-sym { font-size: 22px; color: #0f3460; font-weight: 500; }
+    body.dark .valor-sym { color: #7ab8e8; }
+    .valor-input { font-size: 32px; font-weight: 500; color: #0f3460; border: none; background: none; outline: none; flex: 1; min-width: 0; font-family: "DM Sans", sans-serif; width: 100%; }
+    body.dark .valor-input { color: #7ab8e8; }
+    .valor-input::placeholder { color: #c8d4e0; }
+
+    /* ── Field styles ────────────────────────────────────── */
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .field-block { margin-bottom: 14px; }
+    .field-lbl { font-size: 10px; font-weight: 500; color: #8a9ab0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .f-input, .f-select {
+      width: 100%; padding: 11px 13px;
+      border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif;
+      color: #1a1a2e; background: #fff; outline: none;
+      -webkit-appearance: none; appearance: none;
+      transition: border-color 0.15s;
+    }
+    body.dark .f-input, body.dark .f-select { background: #222; border-color: #333; color: #e8e8e8; }
+    .f-input:focus, .f-select:focus { border-color: #0f3460; }
+    .f-desc {
+      width: 100%; padding: 11px 13px;
+      border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif;
+      color: #1a1a2e; background: #fff; outline: none; resize: none; height: 70px;
+    }
+    body.dark .f-desc { background: #222; border-color: #333; color: #e8e8e8; }
+    .f-desc::placeholder { color: #b0bec8; }
+    .f-desc:focus { border-color: #0f3460; }
+    .modal-save-btn {
+      width: 100%; padding: 13px; background: #0f3460; color: #fff; border: none;
+      border-radius: 10px; font-size: 14px; font-weight: 500;
+      cursor: pointer; font-family: "DM Sans", sans-serif; margin-top: 4px;
+    }
+    .modal-save-btn:hover { background: #1a4a7a; }
+    .modal-save-btn.income { background: #3b6d11; }
+    .modal-save-btn.income:hover { background: #2d540d; }
+
+
 
     /* ── Ingresos por fuente ─────────────────────────────── */
     .source-item { display: flex; align-items: flex-start; justify-content: space-between; padding: 11px 0; border-bottom: 0.5px solid #f0f0f0; }
@@ -248,50 +294,60 @@
   <button class="fab" id="fab">+</button>
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Drawer -->
-  <div class="drawer-overlay" id="drawer-overlay"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-handle"></div>
-    <div class="drawer-title" id="drawer-title">Nuevo gasto</div>
-    <div class="form-group">
-      <label class="form-label">Fecha</label>
-      <input type="date" class="form-input" id="field-date"/>
-    </div>
-    <div class="form-group" id="expense-category-group">
-      <label class="form-label">Categoría</label>
-      <select class="form-select" id="field-category">
-        <option value="">Selecciona una categoría</option>
-      </select>
-    </div>
-    <div class="form-group" id="income-source-group" style="display:none;">
-      <label class="form-label">Fuente</label>
-      <input type="text" class="form-input" id="field-source" placeholder="Ej: Guillo, Sociedad..." maxlength="60" list="sources-datalist"/>
-      <datalist id="sources-datalist"></datalist>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Valor</label>
-      <div class="amount-wrapper">
-        <span class="sym">$</span>
-        <input type="number" class="form-input" id="field-amount" placeholder="0" min="0"/>
+  <!-- Modal -->
+  <div class="drawer-overlay" id="drawer-overlay">
+    <div class="drawer" id="drawer">
+      <div class="modal-hdr">
+        <div class="drawer-title" id="drawer-title">Nuevo gasto</div>
+        <button class="modal-close-btn" id="btn-modal-close">×</button>
       </div>
+
+      <div class="field-lbl">Valor</div>
+      <div class="valor-block">
+        <span class="valor-sym">$</span>
+        <input type="number" class="valor-input" id="field-amount" placeholder="0" min="0" inputmode="decimal"/>
+      </div>
+
+      <div class="field-row">
+        <div>
+          <div class="field-lbl">Fecha</div>
+          <input type="date" class="f-input" id="field-date"/>
+        </div>
+        <div id="expense-category-group">
+          <div class="field-lbl">Categoría</div>
+          <select class="f-select" id="field-category">
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="income-source-group" style="display:none;" class="field-block">
+        <div class="field-lbl">Fuente de ingreso</div>
+        <input type="text" class="f-input" id="field-source" placeholder="Ej: Guillo, Sociedad..." maxlength="60" list="sources-datalist"/>
+        <datalist id="sources-datalist"></datalist>
+      </div>
+
+      <div class="field-block">
+        <div class="field-lbl" id="wallet-label">¿De cuál cajita salió?</div>
+        <select class="f-select" id="field-wallet">
+          <option value="">Sin cajita asignada</option>
+        </select>
+      </div>
+
+      <div class="field-block" id="savings-wallet-group" style="display:none;">
+        <div class="field-lbl" id="savings-wallet-label">¿A cuál cajita va?</div>
+        <select class="f-select" id="field-savings-wallet">
+          <option value="">Sin cajita destino</option>
+        </select>
+      </div>
+
+      <div class="field-block">
+        <div class="field-lbl">Descripción (opcional)</div>
+        <textarea class="f-desc" id="field-description" placeholder="Ej. Almuerzo con el equipo..."></textarea>
+      </div>
+
+      <button class="modal-save-btn" id="btn-save">Guardar movimiento</button>
     </div>
-    <div class="form-group">
-      <label class="form-label" id="wallet-label">¿De cuál cajita salió?</label>
-      <select class="form-select" id="field-wallet">
-        <option value="">Sin cajita asignada</option>
-      </select>
-    </div>
-    <div class="form-group" id="savings-wallet-group" style="display:none;">
-      <label class="form-label" id="savings-wallet-label">¿A cuál cajita va?</label>
-      <select class="form-select" id="field-savings-wallet">
-        <option value="">Sin cajita destino</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Descripción <span style="color:#888;font-weight:300;">(opcional)</span></label>
-      <input type="text" class="form-input" id="field-description" placeholder="Nota adicional..." maxlength="120"/>
-    </div>
-    <button class="btn-primary" id="btn-save">Guardar gasto</button>
   </div>
 
   <script type="module">
@@ -379,6 +435,8 @@
 
     function switchTab(tab) {
       activeTab=tab; activeFilter="";
+      const btn = document.getElementById("btn-save");
+      if (btn) btn.className = tab==="ingresos" ? "modal-save-btn income" : "modal-save-btn";
       const isG = tab==="gastos";
       document.getElementById("tab-gastos").classList.toggle("active", isG);
       document.getElementById("tab-ingresos").classList.toggle("active", !isG);
@@ -616,7 +674,10 @@
 
     // ── FAB ───────────────────────────────────────────────
     document.getElementById("fab").addEventListener("click", openNewDrawer);
-    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
+    document.getElementById("drawer-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("drawer-overlay")) closeDrawer();
+    });
+    document.getElementById("btn-modal-close").addEventListener("click", closeDrawer);
     document.getElementById("btn-save").addEventListener("click", saveItem);
     document.addEventListener("keydown", e=>{if(e.key==="Escape")closeDrawer();});
 
