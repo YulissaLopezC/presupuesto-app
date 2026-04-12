@@ -8,569 +8,459 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
+    body { background: #f0f4f8; }
+    body.dark { background: #111; }
+
+    .page-hdr { padding: 14px 16px 0; max-width: 680px; margin: 0 auto; }
+    .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
+    .page-sub { font-size: 12px; color: #888; margin-top: 2px; }
+
+    .sum-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; max-width: calc(680px - 28px); }
+    .sum-card { background: #fff; border-radius: 16px; padding: 16px; }
+    body.dark .sum-card { background: #1a1a1a; }
+    .sum-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .sum-val-row { display: flex; align-items: baseline; gap: 4px; }
+    .sum-sym { font-size: 16px; color: #185fa5; font-weight: 500; }
+    .sum-val { font-size: 22px; font-weight: 500; color: #185fa5; letter-spacing: -0.5px; }
+    .sum-val.red { color: #c0392b; }
+    .sum-sym.red { color: #c0392b; }
+
+    .transfer-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin: 14px 14px 0; background: #0f3460; color: #fff;
+      border: none; border-radius: 12px; padding: 13px 18px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif;
+      width: calc(100% - 28px); max-width: calc(680px - 28px);
+    }
+    body.dark .transfer-btn { background: #0a1f3d; }
+
+    .section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 18px 16px 10px; max-width: 680px; margin: 0 auto; }
+    .section-title { font-size: 15px; font-weight: 500; color: var(--text); }
+
+    .wallet-list { display: flex; flex-direction: column; gap: 8px; padding: 0 14px; max-width: 680px; margin: 0 auto; }
+    .wallet-item {
+      background: #fff; border-radius: 14px; padding: 14px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: background 0.1s;
+    }
+    body.dark .wallet-item { background: #1a1a1a; }
+    .wallet-item:hover { background: #f8fafc; }
+    body.dark .wallet-item:hover { background: #222; }
+
+    .w-ico { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .w-info { flex: 1; min-width: 0; }
+    .w-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .w-type { font-size: 11px; color: #888; margin-top: 2px; }
+    .w-right { text-align: right; flex-shrink: 0; }
+    .w-balance { font-size: 16px; font-weight: 500; color: #185fa5; }
+    .w-balance.red { color: #c0392b; }
+    .w-sublbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #3b6d11; margin-top: 2px; }
+    .w-sublbl.red { color: #c0392b; }
+    .w-actions { display: flex; gap: 6px; }
+    .w-btn { background: #f0f4f8; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #555; cursor: pointer; font-family: "DM Sans", sans-serif; transition: background 0.15s; }
+    body.dark .w-btn { background: #222; color: #aaa; }
+    .w-btn:hover { background: #e2e8f0; }
+    .w-btn.danger:hover { background: #fbeaea; color: #c0392b; }
+
     .fab {
       position: fixed; bottom: 76px; right: 20px;
-      width: 54px; height: 54px; background: var(--accent); color: #fff;
-      border: none; border-radius: 50%; font-size: 26px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(212,96,138,0.25); z-index: 90;
-      transition: background 0.2s, transform 0.2s;
+      width: 52px; height: 52px; background: #0f3460; color: #fff;
+      border: none; border-radius: 50%; font-size: 24px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(15,52,96,0.3); z-index: 90;
     }
-    .fab:hover { background: var(--accent2); }
-    .fab:active { transform: scale(0.95); }
 
+    /* ── Modal ───────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,52,96,0.4);
+      z-index: 150; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #fff; border-radius: 20px; padding: 24px 20px 20px;
+      width: 100%; max-width: 400px;
+      transform: scale(0.95); opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      max-height: 90vh; overflow-y: auto;
+    }
+    body.dark .modal { background: #1a1a1a; }
+    .modal-overlay.open .modal { transform: scale(1); opacity: 1; }
+    .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 500; color: var(--text); }
+    .modal-close { background: none; border: none; font-size: 20px; color: #888; cursor: pointer; }
+    .field-lbl { font-size: 10px; font-weight: 500; color: #8a9ab0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+    /* Tipo selector */
+    .tipo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .tipo-btn {
+      border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px 8px 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; background: #fff; font-family: "DM Sans", sans-serif;
+      transition: all 0.15s;
+    }
+    body.dark .tipo-btn { background: #222; border-color: #333; }
+    .tipo-btn.active { border-color: #0f3460; background: #f0f4ff; }
+    body.dark .tipo-btn.active { background: #0a1f3d; }
+    .tipo-ico { width: 36px; height: 36px; border-radius: 10px; background: #f0f4f8; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .tipo-btn.active .tipo-ico { background: #e6f1fb; }
+    .tipo-name { font-size: 12px; font-weight: 500; color: #888; }
+    .tipo-btn.active .tipo-name { color: #0f3460; }
+
+    /* Emoji grid */
+    .emoji-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .emoji-btn {
+      width: 40px; height: 40px; border-radius: 10px;
+      border: 1.5px solid #e2e8f0; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; transition: all 0.15s;
+    }
+    body.dark .emoji-btn { background: #222; border-color: #333; }
+    .emoji-btn.active { border-color: #0f3460; background: #f0f4ff; }
+
+    /* Fields */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .field-block { margin-bottom: 14px; }
+    .f-input {
+      width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: #fff; outline: none; transition: border-color 0.15s;
+    }
+    body.dark .f-input { background: #222; border-color: #333; }
+    .f-input:focus { border-color: #0f3460; }
+    .f-input:disabled { opacity: 0.3; cursor: not-allowed; }
+    .modal-save-btn {
+      width: 100%; padding: 13px; background: #0f3460; color: #fff; border: none;
+      border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif; margin-top: 4px;
+    }
+    .modal-save-btn:hover { background: #1a4a7a; }
+
+    /* Transfer drawer */
     .drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s;
     }
     .drawer-overlay.open { opacity: 1; pointer-events: all; }
     .drawer {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--border);
-      border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
-      z-index: 160; transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
-      max-width: 680px; margin: 0 auto; max-height: 92vh; overflow-y: auto;
+      background: var(--surface); border-radius: 20px 20px 0 0;
+      padding: 24px 20px 36px; z-index: 160;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.34,1.1,0.64,1);
+      max-width: 680px; margin: 0 auto; max-height: 80vh; overflow-y: auto;
     }
     .drawer.open { transform: translateY(0); }
     .drawer-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 99px; margin: 0 auto 20px; }
-    .drawer-title  { font-family: "DM Serif Display", serif; font-size: 20px; font-weight: 400; margin-bottom: 20px; }
-
-    /* ── Resumen ──────────────────────────────────────────── */
-    .total-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .total-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
-    .total-label { font-size: 10px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
-    .total-amount { font-family: "DM Serif Display", serif; font-size: 22px; letter-spacing: -0.8px; }
-    .total-amount.positive { color: var(--accent); }
-    .total-amount.negative { color: var(--danger); }
-    .total-amount.credit   { color: var(--warning); }
-
-    /* ── Botón transferir ────────────────────────────────── */
-    .btn-transfer {
-      width: 100%; padding: 12px; background: none;
-      border: 1px solid var(--border2); border-radius: 10px;
-      color: var(--muted); font-family: "DM Sans", sans-serif; font-size: 13px;
-      cursor: pointer; margin-bottom: 14px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .btn-transfer:hover { border-color: var(--info); color: var(--info); }
-    .btn-transfer svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-
-    /* ── Tarjetas de cajita ──────────────────────────────── */
-    .wallet-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 18px; margin-bottom: 10px;
-      cursor: pointer; transition: border-color 0.15s;
-      border-left: 3px solid transparent;
-    }
-    .wallet-card:hover { border-color: var(--border2); }
-    .wallet-card.type-credito  { border-left-color: var(--warning); }
-    .wallet-card.type-ahorro   { border-left-color: var(--info); }
-    .wallet-card.type-efectivo { border-left-color: var(--accent); }
-
-    .wallet-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
-    .wallet-left { display: flex; align-items: center; gap: 12px; }
-    .wallet-icon { width: 42px; height: 42px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-    .wallet-name { font-size: 15px; color: var(--text); font-weight: 400; }
-    .wallet-type-badge { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 99px; margin-top: 3px; display: inline-block; }
-    .wallet-type-badge.ahorro   { background: rgba(74,127,181,0.12);  color: var(--info); }
-    .wallet-type-badge.efectivo { background: rgba(126,184,92,0.12);  color: var(--accent2); }
-    .wallet-type-badge.credito  { background: rgba(201,124,46,0.12);  color: var(--warning); }
-    .wallet-balance { font-family: "DM Serif Display", serif; font-size: 22px; letter-spacing: -0.8px; text-align: right; }
-    .wallet-balance.positive { color: var(--text); }
-    .wallet-balance.debt     { color: var(--warning); }
-    .wallet-balance-label { font-size: 11px; color: var(--muted); text-align: right; margin-top: 1px; }
-
-    .credit-detail { background: var(--surface2); border-radius: 10px; padding: 10px 12px; margin-top: 10px; }
-    .credit-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
-    .credit-row:last-of-type { margin-bottom: 8px; }
-    .credit-row span { color: var(--text); }
-    .wallet-footer { display: flex; justify-content: flex-end; margin-top: 12px; }
-
-    /* ── Tipo selector ───────────────────────────────────── */
-    .type-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 4px; }
-    .type-opt {
-      padding: 10px 8px; border: 1px solid var(--border); border-radius: 10px;
-      text-align: center; cursor: pointer; font-size: 12px; color: var(--muted);
-      transition: all 0.15s; background: var(--bg);
-    }
-    .type-opt .type-icon { font-size: 20px; display: block; margin-bottom: 4px; }
-    .type-opt.selected-ahorro   { border-color: var(--info);    background: rgba(74,127,181,0.08);  color: var(--info); }
-    .type-opt.selected-efectivo { border-color: var(--accent2); background: rgba(126,184,92,0.08);  color: var(--accent2); }
-    .type-opt.selected-credito  { border-color: var(--warning); background: rgba(201,124,46,0.08);  color: var(--warning); }
-
-    /* ── Emoji ───────────────────────────────────────────── */
-    .emoji-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .emoji-btn { width: 40px; height: 40px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .emoji-btn.selected { border-color: var(--accent); background: rgba(212,96,138,0.08); }
-
-    /* ── Amount wrapper ──────────────────────────────────── */
-    .amount-wrapper { position: relative; }
-    .amount-wrapper .sym { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none; }
-    .amount-wrapper .form-input { padding-left: 26px; }
-
-    .transfer-arrow { text-align: center; font-size: 20px; color: var(--muted); margin: 4px 0; }
-
-    /* ── Cajita archivada ────────────────────────────────── */
-    .wallet-card.archived {
-      opacity: 0.5; border-style: dashed; cursor: default;
-    }
-    .wallet-card.archived:hover { border-color: var(--border); }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar"></div>
-  <div class="page">
-    <div style="margin-bottom:16px;">
-      <h2>Cajitas</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:4px;">Tus cuentas, ahorros y tarjetas.</p>
-    </div>
-    <div class="total-row" id="total-row">
-      <div class="skeleton" style="height:80px;border-radius:16px;"></div>
-      <div class="skeleton" style="height:80px;border-radius:16px;"></div>
-    </div>
-    <button class="btn-transfer" id="btn-transfer">
-      <svg viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-      Transferir entre cajitas
-    </button>
-    <div id="wallets-list">
-      <div class="skeleton" style="height:160px;border-radius:16px;"></div>
-    </div>
+  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
 
-    <!-- Cajitas archivadas -->
-    <div id="archived-section" style="display:none;margin-top:8px;">
-      <button id="btn-show-archived" style="background:none;border:none;color:var(--muted);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px 0;text-decoration:underline;text-underline-offset:2px;">
-        Ver cajitas archivadas
-      </button>
-      <div id="archived-list" style="display:none;margin-top:8px;"></div>
-    </div>
+  <div class="page-hdr">
+    <div class="page-title">Cajitas</div>
+    <div class="page-sub">Tus cuentas, ahorros y tarjetas</div>
+  </div>
+
+  <div class="sum-row" id="sum-row">
+    <div class="skeleton" style="height:80px;border-radius:16px;"></div>
+    <div class="skeleton" style="height:80px;border-radius:16px;"></div>
+  </div>
+
+  <button class="transfer-btn" id="btn-transfer">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+    Transferir entre cajitas
+  </button>
+
+  <div class="section-hdr">
+    <div class="section-title">Cajitas activas</div>
+  </div>
+
+  <div class="wallet-list" id="wallet-list">
+    <div class="skeleton" style="height:72px;border-radius:14px;"></div>
+    <div class="skeleton" style="height:72px;border-radius:14px;"></div>
   </div>
 
   <button class="fab" id="fab">+</button>
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Drawer cajita -->
-  <div class="drawer-overlay" id="drawer-overlay"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-handle"></div>
-    <div class="drawer-title" id="drawer-title">Nueva cajita</div>
-    <div class="form-group">
-      <label class="form-label">Tipo</label>
-      <div class="type-options" id="type-options">
-        <div class="type-opt" data-type="ahorro"><span class="type-icon">🏦</span>Ahorro</div>
-        <div class="type-opt" data-type="efectivo"><span class="type-icon">💵</span>Efectivo</div>
-        <div class="type-opt" data-type="credito"><span class="type-icon">💳</span>Crédito</div>
+  <!-- Modal nueva/editar cajita -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal">
+      <div class="modal-hdr">
+        <div class="modal-title" id="modal-title">Nueva cajita</div>
+        <button class="modal-close" id="modal-close">×</button>
       </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Ícono</label>
-      <div class="emoji-grid" id="emoji-grid"></div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Nombre</label>
-      <input type="text" class="form-input" id="field-name" placeholder="Ej: Davivienda, Nequi..." maxlength="40"/>
-    </div>
-    <div class="form-group" id="balance-group">
-      <label class="form-label">Saldo inicial</label>
-      <div class="amount-wrapper"><span class="sym">$</span>
-        <input type="number" class="form-input" id="field-balance" placeholder="0" min="0"/>
+
+      <div class="field-lbl">Tipo de cuenta</div>
+      <div class="tipo-grid" id="tipo-grid">
+        <button class="tipo-btn active" data-tipo="ahorro">
+          <div class="tipo-ico">🏦</div>
+          <span class="tipo-name">Ahorro</span>
+        </button>
+        <button class="tipo-btn" data-tipo="efectivo">
+          <div class="tipo-ico">💵</div>
+          <span class="tipo-name">Efectivo</span>
+        </button>
+        <button class="tipo-btn" data-tipo="credito">
+          <div class="tipo-ico">💳</div>
+          <span class="tipo-name">Crédito</span>
+        </button>
       </div>
-    </div>
-    <div class="form-group" id="credit-limit-group" style="display:none;">
-      <label class="form-label">Cupo total de la tarjeta</label>
-      <div class="amount-wrapper"><span class="sym">$</span>
-        <input type="number" class="form-input" id="field-credit-limit" placeholder="0" min="0"/>
+
+      <div class="field-lbl">Selecciona un ícono</div>
+      <div class="emoji-grid" id="emoji-grid">
+        <div class="emoji-btn active" data-emoji="🏦">🏦</div>
+        <div class="emoji-btn" data-emoji="💵">💵</div>
+        <div class="emoji-btn" data-emoji="💳">💳</div>
+        <div class="emoji-btn" data-emoji="🐷">🐷</div>
+        <div class="emoji-btn" data-emoji="✈️">✈️</div>
+        <div class="emoji-btn" data-emoji="🏠">🏠</div>
+        <div class="emoji-btn" data-emoji="📱">📱</div>
+        <div class="emoji-btn" data-emoji="🎓">🎓</div>
+        <div class="emoji-btn" data-emoji="🚗">🚗</div>
+        <div class="emoji-btn" data-emoji="💊">💊</div>
       </div>
-    </div>
-    <div class="form-group" id="adjust-group" style="display:none;">
-      <label class="form-label" id="adjust-label">Saldo actual</label>
-      <div class="amount-wrapper"><span class="sym">$</span>
-        <input type="number" class="form-input" id="field-adjust" placeholder="0"/>
+
+      <div class="two-col">
+        <div>
+          <div class="field-lbl">Nombre</div>
+          <input class="f-input" id="field-name" placeholder="Ej. Fondo emergencia"/>
+        </div>
+        <div>
+          <div class="field-lbl" id="balance-label">Saldo inicial</div>
+          <input type="number" class="f-input" id="field-balance" placeholder="0" min="0"/>
+        </div>
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:6px;">El saldo se actualiza automáticamente. Edítalo solo si necesitas corregirlo.</p>
+
+      <div class="field-block" id="credit-limit-block">
+        <div class="field-lbl">Límite de crédito</div>
+        <input type="number" class="f-input" id="field-credit-limit" placeholder="0" min="0" disabled/>
+      </div>
+
+      <button class="modal-save-btn" id="btn-save-wallet">Guardar cajita</button>
     </div>
-    <div class="form-group">
-      <label class="form-label">Notas <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
-      <input type="text" class="form-input" id="field-notes" placeholder="Banco, número de cuenta..." maxlength="80"/>
-    </div>
-    <button class="btn-primary" id="btn-save">Guardar cajita</button>
   </div>
 
-  <!-- Drawer transferencia -->
-  <div class="drawer-overlay" id="transfer-overlay"></div>
-  <div class="drawer" id="transfer-drawer">
-    <div class="drawer-handle"></div>
-    <div class="drawer-title">Transferir entre cajitas</div>
-    <div class="form-group">
-      <label class="form-label">De</label>
-      <select class="form-select" id="transfer-from"></select>
-    </div>
-    <div class="transfer-arrow">↓</div>
-    <div class="form-group">
-      <label class="form-label">A</label>
-      <select class="form-select" id="transfer-to"></select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Monto</label>
-      <div class="amount-wrapper"><span class="sym">$</span>
+  <!-- Transfer drawer -->
+  <div class="drawer-overlay" id="drawer-overlay">
+    <div class="drawer" id="drawer">
+      <div class="drawer-handle"></div>
+      <h3 style="margin-bottom:18px;font-size:18px;font-weight:500;color:var(--text);">Transferir entre cajitas</h3>
+      <div class="form-group">
+        <label class="form-label">Desde</label>
+        <select class="form-select" id="transfer-from"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hacia</label>
+        <select class="form-select" id="transfer-to"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monto</label>
         <input type="number" class="form-input" id="transfer-amount" placeholder="0" min="0"/>
       </div>
+      <button class="btn-primary" id="btn-do-transfer">Transferir</button>
     </div>
-    <div class="form-group">
-      <label class="form-label">Descripción <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
-      <input type="text" class="form-input" id="transfer-description" placeholder="Ej: Pago tarjeta, traslado..." maxlength="80"/>
-    </div>
-    <button class="btn-primary" id="btn-transfer-save">Transferir</button>
   </div>
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getWallets, addWallet, updateWallet, archiveWallet, restoreWallet, addTransfer } from "../modules/db.js";
+    import { getWallets, addWallet, updateWallet, deleteWallet, archiveWallet, restoreWallet, addTransfer } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, today } from "../assets/utils.js";
+    import { formatCOP } from "../assets/utils.js";
 
-    const EMOJIS = ["🏦","💵","💳","📱","🐷","💰","🏧","✈️","🏠","🚗","📦","💎"];
-    const TYPE_ICONS = { ahorro: "🏦", efectivo: "💵", credito: "💳" };
-    let uid, wallets = [], editingId = null, selectedEmoji = "🏦", selectedType = "ahorro";
+    let uid, wallets = [], editingId = null, selectedTipo = "ahorro", selectedEmoji = "🏦";
 
     const user = await requireAuth();
     uid = user.uid;
     renderTopbar(user);
-    renderBottomNav("envelopes");
-    buildEmojiGrid();
-    setupTypeSelector();
+    renderBottomNav("wallets");
     await loadWallets();
 
-    // ── Listeners ─────────────────────────────────────────
-    document.getElementById("fab").addEventListener("click", openNewDrawer);
-    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
-    document.getElementById("btn-save").addEventListener("click", saveWallet);
-    document.getElementById("btn-transfer").addEventListener("click", openTransferDrawer);
-    document.getElementById("transfer-overlay").addEventListener("click", closeTransferDrawer);
-    document.getElementById("btn-transfer-save").addEventListener("click", doTransfer);
-    document.getElementById("emoji-grid").addEventListener("click", e => {
-      const btn = e.target.closest(".emoji-btn");
-      if (btn) selectEmoji(btn.dataset.emoji);
-    });
-    document.getElementById("wallets-list").addEventListener("click", e => {
-      const archiveBtn = e.target.closest("[data-archive]");
-      const card       = e.target.closest(".wallet-card");
-      if (archiveBtn)                                   handleArchive(archiveBtn.dataset.archive, archiveBtn.dataset.name);
-      else if (card && !e.target.closest("button"))    openEditDrawer(card.dataset.id);
-    });
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") { closeDrawer(); closeTransferDrawer(); }
-    });
-
-    // ── Cargar ────────────────────────────────────────────
+    // ── Load ──────────────────────────────────────────────
     async function loadWallets() {
       wallets = await getWallets(uid);
-      const allWallets = await getWallets(uid, true);
-      const archived   = allWallets.filter(w => w.archived);
-      renderWallets();
-      renderArchived(archived);
-      populateTransferSelects();
+      renderSummary();
+      renderList();
     }
 
-    function renderWallets() {
-      const rowEl  = document.getElementById("total-row");
-      const listEl = document.getElementById("wallets-list");
-      const normal = wallets.filter(w => w.type !== "credito");
-      const credit = wallets.filter(w => w.type === "credito");
-      const totalBal  = normal.reduce((s, w) => s + Number(w.balance || 0), 0);
-      const totalDebt = credit.reduce((s, w) => s + Number(w.balance || 0), 0);
-
-      rowEl.innerHTML = `
-        <div class="total-card">
-          <div class="total-label">Saldo disponible</div>
-          <div class="total-amount ${totalBal >= 0 ? "positive" : "negative"}">${formatCOP(totalBal)}</div>
+    // ── Summary ───────────────────────────────────────────
+    function renderSummary() {
+      const available = wallets.filter(w => w.type !== "credito").reduce((s,w) => s+Number(w.balance||0), 0);
+      const debt      = wallets.filter(w => w.type === "credito").reduce((s,w) => s+Number(w.balance||0), 0);
+      document.getElementById("sum-row").innerHTML = `
+        <div class="sum-card">
+          <div class="sum-lbl">Saldo disponible</div>
+          <div class="sum-val-row">
+            <span class="sum-sym">$</span>
+            <span class="sum-val">${formatCOP(available).replace("$","")}</span>
+          </div>
         </div>
-        <div class="total-card">
-          <div class="total-label">Deuda en crédito</div>
-          <div class="total-amount ${totalDebt > 0 ? "credit" : "positive"}">${formatCOP(totalDebt)}</div>
+        <div class="sum-card">
+          <div class="sum-lbl">Deuda en crédito</div>
+          <div class="sum-val-row">
+            <span class="sum-sym red">$</span>
+            <span class="sum-val red">${formatCOP(debt).replace("$","")}</span>
+          </div>
         </div>`;
+    }
 
-      if (!wallets.length) {
-        listEl.innerHTML = `<div class="empty-state"><p>No tienes cajitas todavía.</p>
-          <p style="margin-top:6px;font-size:12px;">Toca <strong style="color:var(--accent)">+</strong> para crear la primera.</p></div>`;
+    // ── List ──────────────────────────────────────────────
+    function renderList() {
+      const el = document.getElementById("wallet-list");
+      const active = wallets.filter(w => !w.archived);
+      if (!active.length) {
+        el.innerHTML = `<div class="empty-state"><p>No tienes cajitas creadas.</p>
+          <p style="margin-top:6px;font-size:12px;">Toca <strong style="color:#0f3460;">+</strong> para crear una.</p></div>`;
         return;
       }
-
-      listEl.innerHTML = [
-        ...wallets.filter(w => w.type !== "credito"),
-        ...wallets.filter(w => w.type === "credito")
-      ].map(walletCardHTML).join("");
-    }
-
-    function renderArchived(archived) {
-      const section  = document.getElementById("archived-section");
-      const listEl   = document.getElementById("archived-list");
-      const btn      = document.getElementById("btn-show-archived");
-
-      if (!archived.length) { section.style.display = "none"; return; }
-      section.style.display = "block";
-
-      listEl.innerHTML = archived.map(w => `
-        <div class="wallet-card archived" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:18px;opacity:0.5;">${w.icon || "🏦"}</span>
-            <div>
-              <div style="font-size:14px;color:var(--muted);">${w.name}</div>
-              <div style="font-size:11px;color:var(--muted2);">Archivada</div>
-            </div>
-          </div>
-          <button class="btn-ghost" style="font-size:12px;padding:6px 12px;" data-restore="${w.id}">Restaurar</button>
-        </div>`).join("");
-
-      // Toggle mostrar/ocultar
-      btn.onclick = () => {
-        const isOpen = listEl.style.display !== "none";
-        listEl.style.display = isOpen ? "none" : "block";
-        btn.textContent = isOpen ? "Ver cajitas archivadas" : "Ocultar archivadas";
-      };
-
-      // Restaurar
-      listEl.addEventListener("click", async e => {
-        const btn = e.target.closest("[data-restore]");
-        if (!btn) return;
-        try {
-          await restoreWallet(uid, btn.dataset.restore);
-          showToast("Cajita restaurada.", "success");
-          await loadWallets();
-        } catch (err) { showToast("Error al restaurar.", "error"); }
-      });
-    }
-
-    function walletCardHTML(w) {
-      const type  = w.type || "ahorro";
-      const bal   = Number(w.balance || 0);
-      const typeLabel = { ahorro: "Ahorro", efectivo: "Efectivo", credito: "Crédito" }[type] || type;
-
-      if (type === "credito") {
-        const limit     = Number(w.creditLimit || 0);
-        const available = limit - bal;
-        const pct       = limit > 0 ? Math.min(bal / limit, 1) : 0;
-        const barCls    = pct >= 0.9 ? "over" : pct >= 0.7 ? "warn" : "";
+      const icoBg = { ahorro: "#e6f1fb", efectivo: "#eaf3de", credito: "#fbeaf0" };
+      el.innerHTML = active.map(w => {
+        const isCredit  = w.type === "credito";
+        const balance   = Number(w.balance||0);
+        const limit     = Number(w.creditLimit||0);
+        const available = isCredit ? limit - balance : balance;
         return `
-          <div class="wallet-card type-credito" data-id="${w.id}">
-            <div class="wallet-top">
-              <div class="wallet-left">
-                <div class="wallet-icon">${w.icon || "💳"}</div>
-                <div>
-                  <div class="wallet-name">${w.name}</div>
-                  <span class="wallet-type-badge credito">${typeLabel}</span>
-                </div>
-              </div>
-              <div>
-                <div class="wallet-balance debt">${formatCOP(bal)}</div>
-                <div class="wallet-balance-label">usado</div>
-              </div>
+          <div class="wallet-item">
+            <div class="w-ico" style="background:${icoBg[w.type]||"#f0f4f8"};">${w.icon||"🏦"}</div>
+            <div class="w-info">
+              <div class="w-name">${w.name}</div>
+              <div class="w-type">${w.type==="credito"?"Crédito"+(limit?` · Límite ${formatCOP(limit)}`:""):w.type==="efectivo"?"Efectivo":"Ahorro"}</div>
             </div>
-            <div class="credit-detail">
-              <div class="credit-row"><span>Disponible</span><span>${formatCOP(available)}</span></div>
-              <div class="credit-row"><span>Cupo total</span><span>${formatCOP(limit)}</span></div>
-              <div class="progress-bar">
-                <div class="progress-fill ${barCls}" style="width:${pct*100}%;background:var(--warning);"></div>
-              </div>
-              <div style="font-size:10px;color:var(--muted);margin-top:4px;">${Math.round(pct*100)}% del cupo usado</div>
+            <div class="w-right">
+              <div class="w-balance ${isCredit&&balance>0?"red":""}">${formatCOP(isCredit?balance:balance)}</div>
+              <div class="w-sublbl ${isCredit&&balance>0?"red":""}">${isCredit?"Deuda actual":"Disponible"}</div>
             </div>
-            <div class="wallet-footer">
-              <button class="btn-ghost" style="font-size:12px;" data-archive="${w.id}" data-name="${w.name}">Archivar</button>
-            </div>
+          </div>
+          <div style="display:flex;gap:6px;padding:0 2px 4px;justify-content:flex-end;">
+            <button class="w-btn" onclick="openEdit('${w.id}')">Editar</button>
+            <button class="w-btn danger" onclick="handleArchive('${w.id}')">Archivar</button>
           </div>`;
-      }
-
-      return `
-        <div class="wallet-card type-${type}" data-id="${w.id}">
-          <div class="wallet-top">
-            <div class="wallet-left">
-              <div class="wallet-icon">${w.icon || "🏦"}</div>
-              <div>
-                <div class="wallet-name">${w.name}</div>
-                <span class="wallet-type-badge ${type}">${typeLabel}</span>
-              </div>
-            </div>
-            <div>
-              <div class="wallet-balance positive">${formatCOP(bal)}</div>
-              <div class="wallet-balance-label">disponible</div>
-            </div>
-          </div>
-          ${w.notes ? `<div style="font-size:12px;color:var(--muted);">${w.notes}</div>` : ""}
-          <div class="wallet-footer">
-            <button class="btn-ghost" style="font-size:12px;" data-archive="${w.id}" data-name="${w.name}">Archivar</button>
-          </div>
-        </div>`;
+      }).join("");
     }
 
-    // ── Tipo ──────────────────────────────────────────────
-    function setupTypeSelector() {
-      document.getElementById("type-options").addEventListener("click", e => {
-        const opt = e.target.closest(".type-opt");
-        if (opt) selectType(opt.dataset.type);
-      });
-    }
-
-    function selectType(type) {
-      selectedType = type;
-      document.querySelectorAll(".type-opt").forEach(o =>
-        o.className = `type-opt${o.dataset.type === type ? ` selected-${type}` : ""}`
-      );
-      const isCredit = type === "credito";
-      document.getElementById("balance-group").style.display      = isCredit ? "none"  : "block";
-      document.getElementById("credit-limit-group").style.display = isCredit ? "block" : "none";
-      if (!editingId) selectEmoji(TYPE_ICONS[type] || "🏦");
-    }
-
-    // ── Emoji ─────────────────────────────────────────────
-    function buildEmojiGrid() {
-      document.getElementById("emoji-grid").innerHTML = EMOJIS.map(e =>
-        `<button type="button" class="emoji-btn" data-emoji="${e}">${e}</button>`
-      ).join("");
-    }
-    function selectEmoji(e) {
-      selectedEmoji = e;
-      document.querySelectorAll(".emoji-btn").forEach(b =>
-        b.classList.toggle("selected", b.dataset.emoji === e)
-      );
-    }
-
-    // ── Drawers cajita ────────────────────────────────────
-    function openNewDrawer() {
-      editingId = null;
-      document.getElementById("drawer-title").textContent         = "Nueva cajita";
-      document.getElementById("field-name").value                 = "";
-      document.getElementById("field-balance").value              = "";
-      document.getElementById("field-credit-limit").value         = "";
-      document.getElementById("field-notes").value                = "";
-      document.getElementById("btn-save").textContent             = "Guardar cajita";
-      document.getElementById("adjust-group").style.display       = "none";
-      selectType("ahorro");
-      openDrawer();
-    }
-
-    function openEditDrawer(id) {
+    // Archive / delete
+    window.openEdit = (id) => {
       const w = wallets.find(x => x.id === id);
       if (!w) return;
-      editingId    = id;
-      selectedType = w.type || "ahorro";
-      document.getElementById("drawer-title").textContent         = "Editar cajita";
-      document.getElementById("field-name").value                 = w.name;
-      document.getElementById("field-notes").value                = w.notes || "";
-      document.getElementById("field-adjust").value               = w.balance || 0;
-      document.getElementById("field-credit-limit").value         = w.creditLimit || 0;
-      document.getElementById("btn-save").textContent             = "Actualizar cajita";
-      document.getElementById("adjust-group").style.display       = "block";
-      document.getElementById("balance-group").style.display      = "none";
-      document.getElementById("adjust-label").textContent         = w.type === "credito" ? "Saldo usado actual" : "Saldo actual";
-      document.getElementById("credit-limit-group").style.display = w.type === "credito" ? "block" : "none";
-      document.querySelectorAll(".type-opt").forEach(o =>
-        o.className = `type-opt${o.dataset.type === selectedType ? ` selected-${selectedType}` : ""}`
-      );
-      selectEmoji(w.icon || "🏦");
-      openDrawer();
+      editingId = id;
+      selectedTipo  = w.type || "ahorro";
+      selectedEmoji = w.icon || "🏦";
+      document.getElementById("modal-title").textContent = "Editar cajita";
+      document.getElementById("btn-save-wallet").textContent = "Actualizar cajita";
+      document.getElementById("field-name").value    = w.name || "";
+      document.getElementById("field-balance").value = w.balance || 0;
+      document.getElementById("field-credit-limit").value = w.creditLimit || "";
+      updateTipoUI(); updateEmojiUI(); updateCreditFields();
+      openModal();
+    };
+    window.handleArchive = async (id) => {
+      if (!confirm("¿Archivar esta cajita?")) return;
+      try { await archiveWallet(uid, id); showToast("Cajita archivada.", "success"); await loadWallets(); }
+      catch(e) { showToast("Error.", "error"); }
+    };
+
+    // ── Modal ─────────────────────────────────────────────
+    document.getElementById("fab").addEventListener("click", openNewModal);
+    document.getElementById("modal-close").addEventListener("click", closeModal);
+    document.getElementById("modal-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("modal-overlay")) closeModal();
+    });
+
+    function openNewModal() {
+      editingId = null; selectedTipo = "ahorro"; selectedEmoji = "🏦";
+      document.getElementById("modal-title").textContent     = "Nueva cajita";
+      document.getElementById("btn-save-wallet").textContent = "Guardar cajita";
+      document.getElementById("field-name").value    = "";
+      document.getElementById("field-balance").value = "";
+      document.getElementById("field-credit-limit").value = "";
+      updateTipoUI(); updateEmojiUI(); updateCreditFields();
+      openModal();
+    }
+    function openModal()  { document.getElementById("modal-overlay").classList.add("open"); }
+    function closeModal() { document.getElementById("modal-overlay").classList.remove("open"); editingId = null; }
+
+    // Tipo buttons
+    document.getElementById("tipo-grid").addEventListener("click", e => {
+      const btn = e.target.closest("[data-tipo]");
+      if (!btn) return;
+      selectedTipo = btn.dataset.tipo;
+      updateTipoUI(); updateCreditFields();
+    });
+    function updateTipoUI() {
+      document.querySelectorAll(".tipo-btn").forEach(b => b.classList.toggle("active", b.dataset.tipo === selectedTipo));
+    }
+    function updateCreditFields() {
+      const isCredit = selectedTipo === "credito";
+      document.getElementById("field-credit-limit").disabled = !isCredit;
+      document.getElementById("balance-label").textContent = isCredit ? "Deuda actual" : "Saldo inicial";
     }
 
+    // Emoji buttons
+    document.getElementById("emoji-grid").addEventListener("click", e => {
+      const btn = e.target.closest("[data-emoji]");
+      if (!btn) return;
+      selectedEmoji = btn.dataset.emoji;
+      updateEmojiUI();
+    });
+    function updateEmojiUI() {
+      document.querySelectorAll(".emoji-btn").forEach(b => b.classList.toggle("active", b.dataset.emoji === selectedEmoji));
+    }
+
+    // Save
+    document.getElementById("btn-save-wallet").addEventListener("click", saveWallet);
     async function saveWallet() {
       const name    = document.getElementById("field-name").value.trim();
-      const notes   = document.getElementById("field-notes").value.trim();
-      const btn     = document.getElementById("btn-save");
-      const isCredit = selectedType === "credito";
+      const balance = Number(document.getElementById("field-balance").value) || 0;
+      const limit   = Number(document.getElementById("field-credit-limit").value) || 0;
+      const btn     = document.getElementById("btn-save-wallet");
       if (!name) { showToast("Escribe un nombre.", "error"); return; }
       btn.disabled = true; btn.textContent = "Guardando...";
       try {
-        if (editingId) {
-          const balance     = Number(document.getElementById("field-adjust").value) || 0;
-          const creditLimit = Number(document.getElementById("field-credit-limit").value) || 0;
-          await updateWallet(uid, editingId, { name, notes, icon: selectedEmoji, type: selectedType, balance, ...(isCredit ? {creditLimit} : {}) });
-          showToast("Cajita actualizada.", "success");
-        } else {
-          const balance     = Number(document.getElementById("field-balance").value) || 0;
-          const creditLimit = Number(document.getElementById("field-credit-limit").value) || 0;
-          await addWallet(uid, { name, notes, icon: selectedEmoji, type: selectedType, balance, creditLimit });
-          showToast("Cajita creada.", "success");
-        }
-        closeDrawer();
-        await loadWallets();
-      } catch (err) {
-        showToast("Error al guardar.", "error"); console.error(err);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = editingId ? "Actualizar cajita" : "Guardar cajita";
-      }
+        const data = { name, type: selectedTipo, icon: selectedEmoji, balance };
+        if (selectedTipo === "credito" && limit) data.creditLimit = limit;
+        if (editingId) { await updateWallet(uid, editingId, data); showToast("Cajita actualizada.", "success"); }
+        else           { await addWallet(uid, data);               showToast("Cajita creada.", "success"); }
+        closeModal(); await loadWallets();
+      } catch(e) { showToast("Error al guardar.", "error"); console.error(e); }
+      finally { btn.disabled = false; btn.textContent = editingId ? "Actualizar cajita" : "Guardar cajita"; }
     }
 
-    // ── Transferencia ─────────────────────────────────────
-    function populateTransferSelects() {
-      const opts = wallets.map(w => {
-        const info = w.type === "credito"
-          ? `Disponible: ${formatCOP((w.creditLimit||0)-(w.balance||0))}`
-          : `Saldo: ${formatCOP(w.balance||0)}`;
-        return `<option value="${w.id}">${w.icon||"🏦"} ${w.name} · ${info}</option>`;
-      }).join("");
+    // ── Transfer ──────────────────────────────────────────
+    document.getElementById("btn-transfer").addEventListener("click", openTransfer);
+    document.getElementById("drawer-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("drawer-overlay")) closeTransfer();
+    });
+
+    function openTransfer() {
+      const opts = wallets.filter(w=>!w.archived).map(w =>
+        `<option value="${w.id}">${w.icon||"🏦"} ${w.name} · ${formatCOP(w.balance||0)}</option>`
+      ).join("");
       document.getElementById("transfer-from").innerHTML = opts;
       document.getElementById("transfer-to").innerHTML   = opts;
-      if (wallets.length > 1) document.getElementById("transfer-to").selectedIndex = 1;
-    }
-
-    function openTransferDrawer() {
-      if (wallets.length < 2) { showToast("Necesitas al menos 2 cajitas.", "error"); return; }
-      document.getElementById("transfer-amount").value      = "";
-      document.getElementById("transfer-description").value = "";
-      populateTransferSelects();
-      document.getElementById("transfer-overlay").classList.add("open");
-      document.getElementById("transfer-drawer").classList.add("open");
-    }
-
-    function closeTransferDrawer() {
-      document.getElementById("transfer-overlay").classList.remove("open");
-      document.getElementById("transfer-drawer").classList.remove("open");
-    }
-
-    async function doTransfer() {
-      const fromId = document.getElementById("transfer-from").value;
-      const toId   = document.getElementById("transfer-to").value;
-      const amount = Number(document.getElementById("transfer-amount").value) || 0;
-      const desc   = document.getElementById("transfer-description").value.trim();
-      const btn    = document.getElementById("btn-transfer-save");
-      if (fromId === toId) { showToast("Selecciona cajitas diferentes.", "error"); return; }
-      if (!amount)         { showToast("Ingresa un monto.", "error"); return; }
-      const fromW = wallets.find(w => w.id === fromId);
-      const toW   = wallets.find(w => w.id === toId);
-      if (fromW?.type !== "credito" && Number(fromW?.balance||0) < amount) {
-        showToast(`Saldo insuficiente en ${fromW?.name}.`, "error"); return;
-      }
-      btn.disabled = true; btn.textContent = "Transfiriendo...";
-      try {
-        await addTransfer(uid, { date: today(), fromWalletId: fromId, fromWalletName: fromW?.name||"", toWalletId: toId, toWalletName: toW?.name||"", amount, description: desc });
-        showToast("Transferencia realizada.", "success");
-        closeTransferDrawer();
-        await loadWallets();
-      } catch (err) {
-        showToast("Error al transferir.", "error"); console.error(err);
-      } finally {
-        btn.disabled = false; btn.textContent = "Transferir";
-      }
-    }
-
-    async function handleArchive(id, name) {
-      if (!confirm(`¿Archivar la cajita "${name}"?\nPodrás restaurarla cuando quieras.`)) return;
-      try {
-        await archiveWallet(uid, id);
-        showToast("Cajita archivada.", "success");
-        await loadWallets();
-      } catch (err) { showToast("Error al archivar.", "error"); }
-    }
-
-    function openDrawer() {
+      document.getElementById("transfer-amount").value   = "";
       document.getElementById("drawer-overlay").classList.add("open");
       document.getElementById("drawer").classList.add("open");
-      setTimeout(() => document.getElementById("field-name").focus(), 320);
     }
-    function closeDrawer() {
+    function closeTransfer() {
       document.getElementById("drawer-overlay").classList.remove("open");
       document.getElementById("drawer").classList.remove("open");
     }
+    document.getElementById("btn-do-transfer").addEventListener("click", async () => {
+      const fromId = document.getElementById("transfer-from").value;
+      const toId   = document.getElementById("transfer-to").value;
+      const amount = Number(document.getElementById("transfer-amount").value) || 0;
+      if (!amount || fromId === toId) { showToast("Revisa los datos.", "error"); return; }
+      const fromW  = wallets.find(w => w.id === fromId);
+      const toW    = wallets.find(w => w.id === toId);
+      try {
+        await addTransfer(uid, { fromWalletId: fromId, fromWalletName: fromW?.name, toWalletId: toId, toWalletName: toW?.name, amount });
+        showToast("Transferencia realizada.", "success");
+        closeTransfer(); await loadWallets();
+      } catch(e) { showToast("Error.", "error"); }
+    });
   </script>
 </body>
 </html>
