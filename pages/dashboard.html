@@ -8,119 +8,278 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    .hero-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 28px 24px 24px;
-      margin-bottom: 14px;
+    body { background: #f0f4f8; }
+    body.dark { background: #111; }
+
+    /* ── Hero (navy) ─────────────────────────────────────── */
+    .hero-section {
+      background: #0f3460;
+      padding: 0 16px 28px;
+      position: relative;
     }
-    .hero-month {
-      font-size: 12px; font-weight: 500; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
+    body.dark .hero-section { background: #0a1f3d; }
+
+    .hero-label {
+      font-size: 10px; font-weight: 500; color: #7aa3cc;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 4px;
     }
     .hero-amount {
-      font-family: "DM Serif Display", serif;
-      font-size: 44px; font-weight: 400; letter-spacing: -1.5px;
-      line-height: 1; margin-bottom: 4px;
+      font-size: 38px; font-weight: 500;
+      color: #ffffff; letter-spacing: -1.5px;
+      margin-bottom: 4px; line-height: 1.1;
     }
-    .hero-amount.positive { color: var(--accent); }
-    .hero-amount.negative { color: var(--danger); }
-    .hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-    .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .hero-stat {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px 14px;
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #1a4a7a; border-radius: 99px;
+      padding: 4px 10px; font-size: 11px; color: #7ab8e8;
+      margin-bottom: 14px;
     }
-    .hero-stat .label { margin-bottom: 4px; }
-    .hero-stat .value {
-      font-size: 18px; font-weight: 400;
-      font-family: "DM Serif Display", serif; letter-spacing: -0.5px;
-    }
-    .hero-stat .value.inc { color: var(--info); }
-    .hero-stat .value.exp { color: var(--warning); }
-    .progress-labels {
+    .hero-progress-wrap { margin-bottom: 14px; }
+    .hero-progress-labels {
       display: flex; justify-content: space-between;
-      font-size: 12px; color: var(--muted); margin-bottom: 6px;
+      font-size: 11px; color: #7aa3cc; margin-bottom: 5px;
     }
-    .envelopes-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    .hero-progress-bar {
+      height: 5px; background: rgba(255,255,255,0.15);
+      border-radius: 99px; overflow: hidden;
     }
-    @media (max-width: 380px) { .envelopes-grid { grid-template-columns: 1fr; } }
-    .envelope-card {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px;
+    .hero-progress-fill {
+      height: 100%; border-radius: 99px;
+      background: #ffffff; transition: width 0.4s ease;
     }
-    .envelope-name {
-      font-size: 12px; font-weight: 500; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .hero-progress-fill.warn { background: #e0a050; }
+    .hero-progress-fill.over { background: #e07070; }
+
+    .hero-btns { display: flex; gap: 10px; align-items: center; }
+    .hero-btn-main {
+      background: #ffffff; color: #0f3460;
+      border: none; border-radius: 99px;
+      padding: 9px 18px; font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: "DM Sans", sans-serif;
+      text-decoration: none; display: inline-block;
     }
-    .envelope-actual {
-      font-family: "DM Serif Display", serif;
-      font-size: 20px; font-weight: 400; letter-spacing: -0.5px; margin-bottom: 2px;
+    .hero-btn-arrow {
+      background: #1a4a7a; color: #ffffff;
+      border: none; border-radius: 50%;
+      width: 38px; height: 38px; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; text-decoration: none;
     }
-    .envelope-actual.ok   { color: var(--accent); }
-    .envelope-actual.over { color: var(--danger); }
-    .envelope-actual.warn { color: var(--warning); }
-    .envelope-budget { font-size: 11px; color: var(--muted); }
-    .expense-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
+
+    /* ── Month selector en hero ──────────────────────────── */
+    #month-selector-container .ms-wrap {
+      background: rgba(255,255,255,0.12) !important;
+      border-color: rgba(255,255,255,0.15) !important;
     }
-    .expense-item:last-child { border-bottom: none; }
-    .expense-left { flex: 1; min-width: 0; }
-    .expense-cat { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .expense-desc { font-size: 12px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .expense-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
-    .expense-amount { font-family: "DM Serif Display", serif; font-size: 16px; color: var(--warning); letter-spacing: -0.3px; }
-    .expense-date { font-size: 11px; color: var(--muted); margin-top: 1px; }
-    .cat-row { margin-bottom: 14px; }
-    .cat-row:last-child { margin-bottom: 0; }
-    .cat-row-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-    .cat-name { font-size: 13px; color: var(--text); }
-    .cat-amounts { font-size: 12px; color: var(--muted); }
-    .cat-amounts span { color: var(--text); }
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .link-small { font-size: 12px; color: var(--accent); text-decoration: none; }
-    .link-small:hover { text-decoration: underline; }
+    #month-selector-container .ms-label { color: #ffffff !important; }
+    #month-selector-container .ms-arrow { color: #7aa3cc !important; }
+    #month-selector-container .ms-arrow:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+
+    /* ── Topbar en hero ──────────────────────────────────── */
+    .topbar-hero {
+      background: #0f3460;
+      padding: 14px 16px 12px;
+    }
+    body.dark .topbar-hero { background: #0a1f3d; }
+
+    /* ── Body ────────────────────────────────────────────── */
+    .dash-body {
+      padding: 14px 14px 90px;
+      display: flex; flex-direction: column; gap: 12px;
+      max-width: 680px; margin: 0 auto;
+    }
+
+    /* ── Stats row ───────────────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card {
+      background: #ffffff; border-radius: 14px; padding: 12px 14px;
+    }
+    body.dark .stat-card { background: #1a1a1a; }
+    .stat-label {
+      font-size: 10px; color: #888; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 3px;
+    }
+    .stat-value { font-size: 18px; font-weight: 500; }
+    .stat-value.blue { color: #185fa5; }
+    .stat-value.green { color: #3b6d11; }
+    .stat-bar { height: 3px; border-radius: 99px; overflow: hidden; margin-top: 7px; }
+    .stat-bar-track { height: 100%; border-radius: 99px; }
+    .stat-sub { font-size: 10px; color: #888; margin-top: 4px; }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .dash-card {
+      background: #ffffff; border-radius: 16px; padding: 14px;
+    }
+    body.dark .dash-card { background: #1a1a1a; }
+    .dash-card-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 12px;
+    }
+    .dash-card-title { font-size: 14px; font-weight: 500; color: var(--text); }
+    .dash-card-link {
+      font-size: 11px; color: #185fa5; text-decoration: none; cursor: pointer;
+    }
+
+    /* ── Barras semanales ────────────────────────────────── */
+    .bars-wrap { display: flex; gap: 8px; align-items: flex-end; height: 80px; }
+    .bar-col { display: flex; flex-direction: column; flex: 1; }
+    .bar-group { display: flex; gap: 3px; align-items: flex-end; flex: 1; }
+    .bar { border-radius: 4px 4px 0 0; flex: 1; min-height: 4px; }
+    .bar-budget { background: #b5d4f4; }
+    .bar-actual { background: #0f3460; }
+    body.dark .bar-budget { background: #2a4a7a; }
+    body.dark .bar-actual { background: #5a8abc; }
+    .bar-lbl { text-align: center; font-size: 10px; color: #888; margin-top: 5px; }
+    .chart-legend { display: flex; gap: 12px; margin-top: 8px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    .legend-item { font-size: 11px; color: #666; display: flex; align-items: center; }
+
+    /* ── Donut + cajitas row ─────────────────────────────── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .donut-wrap { position: relative; width: 72px; height: 72px; margin: 0 auto 10px; }
+    .donut-center {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .donut-pct { font-size: 15px; font-weight: 500; color: var(--text); }
+    .donut-sub { font-size: 9px; color: #888; }
+    .donut-stat {
+      display: flex; justify-content: space-between;
+      font-size: 11px; margin-bottom: 3px;
+    }
+    .donut-stat-lbl { color: #888; }
+    .donut-stat-val { font-weight: 500; color: var(--text); }
+    .donut-stat-val.green { color: #3b6d11; }
+
+    /* Cajitas mini lista */
+    .wallet-mini { display: flex; flex-direction: column; gap: 7px; }
+    .wallet-mini-row {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .wallet-mini-name { font-size: 11px; color: var(--text); }
+    .wallet-mini-sub { font-size: 10px; color: #888; }
+    .wallet-mini-val { font-size: 13px; font-weight: 500; }
+    .wallet-mini-val.blue { color: #185fa5; }
+    .wallet-mini-val.red { color: #a32d2d; }
+    .wallet-mini-link { font-size: 11px; color: #185fa5; cursor: pointer; margin-top: 8px; display: block; text-decoration: none; }
+
+    /* ── Categorías top ──────────────────────────────────── */
+    .cats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .cat-card {
+      border-radius: 12px; padding: 11px;
+      border: 0.5px solid #e8e8e8;
+    }
+    body.dark .cat-card { border-color: #2a2a2a; }
+    .cat-icon-box {
+      width: 30px; height: 30px; border-radius: 8px;
+      margin-bottom: 7px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .cat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 3px; }
+    .cat-val { font-size: 14px; font-weight: 500; color: var(--text); }
+
+    /* ── Actividad reciente ──────────────────────────────── */
+    .act-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0; border-bottom: 0.5px solid #f0f0f0;
+    }
+    body.dark .act-item { border-bottom-color: #2a2a2a; }
+    .act-item:last-child { border-bottom: none; }
+    .act-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #f0f4f8; display: flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    body.dark .act-icon { background: #2a2a2a; }
+    .act-info { flex: 1; min-width: 0; }
+    .act-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .act-sub { font-size: 11px; color: #888; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .act-right { text-align: right; flex-shrink: 0; }
+    .act-amount { font-size: 13px; font-weight: 500; }
+    .act-amount.neg { color: #a32d2d; }
+    .act-amount.pos { color: #3b6d11; }
+    .act-date { font-size: 10px; color: #888; margin-top: 1px; }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar"></div>
-  <div class="page">
-    <div id="month-selector-container" style="margin-bottom:16px;"></div>
-    <div class="hero-card" id="hero-card">
-      <div class="skeleton" style="height:140px;border-radius:12px;"></div>
-    </div>
-    <div class="card">
-      <div class="section-header">
-        <h3>Cajitas</h3>
-        <a href="./wallets.html" class="link-small">Ver todas →</a>
-      </div>
-      <div id="envelopes-content">
-        <div class="skeleton" style="height:80px;border-radius:10px;"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-header">
-        <h3>Últimos gastos</h3>
-        <a href="./expenses.html" class="link-small">Ver todos →</a>
-      </div>
-      <div id="recent-expenses-content">
-        <div class="skeleton" style="height:120px;border-radius:10px;"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-header">
-        <h3>Por categoría</h3>
-        <a href="./comparison.html" class="link-small">Comparativo →</a>
-      </div>
-      <div id="categories-content">
-        <div class="skeleton" style="height:140px;border-radius:10px;"></div>
+  <!-- Topbar en hero -->
+  <div class="topbar-hero">
+    <div id="topbar" class="topbar" style="padding:0;max-width:680px;margin:0 auto;"></div>
+  </div>
+
+  <!-- Hero section -->
+  <div class="hero-section">
+    <div style="max-width:680px;margin:0 auto;">
+      <div id="month-selector-container" style="margin-bottom:14px;padding-top:4px;"></div>
+      <div id="hero-content">
+        <div class="hero-label">Cargando...</div>
       </div>
     </div>
   </div>
+
+  <!-- Body -->
+  <div class="dash-body">
+    <!-- Stats row -->
+    <div class="stats-row" id="stats-row">
+      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
+      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
+    </div>
+
+    <!-- Rendimiento semanal -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <div>
+          <div class="dash-card-title">Rendimiento semanal</div>
+          <div style="font-size:11px;color:#888;margin-top:1px;">Real vs presupuesto</div>
+        </div>
+      </div>
+      <div class="bars-wrap" id="weekly-bars">
+        <div class="skeleton" style="height:80px;border-radius:8px;flex:1;"></div>
+      </div>
+      <div class="chart-legend" id="chart-legend" style="display:none;">
+        <div class="legend-item"><span class="legend-dot" style="background:#b5d4f4;"></span>Presupuesto</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#0f3460;"></span>Real</div>
+      </div>
+    </div>
+
+    <!-- Donut + Cajitas -->
+    <div class="two-col">
+      <div class="dash-card" id="donut-card">
+        <div class="skeleton" style="height:160px;border-radius:8px;"></div>
+      </div>
+      <div class="dash-card" id="wallets-card">
+        <div class="skeleton" style="height:160px;border-radius:8px;"></div>
+      </div>
+    </div>
+
+    <!-- Categorías top -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <div class="dash-card-title">Categorías top</div>
+        <a href="./comparison.html" class="dash-card-link">Ver todo →</a>
+      </div>
+      <div class="cats-grid" id="cats-grid">
+        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:80px;border-radius:12px;"></div>
+      </div>
+    </div>
+
+    <!-- Actividad reciente -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <div class="dash-card-title">Actividad reciente</div>
+        <a href="./expenses.html" class="dash-card-link">Ver todo →</a>
+      </div>
+      <div id="activity-list">
+        <div class="skeleton" style="height:140px;border-radius:8px;"></div>
+      </div>
+    </div>
+  </div>
+
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script type="module">
@@ -130,14 +289,13 @@
     import { formatCOP, currentMonth, formatDate, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
 
     let uid, selectedMonth;
-
     const user = await requireAuth();
     uid = user.uid;
     selectedMonth = currentMonth();
 
     renderTopbar(user);
     renderBottomNav("dashboard");
-    renderMonthSelector("month-selector-container", selectedMonth, (m) => {
+    renderMonthSelector("month-selector-container", selectedMonth, m => {
       selectedMonth = m;
       loadDashboard();
     });
@@ -153,151 +311,215 @@
         getProportionalSummary(uid, selectedMonth)
       ]);
       const propExpSummary = await getProportionalExpensesSummary(uid, selectedMonth, expenses);
-      renderHero(expenses, budget, wallets, incomes, propSummary, propExpSummary);
-      renderWallets(wallets);
-      renderRecentExpenses(expenses);
-      renderCategoryProgress(expenses, budget);
+
+      renderHero(expenses, budget, incomes, propSummary, propExpSummary);
+      renderStats(expenses, budget, incomes);
+      renderWeeklyBars(expenses, budget);
+      renderDonut(expenses, budget);
+      renderWalletsCard(wallets);
+      renderCatsTop(expenses, budget);
+      renderActivity(expenses, incomes);
     }
 
-    function renderHero(expenses, budget, wallets, incomes, propSummary, propExpSummary) {
-      const totalBudgeted = budget
-        ? Object.values(budget.categories || {}).reduce((s, v) => s + Number(v), 0) : 0;
-      const totalSpent    = expenses.reduce((s, e) => s + Number(e.amount), 0);
-      const totalIncome   = incomes.filter(i => !i.isProportional).reduce((s, i) => s + Number(i.amount), 0);
+    // ── Hero ──────────────────────────────────────────────
+    function renderHero(expenses, budget, incomes, propSummary, propExpSummary) {
+      const totalBudgeted = budget ? Object.values(budget.categories || {}).reduce((s,v) => s+Number(v), 0) : 0;
+      const totalSpent    = expenses.reduce((s,e) => s+Number(e.amount), 0);
       const saldo         = totalBudgeted - totalSpent;
-      const pctUsed       = totalBudgeted > 0 ? Math.min(totalSpent / totalBudgeted, 1) : 0;
-      const pctN          = Math.round(pctUsed * 100);
-      const amountClass   = saldo >= 0 ? "positive" : "negative";
-      const barClass      = pctUsed >= 1 ? "over" : pctUsed >= 0.8 ? "warn" : "";
+      const pctUsed       = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted, 1) : 0;
+      const pctN          = Math.round(pctUsed*100);
+      const barCls        = pctUsed >= 1 ? "over" : pctUsed >= 0.8 ? "warn" : "";
+      const isOver        = saldo < 0;
 
-      const hasBudget = totalBudgeted > 0;
+      document.getElementById("hero-content").innerHTML = `
+        <div class="hero-label">Disponible del presupuesto · ${formatMonth(selectedMonth)}</div>
+        <div class="hero-amount">${formatCOP(Math.abs(saldo))}</div>
+        <div class="hero-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7ab8e8" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          ${pctN}% del presupuesto ${isOver ? "excedido" : "usado"}
+        </div>
+        ${totalBudgeted > 0 ? `
+          <div class="hero-progress-wrap">
+            <div class="hero-progress-labels">
+              <span>Gastado: ${formatCOP(totalSpent)}</span>
+              <span>${pctN}%</span>
+            </div>
+            <div class="hero-progress-bar">
+              <div class="hero-progress-fill ${barCls}" style="width:${pctUsed*100}%;"></div>
+            </div>
+          </div>` : ""}
+        <div class="hero-btns">
+          <a href="./expenses.html" class="hero-btn-main">+ Registrar movimiento</a>
+          <a href="./expenses.html" class="hero-btn-arrow">↗</a>
+        </div>`;
+    }
 
-      document.getElementById("hero-card").innerHTML = `
-        <div class="hero-month">${formatMonth(selectedMonth)}</div>
+    // ── Stats ─────────────────────────────────────────────
+    function renderStats(expenses, budget, incomes) {
+      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
+      const totalSpent    = expenses.reduce((s,e)=>s+Number(e.amount),0);
+      const totalIncome   = incomes.filter(i=>!i.isProportional).reduce((s,i)=>s+Number(i.amount),0);
+      const pctSpent      = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted,1) : 0;
+      const pctIncome     = totalBudgeted > 0 ? Math.min(totalIncome/totalBudgeted,1) : 0;
 
-        ${hasBudget ? `
-          <div class="hero-amount ${amountClass}">${formatCOP(Math.abs(saldo))}</div>
-          <div class="hero-sub">${saldo >= 0 ? "disponible del presupuesto" : "por encima del presupuesto"}</div>
-          <div class="progress-labels">
-            <span>Gastado: ${formatCOP(totalSpent)}</span>
-            <span>${pctN}% usado</span>
+      document.getElementById("stats-row").innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Presupuesto</div>
+          <div class="stat-value blue">${formatCOP(totalBudgeted)}</div>
+          <div class="stat-bar" style="background:#e6f1fb;">
+            <div class="stat-bar-track" style="width:${pctSpent*100}%;background:#185fa5;"></div>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill ${barClass}" style="width:${pctUsed * 100}%"></div>
+          <div class="stat-sub">${Math.round(pctSpent*100)}% gastado</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ingresos reales</div>
+          <div class="stat-value green">${formatCOP(totalIncome)}</div>
+          <div class="stat-bar" style="background:#eaf3de;">
+            <div class="stat-bar-track" style="width:${pctIncome*100}%;background:#3b6d11;"></div>
           </div>
-        ` : `
-          <div class="hero-amount neutral">${formatCOP(totalSpent)}</div>
-          <div class="hero-sub">gastado este mes · sin presupuesto configurado</div>
-        `}
+          <div class="stat-sub">${Math.round(pctIncome*100)}% del esperado</div>
+        </div>`;
+    }
 
-        <div class="hero-stats" style="margin-top:16px;">
-          <div class="hero-stat">
-            <div class="label">Presupuesto</div>
-            <div class="value inc">${formatCOP(totalBudgeted)}</div>
-          </div>
-          <div class="hero-stat">
-            <div class="label">Ingresos reales</div>
-            <div class="value exp">${formatCOP(totalIncome)}</div>
+    // ── Barras semanales ──────────────────────────────────
+    function renderWeeklyBars(expenses, budget) {
+      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
+      const weekBudget    = totalBudgeted / 4;
+
+      // Agrupar gastos por semana del mes
+      const weeks = [0,0,0,0];
+      expenses.forEach(e => {
+        const day = parseInt((e.date||"").split("-")[2]||"1");
+        const w   = Math.min(Math.floor((day-1)/7), 3);
+        weeks[w] += Number(e.amount);
+      });
+
+      const maxVal = Math.max(...weeks, weekBudget, 1);
+      const barsHTML = weeks.map((w,i) => {
+        const hReal   = Math.round((w/maxVal)*100);
+        const hBudget = Math.round((weekBudget/maxVal)*100);
+        return `
+          <div class="bar-col">
+            <div class="bar-group" style="height:80px;">
+              <div class="bar bar-budget" style="height:${hBudget}%;"></div>
+              <div class="bar bar-actual" style="height:${hReal}%;"></div>
+            </div>
+            <div class="bar-lbl">Sem ${i+1}</div>
+          </div>`;
+      }).join("");
+
+      document.getElementById("weekly-bars").innerHTML = barsHTML;
+      document.getElementById("chart-legend").style.display = "flex";
+    }
+
+    // ── Donut ─────────────────────────────────────────────
+    function renderDonut(expenses, budget) {
+      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
+      const totalSpent    = expenses.reduce((s,e)=>s+Number(e.amount),0);
+      const pct           = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted,1) : 0;
+      const pctN          = Math.round(pct*100);
+      const saldo         = totalBudgeted - totalSpent;
+      const circumference = 2 * Math.PI * 27;
+      const dash          = pct * circumference;
+      const strokeColor   = pct >= 1 ? "#e07070" : pct >= 0.8 ? "#e0a050" : "#0f3460";
+
+      document.getElementById("donut-card").innerHTML = `
+        <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;">Salud presupuesto</div>
+        <div class="donut-wrap">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="27" fill="none" stroke="#e8f0fa" stroke-width="9"/>
+            <circle cx="36" cy="36" r="27" fill="none" stroke="${strokeColor}" stroke-width="9"
+              stroke-dasharray="${dash} ${circumference}" stroke-dashoffset="${circumference/4}"
+              stroke-linecap="round" transform="rotate(-90 36 36)"/>
+          </svg>
+          <div class="donut-center">
+            <div class="donut-pct">${pctN}%</div>
+            <div class="donut-sub">usado</div>
           </div>
         </div>
-
-        ${propSummary.length ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Ingresos devengados hoy</div>
-            ${propSummary.map(s => `
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                <span style="font-size:12px;color:var(--muted);">${s.name}</span>
-                <span style="font-size:13px;color:var(--info);font-family:'DM Serif Display',serif;">
-                  ${formatCOP(s.accruedAmount)}
-                  <span style="font-size:10px;color:var(--muted);"> / ${formatCOP(s.totalAmount)}</span>
-                </span>
-              </div>`).join("")}
-          </div>` : ""}
-        ${propExpSummary.length ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Gastos devengados hoy</div>
-            ${propExpSummary.map(s => `
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                <span style="font-size:12px;color:var(--muted);">${s.name}</span>
-                <span style="font-size:13px;color:var(--warning);font-family:'DM Serif Display',serif;">
-                  ${formatCOP(s.accrued)}
-                  <span style="font-size:10px;color:var(--muted);"> / ${formatCOP(s.amount)}</span>
-                </span>
-              </div>`).join("")}
-          </div>` : ""}
-      `;
+        <div class="donut-stat"><span class="donut-stat-lbl">Límite</span><span class="donut-stat-val">${formatCOP(totalBudgeted)}</span></div>
+        <div class="donut-stat"><span class="donut-stat-lbl">Resta</span><span class="donut-stat-val green">${formatCOP(Math.max(saldo,0))}</span></div>`;
     }
 
-    function renderWallets(wallets) {
-      const el = document.getElementById("envelopes-content");
-      if (!wallets.length) {
-        el.innerHTML = `<div class="empty-state"><p>No tienes cajitas creadas.</p>
-          <a href="./wallets.html" class="link-small" style="display:inline-block;margin-top:8px;">Crear cajita →</a></div>`;
-        return;
-      }
-      el.innerHTML = `<div class="envelopes-grid">${wallets.map(w => {
-        const balance = Number(w.balance);
-        const isNeg   = balance < 0;
-        return `
-          <div class="envelope-card">
-            <div class="envelope-name">${w.icon || "🏦"} ${w.name}</div>
-            <div class="envelope-actual ${isNeg ? "over" : "ok"}">${formatCOP(balance)}</div>
-          </div>`;
-      }).join("")}</div>`;
+    // ── Cajitas card ──────────────────────────────────────
+    function renderWalletsCard(wallets) {
+      const shown = wallets.slice(0, 3);
+      document.getElementById("wallets-card").innerHTML = `
+        <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;">Cajitas</div>
+        <div class="wallet-mini">
+          ${shown.map(w => {
+            const isCredit = w.type === "credito";
+            const val      = Number(w.balance||0);
+            return `
+              <div class="wallet-mini-row">
+                <div>
+                  <div class="wallet-mini-name">${w.icon||"🏦"} ${w.name}</div>
+                  <div class="wallet-mini-sub">${w.type||"ahorro"}</div>
+                </div>
+                <div class="wallet-mini-val ${isCredit ? "red" : "blue"}">${formatCOP(val)}</div>
+              </div>`;
+          }).join("")}
+        </div>
+        <a href="./wallets.html" class="wallet-mini-link">Ver todas →</a>`;
     }
 
-    function renderRecentExpenses(expenses) {
-      const el = document.getElementById("recent-expenses-content");
-      const recent = expenses.slice(0, 5);
-      if (!recent.length) {
-        el.innerHTML = `<div class="empty-state"><p>No hay gastos registrados este mes.</p>
-          <a href="./expenses.html" class="link-small" style="display:inline-block;margin-top:8px;">Registrar gasto →</a></div>`;
+    // ── Categorías top ────────────────────────────────────
+    function renderCatsTop(expenses, budget) {
+      const actual     = sumByCategory(expenses);
+      const catColors  = ["#e6f1fb","#eaf3de","#faeeda","#fbeaf0","#e1f5ee","#faeeda"];
+      const catStrokes = ["#185fa5","#3b6d11","#854f0b","#993556","#0f6e56","#854f0b"];
+      const sorted     = Object.entries(actual).sort((a,b)=>b[1]-a[1]).slice(0,4);
+
+      if (!sorted.length) {
+        document.getElementById("cats-grid").innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Sin gastos este mes.</div>`;
         return;
       }
-      el.innerHTML = recent.map(e => `
-        <div class="expense-item">
-          <div class="expense-left">
-            <div class="expense-cat">${e.category}</div>
-            ${e.description ? `<div class="expense-desc">${e.description}</div>` : ""}
+
+      document.getElementById("cats-grid").innerHTML = sorted.map(([name, amount], i) => `
+        <div class="cat-card">
+          <div class="cat-icon-box" style="background:${catColors[i%catColors.length]};">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${catStrokes[i%catStrokes.length]}" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           </div>
-          <div class="expense-right">
-            <div class="expense-amount">${formatCOP(e.amount)}</div>
-            <div class="expense-date">${formatDate(e.date)}</div>
-          </div>
+          <div class="cat-lbl">${name}</div>
+          <div class="cat-val">${formatCOP(amount)}</div>
         </div>`).join("");
     }
 
-    function renderCategoryProgress(expenses, budget) {
-      const el = document.getElementById("categories-content");
-      if (!budget?.categories) {
-        el.innerHTML = `<div class="empty-state"><p>Configura tu presupuesto para ver el progreso.</p>
-          <a href="./budget.html" class="link-small" style="display:inline-block;margin-top:8px;">Configurar →</a></div>`;
-        return;
-      }
-      const actual = sumByCategory(expenses);
-      const comparison = buildComparison(budget.categories, actual)
-        .filter(r => r.budgeted > 0)
-        .sort((a, b) => (b.pct || 0) - (a.pct || 0));
+    // ── Actividad reciente (gastos + ingresos mezclados) ──
+    function renderActivity(expenses, incomes) {
+      const manualIncomes = incomes.filter(i => !i.isProportional);
+      const allItems = [
+        ...expenses.map(e => ({ ...e, _type: "expense" })),
+        ...manualIncomes.map(i => ({ ...i, _type: "income" }))
+      ].sort((a,b) => (b.date||"").localeCompare(a.date||"")).slice(0,5);
 
-      if (!comparison.length) {
-        el.innerHTML = `<div class="empty-state"><p>Sin datos de categorías.</p></div>`;
+      if (!allItems.length) {
+        document.getElementById("activity-list").innerHTML = `<div class="empty-state">Sin actividad este mes.</div>`;
         return;
       }
-      el.innerHTML = comparison.map(row => {
-        const pct = row.pct !== null ? Math.min(row.pct, 1) : 0;
-        const pctN = row.pct !== null ? Math.round(row.pct * 100) : 0;
-        const barClass = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
+
+      document.getElementById("activity-list").innerHTML = allItems.map(item => {
+        const isIncome = item._type === "income";
+        const label    = isIncome ? (item.source||"Ingreso") : (item.category||"Gasto");
+        const desc     = item.description || (isIncome ? item.walletName : item.walletName) || "";
+        const amount   = formatCOP(Number(item.amount||0));
         return `
-          <div class="cat-row">
-            <div class="cat-row-header">
-              <span class="cat-name">${row.category}</span>
-              <span class="cat-amounts">
-                <span>${formatCOP(row.actual)}</span> / ${formatCOP(row.budgeted)}
-                <span style="margin-left:6px;color:${pctN>=100?"var(--danger)":"var(--muted)"}">${pctN}%</span>
-              </span>
+          <div class="act-item">
+            <div class="act-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="${isIncome?"#3b6d11":"#888"}" stroke-width="1.5" stroke-linecap="round">
+                ${isIncome
+                  ? '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'
+                  : '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>'}
+              </svg>
             </div>
-            <div class="progress-bar">
-              <div class="progress-fill ${barClass}" style="width:${pct*100}%"></div>
+            <div class="act-info">
+              <div class="act-name">${label}</div>
+              ${desc ? `<div class="act-sub">${desc}</div>` : ""}
+            </div>
+            <div class="act-right">
+              <div class="act-amount ${isIncome?"pos":"neg"}">${isIncome?"+":"-"}${amount}</div>
+              <div class="act-date">${formatDate(item.date)}</div>
             </div>
           </div>`;
       }).join("");
