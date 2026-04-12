@@ -222,6 +222,13 @@
       await loadBudget();
     });
 
+    // ── TIPOS de categoría ────────────────────────────────
+    const TYPES = [
+      { key: "GASTO BÁSICO",       label: "Gasto básico",       dot: "basico",    bg: "#e6f1fb", stroke: "#185fa5" },
+      { key: "GASTO NO ESENCIAL",  label: "Gasto no esencial",  dot: "noesencial",bg: "#fbeaf0", stroke: "#993556" },
+      { key: "AHORRO O INVERSIÓN", label: "Ahorro o inversión", dot: "ahorro",    bg: "#eaf3de", stroke: "#3b6d11" },
+    ];
+
     categories = await getCategories(uid);
     await loadBudget();
 
@@ -306,13 +313,6 @@
         showToast("Presupuesto copiado.", "success");
       };
     }
-
-    // ── TIPOS de categoría ────────────────────────────────
-    const TYPES = [
-      { key: "GASTO BÁSICO",       label: "Gasto básico",       dot: "basico",    bg: "#e6f1fb", stroke: "#185fa5" },
-      { key: "GASTO NO ESENCIAL",  label: "Gasto no esencial",  dot: "noesencial",bg: "#fbeaf0", stroke: "#993556" },
-      { key: "AHORRO O INVERSIÓN", label: "Ahorro o inversión", dot: "ahorro",    bg: "#eaf3de", stroke: "#3b6d11" },
-    ];
 
     // ── Expenses form ─────────────────────────────────────
     function renderExpensesForm() {
