@@ -169,6 +169,114 @@ export function renderBottomNav(activeItem) {
     popup.classList.toggle("open");
   });
   document.addEventListener("click", () => popup.classList.remove("open"));
+
+  // ── Desktop sidebar ───────────────────────────────────
+  let sidebar = document.getElementById("sidebar");
+  if (!sidebar) {
+    sidebar = document.createElement("div");
+    sidebar.id = "sidebar";
+    document.body.appendChild(sidebar);
+  }
+
+  const isDarkSb  = localStorage.getItem("darkMode") === "true";
+  const emailEl   = document.querySelector(".topbar-email");
+  const userEmail = emailEl ? emailEl.textContent : "";
+  const initials  = userEmail ? userEmail[0].toUpperCase() : "U";
+
+  sidebar.innerHTML = `
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-ico">🔥</div>
+      <div>
+        <div class="sidebar-brand-name">Mi Presupuesto</div>
+        <div class="sidebar-brand-sub">Finanzas personales</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      ${items.filter(i => i.id !== "more").map(item => `
+        <a href="${item.href}" class="sidebar-item ${item.id === activeItem ? "active" : ""}">
+          ${item.icon}
+          <span>${item.label}</span>
+        </a>
+      `).join("")}
+    </nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-dark-btn" id="sidebar-dark-btn">
+        ${isDarkSb ? "☀️ Modo claro" : "🌙 Modo oscuro"}
+      </button>
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">${initials}</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-email">${userEmail}</div>
+        </div>
+        <button class="sidebar-logout-btn" id="sidebar-logout">Salir</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("sidebar-dark-btn")?.addEventListener("click", () => {
+    const nowDark = document.body.classList.toggle("dark");
+    localStorage.setItem("darkMode", nowDark);
+    document.getElementById("sidebar-dark-btn").innerHTML = nowDark ? "☀️ Modo claro" : "🌙 Modo oscuro";
+    const tb = document.getElementById("btn-darkmode");
+    if (tb) tb.textContent = nowDark ? "☀️" : "🌙";
+  });
+
+  document.getElementById("sidebar-logout")?.addEventListener("click", async () => {
+    const { logout } = await import("../modules/auth.js");
+    await logout();
+  });
+
+  if (!document.getElementById("sidebar-styles")) {
+    const st = document.createElement("style");
+    st.id = "sidebar-styles";
+    st.textContent = `
+      @media (min-width: 768px) {
+        #sidebar {
+          position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+          background: #fff; z-index: 100;
+          display: flex; flex-direction: column;
+          border-right: 0.5px solid #e2e8f0;
+          padding: 20px 12px;
+        }
+        body.dark #sidebar { background: #1a1a1a; border-right-color: #2a2a2a; }
+        body { padding-left: 220px !important; padding-bottom: 0 !important; }
+        .bottom-nav { display: none !important; }
+        #topbar { display: none !important; }
+        .topbar { display: none !important; }
+        #nav-more-popup { display: none !important; }
+        .fab { bottom: 20px !important; }
+        .hero-card { margin-left: 14px !important; }
+      }
+      @media (max-width: 767px) { #sidebar { display: none !important; } }
+
+      .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; border-bottom: 0.5px solid #e2e8f0; margin-bottom: 12px; }
+      body.dark .sidebar-brand { border-bottom-color: #2a2a2a; }
+      .sidebar-brand-ico { font-size: 22px; }
+      .sidebar-brand-name { font-size: 14px; font-weight: 500; color: #1a1a2e; line-height: 1.2; }
+      body.dark .sidebar-brand-name { color: #e8e8e8; }
+      .sidebar-brand-sub { font-size: 10px; color: #888; }
+      .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+      .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #888; font-size: 13px; transition: background 0.15s, color 0.15s; }
+      .sidebar-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+      .sidebar-item:hover { background: #f0f4f8; color: #0f3460; }
+      body.dark .sidebar-item:hover { background: #222; color: #7ab8e8; }
+      .sidebar-item.active { background: #e6f1fb; color: #0f3460; font-weight: 500; }
+      body.dark .sidebar-item.active { background: #0a1f3d; color: #7ab8e8; }
+      .sidebar-footer { border-top: 0.5px solid #e2e8f0; padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+      body.dark .sidebar-footer { border-top-color: #2a2a2a; }
+      .sidebar-dark-btn { background: none; border: 0.5px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #888; cursor: pointer; font-family: "DM Sans", sans-serif; text-align: left; width: 100%; }
+      body.dark .sidebar-dark-btn { border-color: #2a2a2a; }
+      .sidebar-dark-btn:hover { background: #f0f4f8; }
+      body.dark .sidebar-dark-btn:hover { background: #222; }
+      .sidebar-user { display: flex; align-items: center; gap: 8px; }
+      .sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0f3460; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+      .sidebar-user-info { flex: 1; min-width: 0; }
+      .sidebar-user-email { font-size: 11px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .sidebar-logout-btn { background: none; border: none; color: #888; font-size: 11px; cursor: pointer; font-family: "DM Sans", sans-serif; padding: 4px 6px; border-radius: 6px; flex-shrink: 0; }
+      .sidebar-logout-btn:hover { background: #fbeaea; color: #c0392b; }
+    `;
+    document.head.appendChild(st);
+  }
 }
 
 // ── Toast notification ────────────────────────────────────
