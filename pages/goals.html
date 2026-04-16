@@ -8,664 +8,417 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    .fab {
-      position: fixed; bottom: 76px; right: 20px;
-      width: 54px; height: 54px;
-      background: var(--accent); color: #fdf6f0;
-      border: none; border-radius: 50%; font-size: 26px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(212,96,138,0.25);
-      z-index: 90; transition: background 0.2s, transform 0.2s;
-    }
-    .fab:hover  { background: var(--accent2); }
-    .fab:active { transform: scale(0.95); }
+    body { background: #f0f4f8; }
+    body.dark { background: #111; }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px; }
 
-    .drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s;
-    }
-    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    /* ── Header ──────────────────────────────────────────── */
+    .page-hdr { padding: 14px 0 0; margin-bottom: 18px; }
+    .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
+    .page-sub { font-size: 12px; color: #888; margin-top: 3px; }
 
-    .drawer {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--border);
-      border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
-      z-index: 160; transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
-      max-width: 680px; margin: 0 auto;
-      max-height: 92vh; overflow-y: auto;
+    /* ── Calculadora rápida ──────────────────────────────── */
+    .calc-section { background: #fff; border-radius: 16px; padding: 18px; margin-bottom: 18px; }
+    body.dark .calc-section { background: #1a1a1a; }
+    .section-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .section-bar-line { width: 3px; height: 18px; background: #0f3460; border-radius: 99px; }
+    .section-bar-title { font-size: 15px; font-weight: 500; color: var(--text); }
+    .calc-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .calc-field-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+    .calc-input {
+      width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: #fff; outline: none; transition: border-color 0.15s;
     }
-    .drawer.open { transform: translateY(0); }
-    .drawer-handle {
-      width: 36px; height: 4px; background: var(--border2);
-      border-radius: 99px; margin: 0 auto 20px;
+    body.dark .calc-input { background: #222; border-color: #333; }
+    .calc-input:focus { border-color: #0f3460; }
+    .calc-result {
+      background: #0f3460; border-radius: 12px; padding: 16px 18px;
+      display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px;
     }
-    .drawer-title {
-      font-family: "DM Serif Display", serif;
-      font-size: 20px; font-weight: 400; margin-bottom: 20px;
-    }
+    body.dark .calc-result { background: #0a1f3d; }
+    .calc-res-lbl { font-size: 9px; font-weight: 500; color: #7aa3cc; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .calc-res-val { font-size: 22px; font-weight: 500; color: #fff; letter-spacing: -0.5px; }
+    .calc-res-mini-lbl { font-size: 9px; color: #7aa3cc; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .calc-res-mini-val { font-size: 14px; font-weight: 500; color: #fff; }
 
-    /* ── Tarjeta de meta ─────────────────────────────────── */
-    .goal-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .goal-card:hover { border-color: var(--border2); }
-
-    .goal-card-top {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; margin-bottom: 14px;
+    /* ── Metas activas ───────────────────────────────────── */
+    .goals-section { margin-bottom: 90px; }
+    .goals-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .goals-add-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: #0f3460; color: #fff; border: none; border-radius: 8px;
+      padding: 7px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif;
     }
 
-    .goal-left { display: flex; align-items: center; gap: 12px; }
+    /* ── Goal card ───────────────────────────────────────── */
+    .goal-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+    body.dark .goal-card { background: #1a1a1a; }
+    .goal-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+    .goal-left { display: flex; align-items: center; gap: 10px; }
+    .goal-ico { width: 40px; height: 40px; border-radius: 50%; background: #e6f1fb; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .goal-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .goal-date { font-size: 11px; color: #888; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+    .goal-actions { display: flex; gap: 6px; }
+    .goal-btn { background: #f0f4f8; border: none; border-radius: 7px; padding: 5px 9px; font-size: 11px; color: #555; cursor: pointer; font-family: "DM Sans", sans-serif; }
+    body.dark .goal-btn { background: #222; color: #aaa; }
+    .goal-btn.danger:hover { background: #fbeaea; color: #c0392b; }
+    .goal-prog-lbl { display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-bottom: 5px; }
+    .goal-prog-pct { font-weight: 500; color: #3b6d11; }
+    .goal-prog-bar { height: 6px; background: #e8edf2; border-radius: 99px; overflow: hidden; margin-bottom: 12px; }
+    body.dark .goal-prog-bar { background: #2a2a2a; }
+    .goal-prog-fill { height: 100%; border-radius: 99px; background: #3b6d11; transition: width 0.4s ease; }
+    .goal-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .goal-stat { background: #f8fafc; border-radius: 10px; padding: 10px; }
+    body.dark .goal-stat { background: #222; }
+    .goal-stat-lbl { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .goal-stat-val { font-size: 14px; font-weight: 500; color: var(--text); }
 
-    .goal-emoji {
-      width: 44px; height: 44px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
+    /* ── Modal ───────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,52,96,0.4);
+      z-index: 150; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
     }
-
-    .goal-name {
-      font-size: 16px; color: var(--text); font-weight: 400;
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #fff; border-radius: 20px; padding: 24px 20px 20px;
+      width: 100%; max-width: 420px;
+      transform: scale(0.95); opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      max-height: 90vh; overflow-y: auto;
     }
-    .goal-target-date {
-      font-size: 12px; color: var(--muted); margin-top: 2px;
-    }
-
-    .goal-status {
-      font-size: 11px; font-weight: 500;
-      padding: 3px 9px; border-radius: 99px; flex-shrink: 0;
-    }
-    .goal-status.done    { background: rgba(212,96,138,0.12); color: var(--accent); }
-    .goal-status.on-track{ background: rgba(74,127,181,0.12); color: var(--info); }
-    .goal-status.behind  { background: rgba(201,124,46,0.12); color: var(--warning); }
-    .goal-status.no-date { background: var(--surface2); color: var(--muted); }
-
-    /* ── Montos ──────────────────────────────────────────── */
-    .goal-amounts {
-      display: flex; align-items: baseline; gap: 8px;
-      margin-bottom: 6px;
-    }
-    .goal-saved {
-      font-family: "DM Serif Display", serif;
-      font-size: 26px; letter-spacing: -0.8px; color: var(--accent);
-    }
-    .goal-saved.done { color: var(--accent); }
-    .goal-total { font-size: 14px; color: var(--muted); }
-
-    .goal-pct { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-    .goal-pct span { color: var(--text); font-weight: 500; }
-
-    /* ── Panel calculadora dentro de la tarjeta ──────────── */
-    .goal-calc-panel {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-top: 12px;
-    }
-
-    .calc-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 6px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .calc-row:last-child { border-bottom: none; }
-
-    .calc-label { color: var(--muted); }
-    .calc-value { font-family: "DM Serif Display", serif; font-size: 15px; letter-spacing: -0.3px; }
-    .calc-value.accent  { color: var(--accent); }
-    .calc-value.info    { color: var(--info); }
-    .calc-value.warning { color: var(--warning); }
-    .calc-value.muted   { color: var(--muted); font-size: 13px; font-family: "DM Sans", sans-serif; }
-
-    /* ── Slider de ahorro mensual ────────────────────────── */
-    .slider-section { margin: 14px 0 4px; }
-    .slider-header {
-      display: flex; justify-content: space-between;
-      font-size: 12px; color: var(--muted); margin-bottom: 8px;
-    }
-    .slider-header strong { color: var(--accent); font-family: "DM Serif Display", serif; font-size: 14px; }
-
-    input[type="range"] {
-      width: 100%; accent-color: var(--accent);
-      height: 4px; cursor: pointer;
-    }
-
-    /* ── Emoji picker ────────────────────────────────────── */
-    .emoji-grid {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;
-    }
+    body.dark .modal { background: #1a1a1a; }
+    .modal-overlay.open .modal { transform: scale(1); opacity: 1; }
+    .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 500; color: var(--text); }
+    .modal-close { background: none; border: none; font-size: 20px; color: #888; cursor: pointer; }
+    .field-lbl { font-size: 10px; font-weight: 500; color: #8a9ab0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .emoji-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
     .emoji-btn {
-      width: 40px; height: 40px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; font-size: 20px; cursor: pointer;
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1.5px solid #e2e8f0; background: #f8fafc;
       display: flex; align-items: center; justify-content: center;
-      transition: border-color 0.15s;
+      font-size: 20px; cursor: pointer; transition: all 0.15s;
     }
-    .emoji-btn.selected { border-color: var(--accent); background: rgba(212,96,138,0.08); }
-
-    /* ── Dual inputs ─────────────────────────────────────── */
-    .dual-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .amount-wrapper { position: relative; }
-    .amount-wrapper .sym {
-      position: absolute; left: 12px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 13px; color: var(--muted); pointer-events: none;
+    body.dark .emoji-btn { background: #222; border-color: #333; }
+    .emoji-btn.active { border-color: #0f3460; background: #e6f1fb; }
+    .field-block { margin-bottom: 14px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .f-input {
+      width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: #fff; outline: none; transition: border-color 0.15s;
     }
-    .amount-wrapper .form-input { padding-left: 26px; }
-
-    /* ── Calculadora rápida (standalone) ─────────────────── */
-    .quick-calc {
-      background: rgba(74,127,181,0.06);
-      border: 1px solid rgba(74,127,181,0.2);
-      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    body.dark .f-input { background: #222; border-color: #333; }
+    .f-input:focus { border-color: #0f3460; }
+    .f-textarea {
+      width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: #fff; outline: none; resize: none; height: 72px;
     }
-    .quick-calc h3 { color: var(--info); margin-bottom: 12px; }
+    body.dark .f-textarea { background: #222; border-color: #333; }
+    .modal-save-btn {
+      width: 100%; padding: 13px; background: #0f3460; color: #fff; border: none;
+      border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif; margin-top: 4px;
+    }
+    .modal-save-btn:hover { background: #1a4a7a; }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar"></div>
+  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
 
-  <div class="page">
-    <div style="margin-bottom:20px;">
-      <h2>Metas de ahorro</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:4px;">
-        Define tus metas y calcula cuánto ahorrar cada mes para cumplirlas.
-      </p>
+  <div class="wrap">
+    <div class="page-hdr">
+      <div class="page-title">Metas de ahorro</div>
+      <div class="page-sub">Planifica y sigue el progreso de tus objetivos financieros</div>
     </div>
 
-    <!-- Calculadora rápida sin meta guardada -->
-    <div class="quick-calc" id="quick-calc">
-      <h3>Calculadora rápida</h3>
-      <div class="dual-inputs" style="margin-bottom:12px;">
-        <div class="form-group" style="margin-bottom:0;">
-          <label class="form-label">Meta total</label>
-          <div class="amount-wrapper">
-            <span class="sym">$</span>
-            <input type="number" class="form-input" id="qc-goal" placeholder="0" min="0"/>
-          </div>
+    <!-- Calculadora rápida -->
+    <div class="calc-section">
+      <div class="section-bar">
+        <div class="section-bar-line"></div>
+        <div class="section-bar-title">Calculadora rápida</div>
+      </div>
+      <div class="calc-fields">
+        <div>
+          <div class="calc-field-lbl">Meta total</div>
+          <input type="number" class="calc-input" id="calc-goal" placeholder="$ 0" min="0"/>
         </div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label class="form-label">Ya tengo</label>
-          <div class="amount-wrapper">
-            <span class="sym">$</span>
-            <input type="number" class="form-input" id="qc-saved" placeholder="0" min="0"/>
-          </div>
+        <div>
+          <div class="calc-field-lbl">Ya tengo</div>
+          <input type="number" class="calc-input" id="calc-saved" placeholder="$ 0" min="0"/>
+        </div>
+        <div>
+          <div class="calc-field-lbl">Meses</div>
+          <input type="number" class="calc-input" id="calc-months" placeholder="12" min="1" value="12"/>
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">Meses para lograrlo</label>
-        <input type="number" class="form-input" id="qc-months" placeholder="12" min="1" max="360"/>
-      </div>
-      <div id="qc-result" style="display:none;" class="goal-calc-panel">
-        <div class="calc-row">
-          <span class="calc-label">Ahorro mensual necesario</span>
-          <span class="calc-value accent" id="qc-monthly"></span>
+      <div class="calc-result" id="calc-result">
+        <div>
+          <div class="calc-res-lbl">Ahorro mensual necesario</div>
+          <div class="calc-res-val" id="calc-monthly">$ 0</div>
         </div>
-        <div class="calc-row">
-          <span class="calc-label">Falta ahorrar</span>
-          <span class="calc-value info" id="qc-remaining"></span>
+        <div>
+          <div class="calc-res-mini-lbl">Falta ahorrar</div>
+          <div class="calc-res-mini-val" id="calc-remaining">$ 0</div>
         </div>
-        <div class="calc-row">
-          <span class="calc-label">Fecha estimada</span>
-          <span class="calc-value muted" id="qc-date"></span>
+        <div>
+          <div class="calc-res-mini-lbl">Fecha estimada</div>
+          <div class="calc-res-mini-val" id="calc-date">—</div>
         </div>
       </div>
     </div>
 
-    <!-- Lista de metas guardadas -->
-    <div id="goals-list">
-      <div class="skeleton" style="height:180px;border-radius:20px;"></div>
+    <!-- Metas activas -->
+    <div class="goals-section">
+      <div class="section-bar" style="margin-bottom:0;">
+        <div class="section-bar-line" style="background:#3b6d11;"></div>
+        <div class="section-bar-title" style="flex:1;">Mis metas activas</div>
+        <button class="goals-add-btn" id="btn-new-goal">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva meta
+        </button>
+      </div>
+      <div id="goals-list" style="margin-top:14px;">
+        <div class="skeleton" style="height:180px;border-radius:16px;"></div>
+      </div>
     </div>
   </div>
 
-  <button class="fab" id="fab" title="Nueva meta">+</button>
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Drawer: crear / editar meta -->
-  <div class="drawer-overlay" id="drawer-overlay"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-handle"></div>
-    <div class="drawer-title" id="drawer-title">Nueva meta</div>
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-hdr">
+        <div class="modal-title" id="modal-title">Nueva meta</div>
+        <button class="modal-close" id="modal-close">×</button>
+      </div>
 
-    <!-- Emoji -->
-    <div class="form-group">
-      <label class="form-label">Ícono</label>
-      <div class="emoji-grid" id="emoji-grid"></div>
-    </div>
+      <div class="field-lbl">Elige un ícono</div>
+      <div class="emoji-grid" id="emoji-grid">
+        <div class="emoji-btn active" data-emoji="🎯">🎯</div>
+        <div class="emoji-btn" data-emoji="✈️">✈️</div>
+        <div class="emoji-btn" data-emoji="🏠">🏠</div>
+        <div class="emoji-btn" data-emoji="🚗">🚗</div>
+        <div class="emoji-btn" data-emoji="💻">💻</div>
+        <div class="emoji-btn" data-emoji="🎓">🎓</div>
+        <div class="emoji-btn" data-emoji="❤️">❤️</div>
+        <div class="emoji-btn" data-emoji="🐾">🐾</div>
+        <div class="emoji-btn" data-emoji="🎵">🎵</div>
+        <div class="emoji-btn" data-emoji="💍">💍</div>
+        <div class="emoji-btn" data-emoji="🏖️">🏖️</div>
+        <div class="emoji-btn" data-emoji="💊">💊</div>
+        <div class="emoji-btn" data-emoji="🎁">🎁</div>
+        <div class="emoji-btn" data-emoji="🐷">🐷</div>
+      </div>
 
-    <!-- Nombre -->
-    <div class="form-group">
-      <label class="form-label">Nombre de la meta</label>
-      <input type="text" class="form-input" id="field-name"
-             placeholder="Ej: Viaje, Computador, Fondo de emergencia..." maxlength="50"/>
-    </div>
+      <div class="field-block">
+        <div class="field-lbl">Nombre de la meta</div>
+        <input type="text" class="f-input" id="field-name" placeholder="Ej: Viaje, Computador, Fondo de emergencia..." maxlength="60"/>
+      </div>
 
-    <!-- Montos -->
-    <div class="dual-inputs">
-      <div class="form-group">
-        <label class="form-label">Meta total</label>
-        <div class="amount-wrapper">
-          <span class="sym">$</span>
-          <input type="number" class="form-input" id="field-goal"
-                 placeholder="0" min="0"/>
+      <div class="two-col">
+        <div>
+          <div class="field-lbl">Meta total</div>
+          <input type="number" class="f-input" id="field-target" placeholder="$ 0" min="0"/>
+        </div>
+        <div>
+          <div class="field-lbl">Ya tengo</div>
+          <input type="number" class="f-input" id="field-saved" placeholder="$ 0" min="0"/>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Ya tengo</label>
-        <div class="amount-wrapper">
-          <span class="sym">$</span>
-          <input type="number" class="form-input" id="field-saved"
-                 placeholder="0" min="0"/>
-        </div>
-      </div>
-    </div>
 
-    <!-- Fecha objetivo -->
-    <div class="form-group">
-      <label class="form-label">
-        Fecha objetivo
-        <span style="color:var(--muted);font-weight:300;">(opcional)</span>
-      </label>
-      <input type="month" class="form-input" id="field-date"/>
-    </div>
+      <div class="field-block">
+        <div class="field-lbl">Fecha objetivo <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
+        <input type="date" class="f-input" id="field-date"/>
+      </div>
 
-    <!-- Notas -->
-    <div class="form-group">
-      <label class="form-label">
-        Notas
-        <span style="color:var(--muted);font-weight:300;">(opcional)</span>
-      </label>
-      <input type="text" class="form-input" id="field-notes"
-             placeholder="Para qué es esta meta..." maxlength="120"/>
-    </div>
+      <div class="field-block">
+        <div class="field-lbl">Notas <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
+        <textarea class="f-textarea" id="field-notes" placeholder="Para qué es esta meta..."></textarea>
+      </div>
 
-    <!-- Calculadora en tiempo real -->
-    <div id="drawer-calc" style="display:none;" class="goal-calc-panel" style="margin-bottom:16px;">
-      <div class="slider-section">
-        <div class="slider-header">
-          <span>Ahorro mensual</span>
-          <strong id="dc-slider-val">$ 0</strong>
-        </div>
-        <input type="range" id="dc-slider" min="0" max="5000000" step="10000"
-               value="0"/>
-      </div>
-      <div style="height:10px;"></div>
-      <div class="calc-row">
-        <span class="calc-label">Necesario por mes</span>
-        <span class="calc-value accent" id="dc-needed"></span>
-      </div>
-      <div class="calc-row">
-        <span class="calc-label">Falta ahorrar</span>
-        <span class="calc-value info" id="dc-remaining"></span>
-      </div>
-      <div class="calc-row" id="dc-date-row">
-        <span class="calc-label">Llegarías en</span>
-        <span class="calc-value muted" id="dc-date"></span>
-      </div>
+      <button class="modal-save-btn" id="btn-save">Guardar meta</button>
     </div>
-
-    <button class="btn-primary" id="btn-save" style="margin-top:8px;">
-      Guardar meta
-    </button>
   </div>
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
     import { getGoals, addGoal, updateGoal, deleteGoal } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import {
-      formatCOP, formatMonth, currentMonth,
-      monthlySavingsNeeded, monthsUntil, goalProgress, estimatedCompletion
-    } from "../assets/utils.js";
+    import { formatCOP, formatDate } from "../assets/utils.js";
 
     let uid, goals = [], editingId = null, selectedEmoji = "🎯";
 
-    const EMOJIS = ["🎯","✈️","🏠","🚗","💻","📱","🎓","💍","🏖️","🛋️","🐾","🎸","💊","🧳","🎁","💰"];
-
-    // ── Init ─────────────────────────────────────────────
     const user = await requireAuth();
     uid = user.uid;
-
     renderTopbar(user);
-    renderBottomNav("categories"); // "Más" en el nav
-    buildEmojiGrid();
+    renderBottomNav("goals");
     await loadGoals();
 
-    // ── Cargar metas ──────────────────────────────────────
+    // ── Calculadora ───────────────────────────────────────
+    const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    ["calc-goal","calc-saved","calc-months"].forEach(id => {
+      document.getElementById(id).addEventListener("input", recalc);
+    });
+
+    function recalc() {
+      const goal    = Number(document.getElementById("calc-goal").value)   || 0;
+      const saved   = Number(document.getElementById("calc-saved").value)  || 0;
+      const months  = Number(document.getElementById("calc-months").value) || 1;
+      const remaining = Math.max(goal - saved, 0);
+      const monthly   = months > 0 ? Math.ceil(remaining / months) : 0;
+      const estDate   = new Date();
+      estDate.setMonth(estDate.getMonth() + months);
+      document.getElementById("calc-monthly").textContent  = formatCOP(monthly);
+      document.getElementById("calc-remaining").textContent = formatCOP(remaining);
+      document.getElementById("calc-date").textContent     = goal > 0 ? `${MONTHS[estDate.getMonth()]} ${estDate.getFullYear()}` : "—";
+    }
+    recalc();
+
+    // ── Load goals ────────────────────────────────────────
     async function loadGoals() {
       goals = await getGoals(uid);
       renderGoals();
     }
 
-    // ── Render metas ──────────────────────────────────────
     function renderGoals() {
       const el = document.getElementById("goals-list");
-
       if (!goals.length) {
-        el.innerHTML = `
-          <div class="empty-state">
-            <p>No tienes metas guardadas.</p>
-            <p style="margin-top:6px;font-size:12px;">
-              Usa la calculadora de arriba o toca
-              <strong style="color:var(--accent)">+</strong> para guardar una meta.
-            </p>
-          </div>`;
+        el.innerHTML = `<div class="empty-state"><p>No tienes metas creadas.</p>
+          <p style="margin-top:6px;font-size:12px;color:#888;">Toca <strong style="color:#0f3460;">Nueva meta</strong> para empezar.</p></div>`;
         return;
       }
-
-      // Ordenar: incompletas primero, luego por % de progreso desc
-      const sorted = [...goals].sort((a, b) => {
-        const pa = goalProgress(a.goalAmount, a.savedAmount);
-        const pb = goalProgress(b.goalAmount, b.savedAmount);
-        if (pa >= 1 && pb < 1) return 1;
-        if (pb >= 1 && pa < 1) return -1;
-        return pb - pa;
-      });
-
-      el.innerHTML = sorted.map(g => goalCardHTML(g)).join("");
-    }
-
-    function goalCardHTML(g) {
-      const pct       = goalProgress(g.goalAmount, g.savedAmount);
-      const pctN      = Math.round(pct * 100);
-      const remaining = Math.max(0, g.goalAmount - g.savedAmount);
-      const done      = pct >= 1;
-      const months    = g.targetDate ? monthsUntil(g.targetDate) : null;
-      const needed    = months !== null ? monthlySavingsNeeded(g.goalAmount, g.savedAmount, months) : null;
-
-      // Estado
-      let statusCls, statusLbl;
-      if (done) {
-        statusCls = "done"; statusLbl = "¡Cumplida!";
-      } else if (months === null) {
-        statusCls = "no-date"; statusLbl = "Sin fecha";
-      } else if (months === 0) {
-        statusCls = "behind"; statusLbl = "Vencida";
-      } else {
-        statusCls = "on-track"; statusLbl = `${months} mes${months !== 1 ? "es" : ""} restantes`;
-      }
-
-      const barCls = done ? "" : pct >= 0.8 ? "" : pct >= 0.5 ? "" : "";
-
-      // Fecha estimada con ahorro mensual actual
-      const estDate = needed !== null && needed > 0
-        ? estimatedCompletion(g.goalAmount, g.savedAmount, needed)
-        : null;
-
-      return `
-        <div class="goal-card" data-id="${g.id}">
-          <div class="goal-card-top">
-            <div class="goal-left">
-              <div class="goal-emoji">${g.emoji || "🎯"}</div>
-              <div>
-                <div class="goal-name">${g.name}</div>
-                <div class="goal-target-date">
-                  ${g.targetDate ? `Meta: ${formatMonth(g.targetDate)}` : "Sin fecha límite"}
+      el.innerHTML = goals.map(g => {
+        const target  = Number(g.targetAmount || 0);
+        const saved   = Number(g.savedAmount  || 0);
+        const pct     = target > 0 ? Math.min(Math.round(saved/target*100), 100) : 0;
+        const remaining = Math.max(target - saved, 0);
+        const monthsLeft = g.targetDate ? Math.max(Math.ceil((new Date(g.targetDate) - new Date()) / (1000*60*60*24*30)), 0) : null;
+        return `
+          <div class="goal-card">
+            <div class="goal-top">
+              <div class="goal-left">
+                <div class="goal-ico">${g.icon || "🎯"}</div>
+                <div>
+                  <div class="goal-name">${g.name}</div>
+                  ${g.targetDate ? `<div class="goal-date">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    ${formatDate(g.targetDate)}
+                  </div>` : ""}
                 </div>
               </div>
+              <div class="goal-actions">
+                <button class="goal-btn" onclick="openEdit('${g.id}')">Editar</button>
+                <button class="goal-btn danger" onclick="handleDelete('${g.id}')">✕</button>
+              </div>
             </div>
-            <div class="goal-status ${statusCls}">${statusLbl}</div>
-          </div>
-
-          <div class="goal-amounts">
-            <div class="goal-saved ${done ? "done" : ""}">${formatCOP(g.savedAmount)}</div>
-            <div class="goal-total">de ${formatCOP(g.goalAmount)}</div>
-          </div>
-
-          <div class="goal-pct">
-            <span>${pctN}%</span> completado
-            ${!done ? ` · faltan <span>${formatCOP(remaining)}</span>` : ""}
-          </div>
-
-          <div class="progress-bar" style="margin-bottom:${done || !needed ? "0" : "12px"};">
-            <div class="progress-fill ${done ? "" : ""}" style="width:${Math.min(pct,1)*100}%;${done?"background:var(--accent);":""}"></div>
-          </div>
-
-          ${!done && needed !== null ? `
-            <div class="goal-calc-panel" style="margin-top:12px;">
-              <div class="calc-row">
-                <span class="calc-label">Ahorro mensual necesario</span>
-                <span class="calc-value accent">${formatCOP(needed)}</span>
+            <div class="goal-prog-lbl">
+              <span>Progreso del plan</span>
+              <span class="goal-prog-pct">${pct}%</span>
+            </div>
+            <div class="goal-prog-bar">
+              <div class="goal-prog-fill" style="width:${pct}%;"></div>
+            </div>
+            <div class="goal-stats">
+              <div class="goal-stat">
+                <div class="goal-stat-lbl">Meta total</div>
+                <div class="goal-stat-val">${formatCOP(target)}</div>
               </div>
-              <div class="calc-row">
-                <span class="calc-label">Meses restantes</span>
-                <span class="calc-value info">${months}</span>
+              <div class="goal-stat">
+                <div class="goal-stat-lbl">Ahorrado</div>
+                <div class="goal-stat-val" style="color:#3b6d11;">${formatCOP(saved)}</div>
               </div>
-              ${estDate ? `
-              <div class="calc-row">
-                <span class="calc-label">Llegarías en</span>
-                <span class="calc-value muted">${formatMonth(estDate)}</span>
-              </div>` : ""}
-            </div>` : ""}
-
-          <div style="display:flex;justify-content:flex-end;margin-top:12px;">
-            <button class="btn-danger" data-id="${g.id}" data-name="${g.name}">
-              Eliminar
-            </button>
-          </div>
-        </div>`;
+              <div class="goal-stat">
+                <div class="goal-stat-lbl">${monthsLeft !== null ? "Meses rest." : "Falta"}</div>
+                <div class="goal-stat-val">${monthsLeft !== null ? monthsLeft + " meses" : formatCOP(remaining)}</div>
+              </div>
+            </div>
+            ${g.notes ? `<div style="margin-top:10px;font-size:11px;color:#888;padding-top:10px;border-top:0.5px solid #f0f0f0;">${g.notes}</div>` : ""}
+          </div>`;
+      }).join("");
     }
 
-    // ── Calculadora rápida ────────────────────────────────
-    function calcQuick() {
-      const goal   = Number(document.getElementById("qc-goal").value)   || 0;
-      const saved  = Number(document.getElementById("qc-saved").value)  || 0;
-      const months = Number(document.getElementById("qc-months").value) || 0;
-      const result = document.getElementById("qc-result");
-
-      if (!goal || !months) { result.style.display = "none"; return; }
-
-      const needed    = monthlySavingsNeeded(goal, saved, months);
-      const remaining = Math.max(0, goal - saved);
-      const estDate   = estimatedCompletion(goal, saved, needed);
-
-      document.getElementById("qc-monthly").textContent   = formatCOP(needed);
-      document.getElementById("qc-remaining").textContent = formatCOP(remaining);
-      document.getElementById("qc-date").textContent      = estDate ? formatMonth(estDate) : "—";
-      result.style.display = "block";
-    };
-
-    // ── Drawer: nuevo ─────────────────────────────────────
-    document.getElementById("fab").addEventListener("click", openNewDrawer);
-    document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
-    document.getElementById("btn-save").addEventListener("click", saveGoal);
-    document.getElementById("qc-goal").addEventListener("input", calcQuick);
-    document.getElementById("qc-saved").addEventListener("input", calcQuick);
-    document.getElementById("qc-months").addEventListener("input", calcQuick);
-    document.getElementById("field-goal").addEventListener("input", updateDrawerCalc);
-    document.getElementById("field-saved").addEventListener("input", updateDrawerCalc);
-    document.getElementById("field-date").addEventListener("input", updateDrawerCalc);
-    document.getElementById("dc-slider").addEventListener("input", e => onSliderChange(e.target.value));
-
-    // Event delegation for goal cards
-    document.getElementById("goals-list").addEventListener("click", e => {
-      const deleteBtn = e.target.closest(".btn-danger");
-      const card      = e.target.closest(".goal-card");
-      if (deleteBtn && deleteBtn.dataset.id) {
-        handleDelete(deleteBtn.dataset.id, deleteBtn.dataset.name);
-      } else if (card && !e.target.closest(".goal-calc-panel") && !e.target.closest(".btn-danger")) {
-        if (card.dataset.id) openEditDrawer(card.dataset.id);
-      }
+    // ── Modal ─────────────────────────────────────────────
+    document.getElementById("btn-new-goal").addEventListener("click", openNewModal);
+    document.getElementById("modal-close").addEventListener("click", closeModal);
+    document.getElementById("modal-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("modal-overlay")) closeModal();
     });
 
-    // Event delegation for emoji grid
-    document.getElementById("emoji-grid").addEventListener("click", e => {
-      const btn = e.target.closest(".emoji-btn");
-      if (btn) selectEmoji(btn.dataset.emoji);
-    });
-
-    function openNewDrawer() {
-      editingId = null;
-      selectedEmoji = "🎯";
-      document.getElementById("drawer-title").textContent = "Nueva meta";
-      document.getElementById("field-name").value  = "";
-      document.getElementById("field-goal").value  = "";
-      document.getElementById("field-saved").value = "";
-      document.getElementById("field-date").value  = "";
-      document.getElementById("field-notes").value = "";
-      document.getElementById("btn-save").textContent = "Guardar meta";
-      document.getElementById("drawer-calc").style.display = "none";
-      highlightEmoji("🎯");
-      openDrawer();
+    function openNewModal() {
+      editingId = null; selectedEmoji = "🎯";
+      document.getElementById("modal-title").textContent = "Nueva meta";
+      document.getElementById("btn-save").textContent    = "Guardar meta";
+      document.getElementById("field-name").value   = "";
+      document.getElementById("field-target").value = "";
+      document.getElementById("field-saved").value  = "";
+      document.getElementById("field-date").value   = "";
+      document.getElementById("field-notes").value  = "";
+      updateEmojiUI();
+      openModal();
     }
 
-    // ── Drawer: editar ────────────────────────────────────
-    function openEditDrawer(id) {
+    window.openEdit = (id) => {
       const g = goals.find(x => x.id === id);
       if (!g) return;
-      editingId = id;
-      selectedEmoji = g.emoji || "🎯";
-      document.getElementById("drawer-title").textContent = "Editar meta";
-      document.getElementById("field-name").value  = g.name;
-      document.getElementById("field-goal").value  = g.goalAmount;
-      document.getElementById("field-saved").value = g.savedAmount;
-      document.getElementById("field-date").value  = g.targetDate || "";
-      document.getElementById("field-notes").value = g.notes || "";
-      document.getElementById("btn-save").textContent = "Actualizar meta";
-      highlightEmoji(selectedEmoji);
-      updateDrawerCalc();
-      openDrawer();
+      editingId = id; selectedEmoji = g.icon || "🎯";
+      document.getElementById("modal-title").textContent = "Editar meta";
+      document.getElementById("btn-save").textContent    = "Actualizar meta";
+      document.getElementById("field-name").value   = g.name || "";
+      document.getElementById("field-target").value = g.targetAmount || "";
+      document.getElementById("field-saved").value  = g.savedAmount  || "";
+      document.getElementById("field-date").value   = g.targetDate   || "";
+      document.getElementById("field-notes").value  = g.notes        || "";
+      updateEmojiUI();
+      openModal();
     };
 
-    // ── Calculadora en el drawer ──────────────────────────
-    function updateDrawerCalc() {
-      const goal   = Number(document.getElementById("field-goal").value)  || 0;
-      const saved  = Number(document.getElementById("field-saved").value) || 0;
-      const date   = document.getElementById("field-date").value;
-      const calcEl = document.getElementById("drawer-calc");
-
-      if (!goal) { calcEl.style.display = "none"; return; }
-      calcEl.style.display = "block";
-
-      const remaining = Math.max(0, goal - saved);
-      const months    = date ? monthsUntil(date) : null;
-      const needed    = months !== null ? monthlySavingsNeeded(goal, saved, months) : null;
-
-      document.getElementById("dc-remaining").textContent = formatCOP(remaining);
-
-      if (needed !== null) {
-        document.getElementById("dc-needed").textContent = formatCOP(needed);
-        const slider = document.getElementById("dc-slider");
-        slider.max   = Math.max(needed * 2, 1000000);
-        slider.value = needed;
-        document.getElementById("dc-slider-val").textContent = formatCOP(needed);
-        updateDateFromSlider(needed, goal, saved);
-      } else {
-        document.getElementById("dc-needed").textContent = "—";
-        document.getElementById("dc-date").textContent   = "—";
-        const slider = document.getElementById("dc-slider");
-        slider.max   = Math.max(goal, 1000000);
-        slider.value = 0;
-        document.getElementById("dc-slider-val").textContent = formatCOP(0);
-      }
-
-      document.getElementById("dc-date-row").style.display = date ? "" : "none";
+    window.handleDelete = async (id) => {
+      if (!confirm("¿Eliminar esta meta?")) return;
+      try { await deleteGoal(uid, id); showToast("Meta eliminada.", "success"); await loadGoals(); }
+      catch(e) { showToast("Error.", "error"); }
     };
 
-    function onSliderChange(val) {
-      const goal  = Number(document.getElementById("field-goal").value)  || 0;
-      const saved = Number(document.getElementById("field-saved").value) || 0;
-      document.getElementById("dc-slider-val").textContent = formatCOP(Number(val));
-      updateDateFromSlider(Number(val), goal, saved);
-    };
+    function openModal()  { document.getElementById("modal-overlay").classList.add("open"); }
+    function closeModal() { document.getElementById("modal-overlay").classList.remove("open"); editingId = null; }
 
-    function updateDateFromSlider(monthly, goal, saved) {
-      const estDate = estimatedCompletion(goal, saved, monthly);
-      document.getElementById("dc-date").textContent = estDate ? formatMonth(estDate) : "—";
-    }
-
-    // ── Emoji grid ────────────────────────────────────────
-    function buildEmojiGrid() {
-      document.getElementById("emoji-grid").innerHTML = EMOJIS.map(e => `
-        <button type="button" class="emoji-btn" data-emoji="${e}">${e}</button>
-      `).join("");
-    }
-
-    function selectEmoji(e) {
-      selectedEmoji = e;
-      highlightEmoji(e);
-    };
-
-    function highlightEmoji(e) {
-      document.querySelectorAll(".emoji-btn").forEach(btn => {
-        btn.classList.toggle("selected", btn.dataset.emoji === e);
-      });
-    }
-
-    // ── Guardar ───────────────────────────────────────────
-    async function saveGoal() {
-      const name       = document.getElementById("field-name").value.trim();
-      const goalAmount = Number(document.getElementById("field-goal").value)  || 0;
-      const savedAmount= Number(document.getElementById("field-saved").value) || 0;
-      const targetDate = document.getElementById("field-date").value || null;
-      const notes      = document.getElementById("field-notes").value.trim();
-      const btn        = document.getElementById("btn-save");
-
-      if (!name)       { showToast("Escribe un nombre para la meta.", "error"); return; }
-      if (!goalAmount) { showToast("Ingresa un monto objetivo.", "error"); return; }
-
-      btn.disabled = true;
-      btn.textContent = "Guardando...";
-
-      const data = { name, goalAmount, savedAmount, emoji: selectedEmoji, notes };
-      if (targetDate) data.targetDate = targetDate;
-
-      try {
-        if (editingId) {
-          await updateGoal(uid, editingId, data);
-          showToast("Meta actualizada.", "success");
-        } else {
-          await addGoal(uid, data);
-          showToast("Meta guardada.", "success");
-        }
-        closeDrawer();
-        await loadGoals();
-      } catch (err) {
-        showToast("Error al guardar. Intenta de nuevo.", "error");
-        console.error(err);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = editingId ? "Actualizar meta" : "Guardar meta";
-      }
-    };
-
-    // ── Eliminar ──────────────────────────────────────────
-    async function handleDelete(id, name) {
-      if (!confirm(`¿Eliminar la meta "${name}"?`)) return;
-      try {
-        await deleteGoal(uid, id);
-        showToast("Meta eliminada.", "success");
-        await loadGoals();
-      } catch (err) {
-        showToast("Error al eliminar.", "error");
-      }
-    };
-
-    // ── Drawer helpers ────────────────────────────────────
-    function openDrawer() {
-      document.getElementById("drawer-overlay").classList.add("open");
-      document.getElementById("drawer").classList.add("open");
-      setTimeout(() => document.getElementById("field-name").focus(), 320);
-    }
-
-    function closeDrawer() {
-      document.getElementById("drawer-overlay").classList.remove("open");
-      document.getElementById("drawer").classList.remove("open");
-    };
-
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") closeDrawer();
+    // Emoji
+    document.getElementById("emoji-grid").addEventListener("click", e => {
+      const btn = e.target.closest("[data-emoji]");
+      if (!btn) return;
+      selectedEmoji = btn.dataset.emoji;
+      updateEmojiUI();
     });
+    function updateEmojiUI() {
+      document.querySelectorAll(".emoji-btn").forEach(b => b.classList.toggle("active", b.dataset.emoji === selectedEmoji));
+    }
+
+    // Save
+    document.getElementById("btn-save").addEventListener("click", saveGoal);
+    async function saveGoal() {
+      const name   = document.getElementById("field-name").value.trim();
+      const target = Number(document.getElementById("field-target").value) || 0;
+      const saved  = Number(document.getElementById("field-saved").value)  || 0;
+      const date   = document.getElementById("field-date").value;
+      const notes  = document.getElementById("field-notes").value.trim();
+      const btn    = document.getElementById("btn-save");
+      if (!name)   { showToast("Escribe un nombre.", "error"); return; }
+      if (!target) { showToast("Ingresa la meta total.", "error"); return; }
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try {
+        const data = { name, icon: selectedEmoji, targetAmount: target, savedAmount: saved, targetDate: date || null, notes };
+        if (editingId) { await updateGoal(uid, editingId, data); showToast("Meta actualizada.", "success"); }
+        else           { await addGoal(uid, data);               showToast("Meta creada.", "success"); }
+        closeModal(); await loadGoals();
+      } catch(e) { showToast("Error al guardar.", "error"); console.error(e); }
+      finally { btn.disabled = false; btn.textContent = editingId ? "Actualizar meta" : "Guardar meta"; }
+    }
   </script>
 </body>
 </html>
