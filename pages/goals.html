@@ -45,13 +45,6 @@
     /* ── Metas activas ───────────────────────────────────── */
     .goals-section { margin-bottom: 90px; }
     .goals-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .goals-add-btn {
-      display: flex; align-items: center; gap: 5px;
-      background: #0f3460; color: #fff; border: none; border-radius: 8px;
-      padding: 7px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif;
-    }
-
     /* ── Goal card ───────────────────────────────────────── */
     .goal-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 10px; }
     body.dark .goal-card { background: #1a1a1a; }
@@ -76,6 +69,16 @@
     .goal-stat-val { font-size: 14px; font-weight: 500; color: var(--text); }
 
     /* ── Modal ───────────────────────────────────────────── */
+    .fab {
+      position: fixed; bottom: 76px; right: 20px;
+      width: 52px; height: 52px; background: #0f3460; color: #fff;
+      border: none; border-radius: 50%; font-size: 24px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(15,52,96,0.3); z-index: 90;
+      transition: transform 0.2s;
+    }
+    .fab:active { transform: scale(0.95); }
+
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(15,52,96,0.4);
       z-index: 150; opacity: 0; pointer-events: none;
@@ -177,11 +180,7 @@
     <div class="goals-section">
       <div class="section-bar" style="margin-bottom:0;">
         <div class="section-bar-line" style="background:#3b6d11;"></div>
-        <div class="section-bar-title" style="flex:1;">Mis metas activas</div>
-        <button class="goals-add-btn" id="btn-new-goal">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nueva meta
-        </button>
+        <div class="section-bar-title">Mis metas activas</div>
       </div>
       <div id="goals-list" style="margin-top:14px;">
         <div class="skeleton" style="height:180px;border-radius:16px;"></div>
@@ -189,6 +188,7 @@
     </div>
   </div>
 
+  <button class="fab" id="btn-new-goal">+</button>
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Modal -->
