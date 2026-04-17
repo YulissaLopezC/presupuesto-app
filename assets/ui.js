@@ -12,26 +12,94 @@ export function renderTopbar(user) {
   const el = document.getElementById("topbar");
   if (!el) return;
 
-  // Aplicar modo oscuro guardado
-  const isDark = localStorage.getItem("darkMode") === "true";
+  const isDark   = localStorage.getItem("darkMode") === "true";
   if (isDark) document.body.classList.add("dark");
+
+  const initial  = user.email ? user.email[0].toUpperCase() : "U";
+  const email    = user.email || "";
 
   el.innerHTML = `
     <a href="../pages/dashboard.html" class="topbar-brand">🔥 Mi Presupuesto</a>
     <div class="topbar-user">
       <button class="topbar-darkbtn" id="btn-darkmode" title="Modo oscuro">${isDark ? "☀️" : "🌙"}</button>
-      <span class="topbar-email">${user.email}</span>
-      <button class="btn-logout" id="btn-logout">Salir</button>
+      <div class="topbar-avatar-wrap">
+        <button class="topbar-avatar" id="btn-avatar">${initial}</button>
+        <div class="topbar-avatar-menu" id="avatar-menu">
+          <div class="avatar-menu-email">${email}</div>
+          <div class="avatar-menu-divider"></div>
+          <button class="avatar-menu-logout" id="btn-logout">Cerrar sesión</button>
+        </div>
+      </div>
     </div>
   `;
-  document.getElementById("btn-logout").addEventListener("click", async () => {
-    await logout();
-  });
+
+  // Dark mode
   document.getElementById("btn-darkmode").addEventListener("click", () => {
     const nowDark = document.body.classList.toggle("dark");
     localStorage.setItem("darkMode", nowDark);
     document.getElementById("btn-darkmode").textContent = nowDark ? "☀️" : "🌙";
+    const sb = document.getElementById("sidebar-dark-btn");
+    if (sb) sb.innerHTML = nowDark ? "☀️ Modo claro" : "🌙 Modo oscuro";
   });
+
+  // Avatar popup
+  document.getElementById("btn-avatar").addEventListener("click", e => {
+    e.stopPropagation();
+    document.getElementById("avatar-menu").classList.toggle("open");
+  });
+  document.addEventListener("click", () => {
+    document.getElementById("avatar-menu")?.classList.remove("open");
+  });
+
+  // Logout
+  document.getElementById("btn-logout").addEventListener("click", async () => {
+    await logout();
+  });
+
+  // Inject topbar avatar styles once
+  if (!document.getElementById("topbar-avatar-styles")) {
+    const st = document.createElement("style");
+    st.id = "topbar-avatar-styles";
+    st.textContent = `
+      .topbar-avatar-wrap { position: relative; }
+      .topbar-avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: #0f3460; color: #fff;
+        border: none; cursor: pointer;
+        font-size: 14px; font-weight: 500;
+        font-family: "DM Sans", sans-serif;
+        display: flex; align-items: center; justify-content: center;
+        transition: opacity 0.15s;
+      }
+      .topbar-avatar:hover { opacity: 0.85; }
+      .topbar-avatar-menu {
+        position: absolute; top: calc(100% + 8px); right: 0;
+        background: #fff; border: 0.5px solid #e2e8f0;
+        border-radius: 12px; padding: 10px;
+        min-width: 200px; z-index: 300;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        display: none; flex-direction: column; gap: 4px;
+      }
+      body.dark .topbar-avatar-menu { background: #1a1a1a; border-color: #2a2a2a; }
+      .topbar-avatar-menu.open { display: flex; }
+      .avatar-menu-email {
+        font-size: 12px; color: #888; padding: 4px 6px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .avatar-menu-divider { height: 0.5px; background: #e2e8f0; margin: 4px 0; }
+      body.dark .avatar-menu-divider { background: #2a2a2a; }
+      .avatar-menu-logout {
+        background: none; border: none; text-align: left;
+        padding: 8px 8px; border-radius: 8px;
+        font-size: 13px; color: #c0392b; cursor: pointer;
+        font-family: "DM Sans", sans-serif; width: 100%;
+        transition: background 0.15s;
+      }
+      .avatar-menu-logout:hover { background: #fbeaea; }
+      body.dark .avatar-menu-logout:hover { background: #2a1515; }
+    `;
+    document.head.appendChild(st);
+  }
 }
 
 // ── Nav inferior con ítem activo ──────────────────────────
