@@ -233,13 +233,13 @@
 <body>
   <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
 
-  <div class="mov-header">
+  <div class="mov-header" style="align-items:center;">
     <div>
       <div class="mov-title">Movimientos</div>
       <div class="mov-sub">Gastos e ingresos del mes</div>
     </div>
+    <div id="month-selector-container"></div>
   </div>
-  <div id="month-selector-container" style="display:flex;justify-content:flex-end;padding:0 14px;margin-bottom:4px;max-width:680px;margin-left:auto;margin-right:auto;"></div>
 
   <div style="max-width:680px;margin:0 auto;padding:0 14px;">
   <div class="main-tabs" style="margin-top:12px;margin-left:0;margin-right:0;">
@@ -359,7 +359,7 @@
       syncProportionalIncomes, getProportionalSummary,
       getProportionalExpensesSummary
     } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
+    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=4";
     import { formatCOP, currentMonth, formatDate, formatMonth, today } from "../assets/utils.js";
 
     let uid, selectedMonth;
@@ -555,9 +555,15 @@
             <span class="dev-name">${s.name}</span>
             <span class="dev-amount">${formatCOP(s.accrued)}</span>
           </div>
-          <div class="dev-bar"><div class="dev-fill" style="width:${Math.min(s.pct,1)*100}%;"></div></div>
-          <div class="dev-sub">${s.daysPassed}/${s.daysInMonth} días · ${formatCOP(s.dailyAmount)}/día · de ${formatCOP(s.amount)}</div>
-          ${s.pending>0?`<button class="dev-reg-btn" data-cat="${s.name}" data-amount="${s.pending}">Registrar $${Math.round(s.pending/1000)}k pendientes</button>`:"<div style='font-size:10px;color:#3b6d11;margin-top:6px;'>✓ Registrado completo</div>"}
+          <div class="dev-bar"><div class="dev-fill" style="width:${Math.min(s.pct,1)*100}%;background:${Math.min(s.pct,1)>=1?'#c0392b':Math.min(s.pct,1)>=0.8?'#e0a050':'#0f3460'};"></div></div>
+          <div class="dev-sub">${Math.round(Math.min(s.pct,1)*100)}% · ${s.daysPassed}/${s.daysInMonth} días · ${formatCOP(s.dailyAmount)}/día · de ${formatCOP(s.amount)}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              ${s.pending > 0
+                ? `<span style="font-size:11px;color:#888;">Pendiente: <strong style="color:#1a1a2e;">${formatCOP(s.pending)}</strong></span>
+                   <button class="dev-reg-btn" data-cat="${s.name}" data-amount="${s.pending}" style="padding:6px 14px;font-size:11px;border-radius:8px;">+ Registrar</button>`
+                : `<span style="font-size:11px;color:#3b6d11;font-weight:500;">✓ Registrado completo</span>`
+              }
+            </div>
         </div>`).join("");
 
       list.onclick = e => {
