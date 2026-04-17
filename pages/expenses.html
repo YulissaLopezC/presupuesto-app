@@ -238,8 +238,8 @@
       <div class="mov-title">Movimientos</div>
       <div class="mov-sub">Gastos e ingresos del mes</div>
     </div>
-    <div id="month-selector-container"></div>
   </div>
+  <div id="month-selector-container" style="display:flex;justify-content:flex-end;padding:0 14px;margin-bottom:4px;max-width:680px;margin-left:auto;margin-right:auto;"></div>
 
   <div style="max-width:680px;margin:0 auto;padding:0 14px;">
   <div class="main-tabs" style="margin-top:12px;margin-left:0;margin-right:0;">
@@ -405,10 +405,10 @@
 
       const container = document.getElementById("month-selector-container");
       container.innerHTML = `
-        <div class="month-pill">
-          <span class="m-arrow" id="mp-prev">‹</span>
-          <span class="m-lbl" id="mp-lbl">${formatMonth(selectedMonth)}</span>
-          <span class="m-arrow" id="mp-next">›</span>
+        <div style="display:inline-flex;align-items:center;gap:12px;background:#fff;border:0.5px solid #ddd;border-radius:99px;padding:8px 16px;">
+          <span style="font-size:16px;color:#888;cursor:pointer;line-height:1;font-weight:300;" id="mp-prev">‹</span>
+          <span style="font-size:14px;font-weight:500;color:#1a1a2e;min-width:120px;text-align:center;" id="mp-lbl">${formatMonth(selectedMonth)}</span>
+          <span style="font-size:16px;color:#888;cursor:pointer;line-height:1;font-weight:300;" id="mp-next">›</span>
         </div>`;
 
       document.getElementById("mp-prev").addEventListener("click", () => {
