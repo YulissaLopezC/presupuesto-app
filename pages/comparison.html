@@ -8,371 +8,288 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    /* ── Tarjeta resumen global ──────────────────────────── */
-    .hero-comparison {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 24px;
-      margin-bottom: 14px;
+    body { background: #f0f4f8; }
+    body.dark { background: #111; }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px; }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .page-hdr {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 14px 0 0; margin-bottom: 18px;
+    }
+    .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
+    .page-sub { font-size: 12px; color: #888; margin-top: 3px; }
+
+    /* ── 3 stat cards ────────────────────────────────────── */
+    .stats-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .s3-card { background: #fff; border-radius: 14px; padding: 14px 14px 12px; position: relative; overflow: hidden; }
+    body.dark .s3-card { background: #1a1a1a; }
+    .s3-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .s3-val { font-size: 16px; font-weight: 500; letter-spacing: -0.3px; }
+    .s3-val.pres { color: #185fa5; }
+    .s3-val.gast { color: #c0392b; }
+    .s3-val.disp { color: #3b6d11; }
+    .s3-bar { height: 3px; border-radius: 99px; margin-top: 10px; }
+    .s3-ico {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      opacity: 0.08; font-size: 32px;
     }
 
-    .hero-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 20px;
+    /* ── Uso total ───────────────────────────────────────── */
+    .uso-card { background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+    body.dark .uso-card { background: #1a1a1a; }
+    .uso-hdr { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
+    .uso-lbl { color: var(--text); font-weight: 400; }
+    .uso-pct { font-weight: 500; color: #185fa5; }
+    .uso-bar { height: 8px; background: #f0f4f8; border-radius: 99px; overflow: hidden; }
+    body.dark .uso-bar { background: #2a2a2a; }
+    .uso-fill { height: 100%; border-radius: 99px; background: #0f3460; transition: width 0.5s ease; }
+    .uso-fill.warn { background: #e0a050; }
+    .uso-fill.over { background: #c0392b; }
+
+    /* ── Filtros ─────────────────────────────────────────── */
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-chip {
+      padding: 6px 14px; border-radius: 99px; border: 1.5px solid #e2e8f0;
+      font-size: 12px; font-weight: 500; color: #888; cursor: pointer;
+      background: #fff; font-family: "DM Sans", sans-serif;
+      transition: all 0.15s;
     }
+    body.dark .filter-chip { background: #1a1a1a; border-color: #2a2a2a; }
+    .filter-chip.active { background: #0f3460; border-color: #0f3460; color: #fff; }
 
-    .hero-stat {
-      text-align: center;
+    /* ── Category rows ───────────────────────────────────── */
+    .cat-row {
+      background: #fff; border-radius: 14px; padding: 16px;
+      margin-bottom: 8px;
     }
-
-    .hero-stat .hs-label {
-      font-size: 10px; font-weight: 500; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.06em;
-      margin-bottom: 4px;
-    }
-
-    .hero-stat .hs-value {
-      font-family: "DM Serif Display", serif;
-      font-size: 19px; letter-spacing: -0.5px;
-    }
-
-    .hs-value.inc { color: var(--info); }
-    .hs-value.exp { color: var(--warning); }
-    .hs-value.pos { color: var(--accent); }
-    .hs-value.neg { color: var(--danger); }
-    .hs-value.neu { color: var(--text); }
-
-    .global-bar-wrap { }
-    .global-bar-labels {
-      display: flex; justify-content: space-between;
-      font-size: 11px; color: var(--muted); margin-bottom: 5px;
-    }
-
-    /* ── Tabs de tipo ────────────────────────────────────── */
-    .type-tabs {
-      display: flex; gap: 6px; overflow-x: auto;
-      padding-bottom: 2px; margin-bottom: 16px;
-      scrollbar-width: none;
-    }
-    .type-tabs::-webkit-scrollbar { display: none; }
-
-    .type-tab {
-      flex-shrink: 0;
-      padding: 6px 14px;
+    body.dark .cat-row { background: #1a1a1a; }
+    .cat-row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .cat-row-left { display: flex; align-items: center; gap: 10px; }
+    .cat-row-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .cat-badge {
+      font-size: 10px; font-weight: 500; padding: 2px 8px;
       border-radius: 99px;
-      border: 1px solid var(--border2);
-      font-size: 12px; font-weight: 400; color: var(--muted);
-      cursor: pointer; background: none;
-      font-family: "DM Sans", sans-serif;
-      transition: all 0.15s; white-space: nowrap;
     }
-    .type-tab.active-all     { background: rgba(212,96,138,0.1); border-color: var(--accent);   color: var(--accent); }
-    .type-tab.active-basico  { background: rgba(212,96,138,0.1); border-color: var(--accent);   color: var(--accent); }
-    .type-tab.active-noe     { background: rgba(201,124,46,0.10); border-color: var(--warning);  color: var(--warning); }
-    .type-tab.active-ahorro  { background: rgba(112,171,224,0.1); border-color: var(--info);     color: var(--info); }
+    .cat-badge.none { background: #f0f4f8; color: #888; }
+    body.dark .cat-badge.none { background: #222; }
+    .cat-badge.ok   { background: #eaf3de; color: #3b6d11; }
+    .cat-badge.warn { background: #faeeda; color: #854f0b; }
+    .cat-badge.over { background: #fbeaea; color: #c0392b; }
 
-    /* ── Fila de categoría ───────────────────────────────── */
-    .comp-row {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 8px;
-    }
+    .cat-row-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .cat-col-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .cat-col-val { font-size: 14px; font-weight: 500; }
+    .cat-col-val.spent { color: var(--text); }
+    .cat-col-val.budget { color: #185fa5; }
+    .cat-col-val.avail  { color: #3b6d11; }
+    .cat-col-val.neg    { color: #c0392b; }
 
-    .comp-row-header {
-      display: flex; align-items: baseline;
-      justify-content: space-between; margin-bottom: 8px;
-    }
+    .cat-prog { height: 5px; background: #f0f4f8; border-radius: 99px; overflow: hidden; }
+    body.dark .cat-prog { background: #2a2a2a; }
+    .cat-prog-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
 
-    .comp-cat-name { font-size: 14px; color: var(--text); }
-
-    .comp-pct {
-      font-size: 12px; font-weight: 500;
-      padding: 2px 8px; border-radius: 99px;
-    }
-    .comp-pct.ok   { background: rgba(212,96,138,0.10); color: var(--accent); }
-    .comp-pct.warn { background: rgba(201,124,46,0.12); color: var(--warning); }
-    .comp-pct.over { background: rgba(217,79,79,0.12); color: var(--danger); }
-    .comp-pct.zero { background: var(--surface); color: var(--muted); }
-
-    .comp-amounts {
-      display: flex; justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .comp-col { }
-    .comp-col-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
-    .comp-col-val   { font-family: "DM Serif Display", serif; font-size: 15px; letter-spacing: -0.3px; }
-    .comp-col-val.actual   { color: var(--warning); }
-    .comp-col-val.budget   { color: var(--text); }
-    .comp-col-val.diff-pos { color: var(--accent); }
-    .comp-col-val.diff-neg { color: var(--danger); }
-
-    /* ── Tipo section header ─────────────────────────────── */
-    .type-section-hdr {
-      display: flex; align-items: center; gap: 8px;
-      padding: 14px 0 8px;
-    }
-    .type-dot { width: 7px; height: 7px; border-radius: 50%; }
-    .type-dot.basico      { background: var(--accent); }
-    .type-dot.no-esencial { background: var(--warning); }
-    .type-dot.ahorro      { background: var(--info); }
-    .type-section-lbl {
-      font-size: 11px; font-weight: 500; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.07em;
-    }
-    .type-section-sub { margin-left: auto; font-size: 12px; color: var(--muted); }
-
-    /* ── Sin presupuesto notice ──────────────────────────── */
-    .no-budget-notice {
-      background: rgba(201,124,46,0.07);
-      border: 1px solid rgba(201,124,46,0.25);
-      border-radius: 14px; padding: 20px;
-      text-align: center; color: var(--warning); font-size: 13px; line-height: 1.6;
-    }
+    .empty-filter { text-align: center; padding: 40px 0; font-size: 13px; color: #888; }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar"></div>
+  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
 
-  <div class="page">
-    <div style="margin-bottom:16px;">
-      <h2>Comparativo</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:4px;">
-        Presupuestado vs. gastado real por categoría.
-      </p>
+  <div class="wrap">
+    <div class="page-hdr">
+      <div>
+        <div class="page-title">Comparativo</div>
+        <div class="page-sub">Análisis de rendimiento presupuestario</div>
+      </div>
+      <div id="month-selector-container"></div>
     </div>
 
-    <div id="month-selector-container" style="margin-bottom:16px;"></div>
-
-    <!-- Hero resumen -->
-    <div id="hero-section">
-      <div class="skeleton" style="height:130px;border-radius:24px;margin-bottom:14px;"></div>
+    <div class="stats-3" id="stats-3">
+      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
+      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
+      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
     </div>
 
-    <!-- Tabs de tipo -->
-    <div class="type-tabs" id="type-tabs" style="display:none;">
-      <button class="type-tab active-all" data-filter="all"   >Todos</button>
-      <button class="type-tab"            data-filter="basico">Básico</button>
-      <button class="type-tab"            data-filter="noe"   >No esencial</button>
-      <button class="type-tab"            data-filter="ahorro">Ahorro</button>
+    <div class="uso-card" id="uso-card">
+      <div class="uso-hdr">
+        <span class="uso-lbl">Uso total del presupuesto</span>
+        <span class="uso-pct" id="uso-pct">0%</span>
+      </div>
+      <div class="uso-bar"><div class="uso-fill" id="uso-fill" style="width:0%;"></div></div>
     </div>
 
-    <!-- Lista comparativo -->
-    <div id="comparison-list">
-      <div class="skeleton" style="height:280px;border-radius:14px;"></div>
+    <div class="filters" id="filters">
+      <button class="filter-chip active" data-filter="">Todos</button>
+      <button class="filter-chip" data-filter="GASTO BÁSICO">Básico</button>
+      <button class="filter-chip" data-filter="GASTO NO ESENCIAL">No esencial</button>
+      <button class="filter-chip" data-filter="AHORRO O INVERSIÓN">Ahorro</button>
+    </div>
+
+    <div id="cat-list" style="padding-bottom:90px;">
+      <div class="skeleton" style="height:100px;border-radius:14px;margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:100px;border-radius:14px;margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:100px;border-radius:14px;"></div>
     </div>
   </div>
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script type="module">
-    import { requireAuth }  from "../modules/auth.js";
+    import { requireAuth } from "../modules/auth.js";
     import { getExpenses, getBudget, getCategories } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js?v=3";
-    import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison, totalUsedPct } from "../assets/utils.js";
+    import { renderTopbar, renderBottomNav } from "../assets/ui.js?v=4";
+    import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
 
-    let uid, selectedMonth, activeFilter = "all";
-    let compData = [], categories = [];
+    let uid, selectedMonth, allData = [], categories = [], activeFilter = "";
 
-    // ── Init ─────────────────────────────────────────────
     const user = await requireAuth();
     uid = user.uid;
     selectedMonth = currentMonth();
-
     renderTopbar(user);
-    renderBottomNav("budget");  // comparativo vive bajo el ícono de presupuesto
-    renderMonthSelector("month-selector-container", selectedMonth, (m) => {
-      selectedMonth = m;
-      loadData();
-    });
+    renderBottomNav("comparison");
 
-    // Event delegation for type tabs
-    document.getElementById("type-tabs").addEventListener("click", e => {
-      const btn = e.target.closest(".type-tab");
-      if (btn) setFilter(btn, btn.dataset.filter);
-    });
-
+    // Month selector pill style
+    renderMonthPill();
     categories = await getCategories(uid);
     await loadData();
 
-    // ── Cargar datos ──────────────────────────────────────
+    function renderMonthPill() {
+      const container = document.getElementById("month-selector-container");
+      container.innerHTML = `
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ddd;border-radius:99px;padding:6px 12px;">
+          <span style="font-size:13px;color:#888;cursor:pointer;" id="mp-prev">‹</span>
+          <span style="font-size:12px;font-weight:500;color:#1a1a2e;" id="mp-lbl">${formatMonth(selectedMonth)}</span>
+          <span style="font-size:13px;color:#888;cursor:pointer;" id="mp-next">›</span>
+        </div>`;
+      document.getElementById("mp-prev").addEventListener("click", () => {
+        const [y,m] = selectedMonth.split("-").map(Number);
+        const pm = m===1?12:m-1, py = m===1?y-1:y;
+        selectedMonth = `${py}-${String(pm).padStart(2,"0")}`;
+        document.getElementById("mp-lbl").textContent = formatMonth(selectedMonth);
+        loadData();
+      });
+      document.getElementById("mp-next").addEventListener("click", () => {
+        const [y,m] = selectedMonth.split("-").map(Number);
+        const nm = m===12?1:m+1, ny = m===12?y+1:y;
+        selectedMonth = `${ny}-${String(nm).padStart(2,"0")}`;
+        document.getElementById("mp-lbl").textContent = formatMonth(selectedMonth);
+        loadData();
+      });
+    }
+
     async function loadData() {
       const [expenses, budget] = await Promise.all([
         getExpenses(uid, { month: selectedMonth }),
         getBudget(uid, selectedMonth)
       ]);
+      const actual     = sumByCategory(expenses);
+      const comparison = buildComparison(budget?.categories || {}, actual);
+      allData = comparison.map(row => {
+        const catObj = categories.find(c => c.name === row.category);
+        return { ...row, type: catObj?.type || "" };
+      });
+      renderStats(budget, expenses);
+      renderList();
+    }
 
-      if (!budget?.categories) {
-        renderNoBudget();
+    function renderStats(budget, expenses) {
+      const totalBudget  = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
+      const totalSpent   = expenses.reduce((s,e)=>s+Number(e.amount),0);
+      const totalAvail   = Math.max(totalBudget - totalSpent, 0);
+      const pct          = totalBudget > 0 ? Math.min(Math.round(totalSpent/totalBudget*100),100) : 0;
+      const barCls       = pct >= 100 ? "over" : pct >= 80 ? "warn" : "";
+
+      document.getElementById("stats-3").innerHTML = `
+        <div class="s3-card">
+          <div class="s3-lbl">Presupuestado</div>
+          <div class="s3-val pres">${formatCOP(totalBudget)}</div>
+          <div class="s3-bar" style="background:#b5d4f4;"></div>
+          <div class="s3-ico">🏦</div>
+        </div>
+        <div class="s3-card">
+          <div class="s3-lbl">Gastado</div>
+          <div class="s3-val gast">${formatCOP(totalSpent)}</div>
+          <div class="s3-bar" style="background:#f5c6c6;"></div>
+          <div class="s3-ico">💸</div>
+        </div>
+        <div class="s3-card">
+          <div class="s3-lbl">Disponible</div>
+          <div class="s3-val disp">${formatCOP(totalAvail)}</div>
+          <div class="s3-bar" style="background:#c0dda0;"></div>
+          <div class="s3-ico">✅</div>
+        </div>`;
+
+      document.getElementById("uso-pct").textContent = pct + "%";
+      document.getElementById("uso-pct").style.color = pct >= 100 ? "#c0392b" : pct >= 80 ? "#e0a050" : "#185fa5";
+      const fill = document.getElementById("uso-fill");
+      fill.style.width = pct + "%";
+      fill.className = "uso-fill " + barCls;
+    }
+
+    function renderList() {
+      const el       = document.getElementById("cat-list");
+      const filtered = activeFilter ? allData.filter(r => r.type === activeFilter) : allData;
+      const sorted   = filtered.sort((a,b) => (b.pct||0)-(a.pct||0));
+
+      if (!sorted.length) {
+        el.innerHTML = `<div class="empty-filter">No hay datos para este filtro.</div>`;
         return;
       }
 
-      const actualByCategory = sumByCategory(expenses);
-      compData = buildComparison(budget.categories, actualByCategory);
+      el.innerHTML = sorted.map(row => {
+        const budgeted  = row.budgeted || 0;
+        const actual    = row.actual   || 0;
+        const avail     = Math.max(budgeted - actual, 0);
+        const isOver    = actual > budgeted && budgeted > 0;
+        const pct       = row.pct !== null ? Math.min(Math.round((row.pct||0)*100), 100) : 0;
+        const barColor  = isOver ? "#c0392b" : pct >= 80 ? "#e0a050" : "#0f3460";
+        const barW      = Math.min(row.pct||0, 1) * 100;
+        const noSpend   = actual === 0;
 
-      // Enriquecer con tipo de categoría
-      const catTypeMap = Object.fromEntries(categories.map(c => [c.name, c.type]));
-      compData = compData.map(row => ({
-        ...row,
-        catType: catTypeMap[row.category] || "GASTO BÁSICO"
-      }));
+        let badgeCls, badgeTxt;
+        if (noSpend)       { badgeCls="none"; badgeTxt="Sin gastos"; }
+        else if (isOver)   { badgeCls="over"; badgeTxt=`${pct}% · Excedido`; }
+        else if (pct >= 80){ badgeCls="warn"; badgeTxt=`${pct}%`; }
+        else               { badgeCls="ok";   badgeTxt=`${pct}%`; }
 
-      renderHero(compData, budget, expenses);
-      document.getElementById("type-tabs").style.display = "flex";
+        return `
+          <div class="cat-row">
+            <div class="cat-row-top">
+              <div class="cat-row-left">
+                <div class="cat-row-name">${row.category}</div>
+                <span class="cat-badge ${badgeCls}">${badgeTxt}</span>
+              </div>
+            </div>
+            <div class="cat-row-cols">
+              <div>
+                <div class="cat-col-lbl">Gastado</div>
+                <div class="cat-col-val spent">${formatCOP(actual)}</div>
+              </div>
+              <div>
+                <div class="cat-col-lbl">Presupuesto</div>
+                <div class="cat-col-val budget">${formatCOP(budgeted)}</div>
+              </div>
+              <div>
+                <div class="cat-col-lbl">Disponible</div>
+                <div class="cat-col-val ${isOver?"neg":"avail"}">${isOver ? "-"+formatCOP(actual-budgeted) : formatCOP(avail)}</div>
+              </div>
+            </div>
+            <div class="cat-prog">
+              <div class="cat-prog-fill" style="width:${barW}%;background:${barColor};"></div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    // Filters
+    document.getElementById("filters").addEventListener("click", e => {
+      const btn = e.target.closest(".filter-chip");
+      if (!btn) return;
+      document.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = btn.dataset.filter;
       renderList();
-    }
-
-    // ── Hero global ───────────────────────────────────────
-    function renderHero(comp, budget, expenses) {
-      const totalBudgeted = comp.reduce((s, r) => s + r.budgeted, 0);
-      const totalActual   = comp.reduce((s, r) => s + r.actual,   0);
-      const totalDiff     = totalBudgeted - totalActual;
-      const pct           = totalBudgeted > 0 ? Math.min(totalActual / totalBudgeted, 1) : 0;
-      const pctN          = Math.round((totalBudgeted > 0 ? totalActual / totalBudgeted : 0) * 100);
-      const barClass      = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
-
-      document.getElementById("hero-section").innerHTML = `
-        <div class="hero-comparison">
-          <div class="hero-row">
-            <div class="hero-stat">
-              <div class="hs-label">Presupuestado</div>
-              <div class="hs-value neu">${formatCOP(totalBudgeted)}</div>
-            </div>
-            <div class="hero-stat">
-              <div class="hs-label">Gastado</div>
-              <div class="hs-value exp">${formatCOP(totalActual)}</div>
-            </div>
-            <div class="hero-stat">
-              <div class="hs-label">${totalDiff >= 0 ? "Disponible" : "Exceso"}</div>
-              <div class="hs-value ${totalDiff >= 0 ? "pos" : "neg"}">${formatCOP(Math.abs(totalDiff))}</div>
-            </div>
-          </div>
-          <div class="global-bar-labels">
-            <span>${pctN}% del presupuesto usado</span>
-            <span>${formatCOP(totalActual)} / ${formatCOP(totalBudgeted)}</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill ${barClass}" style="width:${pct * 100}%"></div>
-          </div>
-        </div>
-      `;
-    }
-
-    // ── Lista por tipo ────────────────────────────────────
-    function renderList() {
-      const el = document.getElementById("comparison-list");
-
-      const TYPE_MAP = {
-        "GASTO BÁSICO":       { key: "basico",  cls: "basico",      label: "Gasto básico" },
-        "GASTO NO ESENCIAL":  { key: "noe",     cls: "no-esencial", label: "Gasto no esencial" },
-        "AHORRO O INVERSIÓN": { key: "ahorro",  cls: "ahorro",      label: "Ahorro o inversión" }
-      };
-
-      const TYPES = [
-        "GASTO BÁSICO",
-        "GASTO NO ESENCIAL",
-        "AHORRO O INVERSIÓN"
-      ];
-
-      let html = "";
-
-      TYPES.forEach(typeKey => {
-        const meta  = TYPE_MAP[typeKey];
-        const items = compData.filter(r => {
-          const matchType = r.catType === typeKey;
-          if (activeFilter === "all") return matchType;
-          return matchType && meta.key === activeFilter;
-        });
-
-        if (!items.length) return;
-
-        const typeTotal     = items.reduce((s, r) => s + r.actual,   0);
-        const typeBudgeted  = items.reduce((s, r) => s + r.budgeted, 0);
-
-        html += `
-          <div class="type-section-hdr">
-            <div class="type-dot ${meta.cls}"></div>
-            <span class="type-section-lbl">${meta.label}</span>
-            <span class="type-section-sub">${formatCOP(typeTotal)} / ${formatCOP(typeBudgeted)}</span>
-          </div>
-          ${items.map(row => compRowHTML(row)).join("")}
-        `;
-      });
-
-      // Categorías sin tipo conocido (gastos sin categoría configurada)
-      const orphans = compData.filter(r => !TYPE_MAP[r.catType]);
-      if (orphans.length && (activeFilter === "all")) {
-        html += `
-          <div class="type-section-hdr">
-            <div class="type-dot" style="background:var(--muted);"></div>
-            <span class="type-section-lbl">Otros</span>
-          </div>
-          ${orphans.map(row => compRowHTML(row)).join("")}
-        `;
-      }
-
-      el.innerHTML = html || `<div class="empty-state"><p>No hay datos para mostrar.</p></div>`;
-    }
-
-    function compRowHTML(row) {
-      const pctN     = row.pct !== null ? Math.round(row.pct * 100) : 0;
-      const pct      = row.pct !== null ? Math.min(row.pct, 1) : 0;
-      const pctClass = row.actual === 0 ? "zero" : pctN >= 100 ? "over" : pctN >= 80 ? "warn" : "ok";
-      const barClass = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
-      const diffCls  = row.diff >= 0 ? "diff-pos" : "diff-neg";
-
-      return `
-        <div class="comp-row">
-          <div class="comp-row-header">
-            <span class="comp-cat-name">${row.category}</span>
-            <span class="comp-pct ${pctClass}">${row.actual === 0 ? "Sin gastos" : pctN + "%"}</span>
-          </div>
-          <div class="comp-amounts">
-            <div class="comp-col">
-              <div class="comp-col-label">Gastado</div>
-              <div class="comp-col-val actual">${formatCOP(row.actual)}</div>
-            </div>
-            <div class="comp-col" style="text-align:center;">
-              <div class="comp-col-label">Presupuesto</div>
-              <div class="comp-col-val budget">${formatCOP(row.budgeted)}</div>
-            </div>
-            <div class="comp-col" style="text-align:right;">
-              <div class="comp-col-label">${row.diff >= 0 ? "Disponible" : "Exceso"}</div>
-              <div class="comp-col-val ${diffCls}">${formatCOP(Math.abs(row.diff))}</div>
-            </div>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill ${barClass}" style="width:${pct * 100}%"></div>
-          </div>
-        </div>`;
-    }
-
-    // ── Filtro por tipo ───────────────────────────────────
-    function setFilter(btn, filter) {
-      document.querySelectorAll(".type-tab").forEach(b => b.className = "type-tab");
-      const clsMap = { all: "active-all", basico: "active-basico", noe: "active-noe", ahorro: "active-ahorro" };
-      btn.classList.add(clsMap[filter]);
-      activeFilter = filter;
-      renderList();
-    };
-
-    // ── Sin presupuesto ───────────────────────────────────
-    function renderNoBudget() {
-      document.getElementById("hero-section").innerHTML = "";
-      document.getElementById("type-tabs").style.display = "none";
-      document.getElementById("comparison-list").innerHTML = `
-        <div class="no-budget-notice">
-          No hay presupuesto configurado para ${formatMonth(selectedMonth)}.<br/>
-          <a href="./budget.html" style="color:var(--warning);font-weight:500;display:inline-block;margin-top:8px;">
-            Configurar presupuesto →
-          </a>
-        </div>`;
-    }
+    });
   </script>
 </body>
 </html>
