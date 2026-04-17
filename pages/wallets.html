@@ -437,7 +437,7 @@
               <span class="w-badge ${w.type||"ahorro"}">${typeLabel[w.type]||"Ahorro"}</span>
             </div>
             <div class="w-name">${w.name}</div>
-            <div class="w-type">${isCredit?"Tarjeta de crédito":"Cuenta de ${w.type==="efectivo"?"efectivo":"ahorros"}"}</div>
+            <div class="w-type">${isCredit?"Tarjeta de crédito":w.type==="efectivo"?"Cuenta de efectivo":"Cuenta de ahorros"}</div>
             <div class="w-balance ${isCredit&&balance>0?"red":""}">${formatCOP(balance)}</div>
             <div class="w-sublbl ${isCredit&&balance>0?"red":""}">${isCredit?"Deuda actual":"Disponible"}</div>
             <div class="w-divider"></div>
