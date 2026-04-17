@@ -38,30 +38,38 @@
     .section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 10px; max-width: 680px; margin: 0 auto; padding-left: 0; padding-right: 0; }
     .section-title { font-size: 15px; font-weight: 500; color: var(--text); }
 
-    .wallet-list { display: flex; flex-direction: column; gap: 8px; padding: 0; max-width: 680px; margin: 0 auto; }
+    .wallet-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0; max-width: 680px; margin: 0 auto; }
+    @media (max-width: 400px) { .wallet-list { grid-template-columns: 1fr; } }
+
     .wallet-item {
-      background: #fff; border-radius: 14px; padding: 14px;
-      display: flex; align-items: center; gap: 12px;
-      cursor: pointer; transition: background 0.1s;
+      background: #fff; border-radius: 16px; padding: 16px;
+      display: flex; flex-direction: column; gap: 0;
+      transition: background 0.1s;
     }
     body.dark .wallet-item { background: #1a1a1a; }
-    .wallet-item:hover { background: #f8fafc; }
-    body.dark .wallet-item:hover { background: #222; }
 
-    .w-ico { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .w-info { flex: 1; min-width: 0; }
-    .w-name { font-size: 14px; font-weight: 500; color: var(--text); }
-    .w-type { font-size: 11px; color: #888; margin-top: 2px; }
-    .w-right { text-align: right; flex-shrink: 0; }
-    .w-balance { font-size: 16px; font-weight: 500; color: #185fa5; }
+    .w-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .w-ico { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .w-badge { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 99px; }
+    .w-badge.ahorro   { background: #eaf3de; color: #3b6d11; }
+    .w-badge.efectivo { background: #e6f1fb; color: #185fa5; }
+    .w-badge.credito  { background: #fbeaf0; color: #993556; }
+
+    .w-name { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+    .w-type { font-size: 11px; color: #888; margin-bottom: 14px; }
+
+    .w-balance { font-size: 22px; font-weight: 500; color: #185fa5; letter-spacing: -0.5px; margin-bottom: 4px; }
     .w-balance.red { color: #c0392b; }
-    .w-sublbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #3b6d11; margin-top: 2px; }
+    .w-sublbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #3b6d11; }
     .w-sublbl.red { color: #c0392b; }
-    .w-actions { display: flex; gap: 6px; }
-    .w-btn { background: #f0f4f8; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #555; cursor: pointer; font-family: "DM Sans", sans-serif; transition: background 0.15s; }
-    body.dark .w-btn { background: #222; color: #aaa; }
-    .w-btn:hover { background: #e2e8f0; }
-    .w-btn.danger:hover { background: #fbeaea; color: #c0392b; }
+
+    .w-divider { height: 0.5px; background: #f0f0f0; margin: 12px 0; }
+    body.dark .w-divider { background: #2a2a2a; }
+    .w-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .w-btn { background: none; border: 0.5px solid #e2e8f0; border-radius: 7px; padding: 5px 10px; font-size: 11px; color: #888; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.15s; }
+    body.dark .w-btn { border-color: #2a2a2a; color: #666; }
+    .w-btn:hover { background: #f0f4f8; color: #0f3460; border-color: #b5d4f4; }
+    .w-btn.danger:hover { background: #fbeaea; color: #c0392b; border-color: #f5c6c6; }
 
     .fab {
       position: fixed; bottom: 76px; right: 20px;
@@ -418,26 +426,25 @@
         return;
       }
       const icoBg = { ahorro: "#e6f1fb", efectivo: "#eaf3de", credito: "#fbeaf0" };
+      const typeLabel = { ahorro: "Ahorro", efectivo: "Efectivo", credito: "Crédito" };
       el.innerHTML = active.map(w => {
-        const isCredit  = w.type === "credito";
-        const balance   = Number(w.balance||0);
-        const limit     = Number(w.creditLimit||0);
-        const available = isCredit ? limit - balance : balance;
+        const isCredit = w.type === "credito";
+        const balance  = Number(w.balance||0);
         return `
           <div class="wallet-item">
-            <div class="w-ico" style="background:${icoBg[w.type]||"#f0f4f8"};">${w.icon||"🏦"}</div>
-            <div class="w-info">
-              <div class="w-name">${w.name}</div>
-              <div class="w-type">${w.type==="credito"?"Crédito"+(limit?` · Límite ${formatCOP(limit)}`:""):w.type==="efectivo"?"Efectivo":"Ahorro"}</div>
+            <div class="w-top">
+              <div class="w-ico" style="background:${icoBg[w.type]||"#f0f4f8"};">${w.icon||"🏦"}</div>
+              <span class="w-badge ${w.type||"ahorro"}">${typeLabel[w.type]||"Ahorro"}</span>
             </div>
-            <div class="w-right">
-              <div class="w-balance ${isCredit&&balance>0?"red":""}">${formatCOP(isCredit?balance:balance)}</div>
-              <div class="w-sublbl ${isCredit&&balance>0?"red":""}">${isCredit?"Deuda actual":"Disponible"}</div>
+            <div class="w-name">${w.name}</div>
+            <div class="w-type">${isCredit?"Tarjeta de crédito":"Cuenta de ${w.type==="efectivo"?"efectivo":"ahorros"}"}</div>
+            <div class="w-balance ${isCredit&&balance>0?"red":""}">${formatCOP(balance)}</div>
+            <div class="w-sublbl ${isCredit&&balance>0?"red":""}">${isCredit?"Deuda actual":"Disponible"}</div>
+            <div class="w-divider"></div>
+            <div class="w-actions">
+              <button class="w-btn" onclick="openEdit('${w.id}')">Editar</button>
+              <button class="w-btn danger" onclick="handleArchive('${w.id}')">Archivar</button>
             </div>
-          </div>
-          <div style="display:flex;gap:6px;padding:0 2px 4px;justify-content:flex-end;">
-            <button class="w-btn" onclick="openEdit('${w.id}')">Editar</button>
-            <button class="w-btn danger" onclick="handleArchive('${w.id}')">Archivar</button>
           </div>`;
       }).join("");
     }
