@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Presupuesto · Inicio</title>
+  <title>Presupuesto · Inicio</title><!-- v4 -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
@@ -239,7 +239,7 @@
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
     import { getExpenses, getBudget, getWallets, getIncomes, getProportionalSummary, getProportionalExpensesSummary } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js?v=3";
+    import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js?v=4";
     import { formatCOP, currentMonth, formatDate, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
 
     let uid, selectedMonth;
