@@ -137,6 +137,22 @@
     .wall-val.b { color: #185fa5; }
     .wall-val.r { color: #a32d2d; }
 
+    /* ── Cat progress nueva versión ─────────────────────── */
+    .cat-prog-row-v2 { padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
+    body.dark .cat-prog-row-v2 { border-bottom-color: #2a2a2a; }
+    .cat-prog-row-v2:last-child { border-bottom: none; }
+    .cat-prog-hdr-v2 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+    .cat-prog-left { display: flex; align-items: center; gap: 8px; }
+    .cat-prog-ico { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .cat-prog-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .cat-prog-spent-sub { font-size: 10px; color: #888; margin-top: 1px; }
+    .cat-prog-right { text-align: right; flex-shrink: 0; }
+    .cat-prog-vals { font-size: 12px; font-weight: 500; color: var(--text); }
+    .cat-prog-pct { font-size: 10px; color: #888; margin-top: 2px; }
+    .cat-prog-bar-v2 { height: 5px; background: #f0f0f0; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    body.dark .cat-prog-bar-v2 { background: #2a2a2a; }
+    .cat-prog-fill-v2 { height: 100%; border-radius: 99px; }
+
     /* ── Categorías top ──────────────────────────────────── */
     .cats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .cat-top-card { border-radius: 12px; padding: 10px; border: 0.5px solid #e8e8e8; }
@@ -185,21 +201,7 @@
       <div class="skeleton" style="height:80px;border-radius:14px;"></div>
     </div>
 
-    <div class="dash-card">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Gastos por categoría</div>
-          <div class="card-sub">Real vs presupuestado · Top 4</div>
-        </div>
-      </div>
-      <div class="bars-wrap" id="weekly-bars" style="margin-top:20px;height:160px;">
-        <div class="skeleton" style="height:100px;border-radius:8px;flex:1;"></div>
-      </div>
-      <div class="chart-legend" id="chart-legend" style="display:none;">
-        <div class="leg-item"><span class="leg-dot" style="background:#b5d4f4;"></span>Presupuestado</div>
-        <div class="leg-item"><span class="leg-dot" style="background:#0f3460;"></span>Gastado</div>
-      </div>
-    </div>
+
 
     <div class="two-col">
       <div class="dash-card" id="donut-card">
@@ -225,7 +227,10 @@
 
     <div class="dash-card">
       <div class="card-hdr">
-        <div class="card-title">Por categoría</div>
+        <div>
+          <div class="card-title">Gastos por categoría</div>
+          <div class="card-sub" style="font-size:11px;color:#888;">Distribución del presupuesto mensual</div>
+        </div>
         <a href="./comparison.html" class="card-link">Comparativo →</a>
       </div>
       <div id="cat-progress">
@@ -270,7 +275,6 @@
 
       renderHero(expenses, budget);
       renderStats(expenses, budget, incomes);
-      renderWeeklyBars(expenses, budget);
       renderDonut(expenses, budget);
       renderWalletsCard(wallets);
       renderCatsTop(expenses);
@@ -443,7 +447,7 @@
         </div>`).join("");
     }
 
-    // ── Progreso por categoría ────────────────────────────
+    // ── Progreso por categoría (nuevo diseño) ─────────────
     function renderCatProgress(expenses, budget) {
       const el = document.getElementById("cat-progress");
       if (!budget?.categories) {
@@ -460,21 +464,35 @@
         el.innerHTML = `<div class="empty-state">Sin datos de categorías.</div>`;
         return;
       }
-      el.innerHTML = comparison.map(row => {
-        const pct    = row.pct !== null ? Math.min(row.pct,1) : 0;
-        const pctN   = row.pct !== null ? Math.round(row.pct*100) : 0;
-        const barCls = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
+
+      const icoBg = ["#e6f1fb","#fbeaf0","#eaf3de","#faeeda","#e1f5ee","#fbeaf0"];
+      const icoStroke = ["#185fa5","#993556","#3b6d11","#854f0b","#0f6e56","#993556"];
+
+      el.innerHTML = comparison.map((row, i) => {
+        const pct    = row.pct !== null ? Math.min(row.pct, 1) : 0;
+        const pctN   = row.pct !== null ? Math.round(row.pct * 100) : 0;
+        const isOver = pctN >= 100;
+        const isWarn = pctN >= 80 && !isOver;
+        const barColor = isOver ? "#c0392b" : isWarn ? "#e0a050" : "#0f3460";
         return `
-          <div class="cat-prog-row">
-            <div class="cat-prog-hdr">
-              <span class="cat-prog-name">${row.category}</span>
-              <span class="cat-prog-amounts">
-                <b>${formatCOP(row.actual)}</b> / ${formatCOP(row.budgeted)}
-                <span style="margin-left:4px;color:${pctN>=100?"#e07070":"#888"}">${pctN}%</span>
-              </span>
+          <div class="cat-prog-row-v2">
+            <div class="cat-prog-hdr-v2">
+              <div class="cat-prog-left">
+                <div class="cat-prog-ico" style="background:${icoBg[i%icoBg.length]};">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${icoStroke[i%icoStroke.length]}" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
+                </div>
+                <div>
+                  <div class="cat-prog-name">${row.category}</div>
+                  <div class="cat-prog-spent-sub">${formatCOP(row.actual)} gastado</div>
+                </div>
+              </div>
+              <div class="cat-prog-right">
+                <div class="cat-prog-vals">${formatCOP(row.actual)} / ${formatCOP(row.budgeted)}</div>
+                <div class="cat-prog-pct" style="color:${isOver?"#c0392b":isWarn?"#e0a050":"#888"};">${pctN}% usado</div>
+              </div>
             </div>
-            <div class="prog-bar">
-              <div class="prog-fill ${barCls}" style="width:${pct*100}%;"></div>
+            <div class="cat-prog-bar-v2">
+              <div class="cat-prog-fill-v2" style="width:${pct*100}%;background:${barColor};"></div>
             </div>
           </div>`;
       }).join("");
