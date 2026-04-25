@@ -204,6 +204,35 @@
       display: flex !important; align-items: center; justify-content: center; padding: 16px;
     }
     .cat-picker-overlay.open { opacity: 1 !important; pointer-events: all; }
+    .cat-picker-modal {
+      background: #fff; border-radius: 16px; padding: 20px;
+      width: 100%; max-width: 400px;
+      transform: scale(0.95); opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      max-height: 80vh; overflow-y: auto;
+    }
+    body.dark .cat-picker-modal { background: #1a1a1a; }
+    .cat-picker-overlay.open .cat-picker-modal { transform: scale(1); opacity: 1; }
+    .cat-picker-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .cat-picker-title { font-size: 16px; font-weight: 500; color: var(--text); }
+    .cat-picker-close { background: none; border: none; font-size: 20px; color: #888; cursor: pointer; line-height:1; }
+    .cat-picker-search {
+      width: 100%; padding: 10px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: #fff; outline: none; margin-bottom: 14px; box-sizing: border-box;
+    }
+    body.dark .cat-picker-search { background: #222; border-color: #333; }
+    .cat-picker-search:focus { border-color: #0f3460; }
+    .cat-picker-section-lbl { font-size: 10px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; padding: 0 2px; display: block; }
+    .cat-picker-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s; margin-bottom: 4px; }
+    .cat-picker-item:hover { background: #f0f4f8; }
+    .cat-picker-item-name { font-size: 13px; color: var(--text); }
+    .cat-picker-item-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: #f0f4f8; color: #888; }
+    .cat-picker-restore-btn { font-size: 11px; padding: 4px 10px; border-radius: 7px; background: #e6f1fb; color: #185fa5; border: none; cursor: pointer; font-family: "DM Sans", sans-serif; }
+    .cat-picker-new { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; cursor: pointer; border: 1.5px dashed #cdd5e0; margin-top: 8px; transition: border-color 0.15s; }
+    .cat-picker-new:hover { border-color: #0f3460; }
+    .cat-picker-new-lbl { font-size: 13px; color: #888; }
+    .cat-picker-new-name { font-size: 13px; color: #0f3460; font-weight: 500; }
   </style>
 </head>
 <body>
@@ -374,13 +403,14 @@
       const meta      = currentBudget?.categoryMeta || {};
       const el        = document.getElementById("expenses-form");
 
-      // Merge active cats + ghost cats from saved budget
+      // Merge active cats + ghost cats from saved budget, filter hidden for this month
+      const hiddenCats   = new Set(currentBudget?.hiddenCats || []);
       const savedNames   = Object.keys(savedCats);
       const activeCatNames = new Set(categories.map(c => c.name));
       const ghostCats    = savedNames
-        .filter(name => !activeCatNames.has(name))
+        .filter(name => !activeCatNames.has(name) && !hiddenCats.has(name))
         .map(name => ({ id: "ghost-" + name, name, type: "GASTO BÁSICO", ghost: true }));
-      const allCats = [...categories, ...ghostCats];
+      const allCats = [...categories.filter(c => !hiddenCats.has(c.name)), ...ghostCats];
 
       el.innerHTML = TYPES.map(type => {
         const cats = allCats.filter(c => c.type === type.key);
@@ -436,8 +466,27 @@
           </div>`;
       }).join("");
 
-      // Event delegation
-      el.addEventListener("click", handleExpensesClick);
+      // Event delegation — use onclick to avoid duplicates
+      el.onclick = handleExpensesClick;
+
+      // Format number inputs
+      el.querySelectorAll(".val-pill-input").forEach(inp => {
+        // Set initial formatted value
+        if (inp.value) {
+          inp.dataset.rawValue = inp.value;
+          inp.value = Number(inp.value).toLocaleString("es-CO");
+        }
+        inp.addEventListener("input", () => {
+          const cursor = inp.selectionStart;
+          const raw = inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+          inp.dataset.rawValue = raw;
+          if (raw) inp.value = Number(raw).toLocaleString("es-CO");
+          else inp.value = "";
+        });
+        inp.addEventListener("focus", () => {
+          inp.select();
+        });
+      });
     }
 
     function handleExpensesClick(e) {
@@ -445,21 +494,25 @@
       const propBtn = e.target.closest("[data-field='prop-toggle']");
       if (propBtn) { propBtn.classList.toggle("on"); return; }
 
-      // Archive cat
+      // Hide cat from THIS month only
       const delBtn = e.target.closest(".btn-delete-cat");
       if (delBtn) {
         const catId   = delBtn.dataset.catId;
         const catName = delBtn.dataset.catName;
-        if (catId.startsWith("ghost-")) {
-          showToast("Esta categoría ya fue archivada.", "info"); return;
-        }
-        if (!confirm(`¿Archivar la categoría "${catName}"?
-Desaparecerá de futuros presupuestos pero se conservará en los meses anteriores.`)) return;
-        archiveCategory(uid, catId).then(async () => {
-          categories = await getCategories(uid);
-          showToast("Categoría archivada.", "success");
-          await loadBudget();
+        if (!confirm(`¿Ocultar "${catName}" de este mes?
+Seguirá disponible en otros meses.`)) return;
+        // Save hidden cats in budget doc for this month
+        const hiddenCats = currentBudget?.hiddenCats || [];
+        if (!hiddenCats.includes(catName)) hiddenCats.push(catName);
+        await setBudget(uid, selectedMonth, {
+          categories: currentBudget?.categories || {},
+          income: currentBudget?.income || {},
+          categoryMeta: currentBudget?.categoryMeta || {},
+          hiddenCats
         });
+        currentBudget = { ...currentBudget, hiddenCats };
+        showToast(`"${catName}" oculta para este mes.`, "success");
+        await loadBudget();
         return;
       }
 
@@ -530,6 +583,18 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
             <div class="toggle-switch ${inc.proportional?"on":""}" data-toggle></div>
           </div>
         </div>`;
+    }
+
+    function formatNumberInput(input) {
+      const raw = input.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+      input.dataset.rawValue = raw;
+      if (raw) {
+        input.value = Number(raw).toLocaleString("es-CO");
+      }
+    }
+
+    function getInputRaw(input) {
+      return Number((input.dataset.rawValue || input.value).replace(/\./g, "").replace(/[^0-9]/g, "")) || 0;
     }
 
     function attachToggleListeners() {
@@ -651,7 +716,7 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
 
       el.innerHTML = html;
 
-      el.addEventListener("click", async e => {
+      el.onclick = async e => {
         const item    = e.target.closest("[data-action]");
         if (!item) return;
         const action  = item.dataset.action;
@@ -678,7 +743,7 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
           closeCatPicker();
           await loadBudget();
         }
-      }, { once: false });
+      };
     }
 
     // ── Guardar ───────────────────────────────────────────
@@ -689,8 +754,8 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
 
       // Categorías
       const categoriesData = {};
-      document.querySelectorAll(".budget-input[data-cat]").forEach(inp => {
-        const val = Number(inp.value) || 0;
+      document.querySelectorAll(".val-pill-input.budget-input[data-cat]").forEach(inp => {
+        const val = Number(inp.dataset.rawValue || inp.value.replace(/\./g, "") || 0);
         if (val > 0) categoriesData[inp.dataset.cat] = val;
       });
 
@@ -732,7 +797,7 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
       btn.disabled = true; btn.textContent = "Guardando...";
       try {
         await Promise.all(renamePromises);
-        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta });
+        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta, hiddenCats: currentBudget?.hiddenCats || [] });
         currentBudget = { categories: categoriesData, income: incomeData, categoryMeta };
         categories = await getCategories(uid);
         showToast("Presupuesto guardado.", "success");
