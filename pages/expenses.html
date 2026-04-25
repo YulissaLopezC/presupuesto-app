@@ -460,6 +460,7 @@
         getProportionalSummary(uid, selectedMonth)
       ]);
       allExpenses=exp; allIncomes=inc; budget=bud; propSummary=prop;
+      populateCategorySelect();
 
       // Also parallel with above would be ideal but needs expenses first
       propExpenses = await getProportionalExpensesSummary(uid, selectedMonth, allExpenses);
@@ -804,8 +805,14 @@
     function populateCategorySelect() {
       const sel=document.getElementById("field-category");
       const def=`<option value="">Selecciona una categoría</option>`;
-      if (!categories.length){sel.innerHTML=def+`<option value="Otro">Otro</option>`;return;}
-      const grouped=categories.reduce((acc,c)=>{(acc[c.type]=acc[c.type]||[]).push(c.name);return acc;},{});
+      const hiddenCats=budget?.hiddenCats||[];
+      const visible=categories.filter(c=>{
+        if (c.visibleFromMonth&&c.visibleFromMonth>selectedMonth) return false;
+        if (hiddenCats.includes(c.name)) return false;
+        return true;
+      });
+      if (!visible.length){sel.innerHTML=def+`<option value="Otro">Otro</option>`;return;}
+      const grouped=visible.reduce((acc,c)=>{(acc[c.type]=acc[c.type]||[]).push(c.name);return acc;},{});
       sel.innerHTML=def+Object.entries(grouped).map(([type,names])=>
         `<optgroup label="${type}">${names.map(n=>`<option value="${n}">${n}</option>`).join("")}</optgroup>`
       ).join("");

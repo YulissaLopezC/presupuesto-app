@@ -196,6 +196,25 @@
     .inline-add-actions { display: flex; gap: 8px; }
     .inline-add-confirm { flex: 1; padding: 8px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
     .inline-add-cancel { padding: 8px 14px; background: #f0f4f8; color: #888; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
+    /* ── Categorías ocultas ─────────────────────────────── */
+    .cat-hidden-row {
+      background: #f8fafc; border-radius: 10px; padding: 9px 12px;
+      margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;
+    }
+    body.dark .cat-hidden-row { background: #1a1a1a; }
+    .cat-hidden-name { font-size: 13px; color: #888; }
+    .btn-restore-cat {
+      font-size: 11px; color: #185fa5; background: #e6f1fb;
+      border: none; border-radius: 6px; padding: 4px 10px;
+      cursor: pointer; font-family: "DM Sans", sans-serif; font-weight: 500;
+    }
+    .btn-restore-cat:hover { background: #cce3f7; }
+    .btn-hide-cat {
+      background: none; border: none; color: #cdd5e0; font-size: 15px;
+      cursor: pointer; padding: 0 2px; transition: color 0.15s;
+    }
+    .btn-hide-cat:hover { color: #888; }
+
     /* ── Number input formatting ─────────────────────────── */
     .val-pill-input { -moz-appearance: textfield; }
     .val-pill-input::-webkit-outer-spin-button,
@@ -237,11 +256,12 @@
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, syncProportionalIncomes } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, addCategory, updateCategory, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
     import { currentMonth, formatMonth, formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     let uid, selectedMonth, currentBudget = null, categories = [], activeTab = "gastos";
+    let hiddenCats = [];
 
     const user = await requireAuth();
     uid = user.uid;
@@ -278,10 +298,43 @@
 
     async function loadBudget() {
       currentBudget = await getBudget(uid, selectedMonth);
+      hiddenCats = currentBudget?.hiddenCats || [];
+
+      const hasCategories = currentBudget?.categories && Object.keys(currentBudget.categories).length > 0;
+      if (!hasCategories && !currentBudget?.budgetInitialized) {
+        await autoInitHiddenCats();
+      }
+
       renderStats();
       renderExpensesForm();
       renderIncomeForm();
       checkCopyBanner();
+    }
+
+    async function autoInitHiddenCats() {
+      const [y, m] = selectedMonth.split("-").map(Number);
+      const pm = m === 1 ? 12 : m - 1;
+      const py = m === 1 ? y - 1 : y;
+      const prevBudget = await getBudget(uid, `${py}-${String(pm).padStart(2, "0")}`);
+
+      if (prevBudget) {
+        const prevCats = prevBudget.categories || {};
+        const validCats = categories.filter(c => !(c.visibleFromMonth && c.visibleFromMonth > selectedMonth));
+        hiddenCats = validCats
+          .filter(c => !prevCats[c.name] || Number(prevCats[c.name]) === 0)
+          .map(c => c.name);
+      } else {
+        hiddenCats = [];
+      }
+
+      await setBudget(uid, selectedMonth, {
+        categories: currentBudget?.categories || {},
+        income: currentBudget?.income || {},
+        categoryMeta: currentBudget?.categoryMeta || {},
+        hiddenCats,
+        budgetInitialized: true
+      });
+      currentBudget = { ...(currentBudget || {}), hiddenCats, budgetInitialized: true };
     }
 
     // ── Stats 3 cards ─────────────────────────────────────
@@ -351,9 +404,14 @@
       const savedCats = currentBudget?.categories || {};
       const meta      = currentBudget?.categoryMeta || {};
       const el        = document.getElementById("expenses-form");
+      const hidden    = hiddenCats.filter(name => categories.some(c => c.name === name));
 
       el.innerHTML = TYPES.map(type => {
-        const cats = categories.filter(c => c.type === type.key);
+        const cats = categories.filter(c => {
+          if (c.type !== type.key || hiddenCats.includes(c.name)) return false;
+          if (c.visibleFromMonth && c.visibleFromMonth > selectedMonth) return false;
+          return true;
+        });
         const typeTotal = cats.reduce((s,c) => s + Number(savedCats[c.name]||0), 0);
         return `
           <div class="type-section">
@@ -382,8 +440,8 @@
                       <span class="day-lbl">~/día</span>
                       <button type="button" class="prop-toggle-btn ${isProp?"on":""}"
                         data-cat-name="${cat.name}" data-field="prop-toggle"></button>
-                      <button class="cat-del-btn btn-delete-cat"
-                        data-cat-id="${cat.id}" data-cat-name="${cat.name}">✕</button>
+                      <button class="btn-hide-cat"
+                        data-cat-name="${cat.name}" title="Ocultar este mes">🗃</button>
                     </div>
                     <button type="button" class="cat-calc-btn" data-open="false">
                       ▼ Calcular
@@ -410,7 +468,18 @@
               <span>Agregar en ${type.label.toLowerCase()}</span>
             </button>
           </div>`;
-      }).join("");
+      }).join("") + (hidden.length ? `
+        <div class="type-section" id="hidden-cats-section">
+          <div class="type-hdr">
+            <div class="type-dot" style="background:#ccc;"></div>
+            <span class="type-lbl">Ocultas este mes (${hidden.length})</span>
+          </div>
+          ${hidden.map(name => `
+            <div class="cat-hidden-row">
+              <span class="cat-hidden-name">${name}</span>
+              <button class="btn-restore-cat" data-cat-name="${name}">Restaurar</button>
+            </div>`).join("")}
+        </div>` : "");
 
       // Event delegation
       el.addEventListener("click", handleExpensesClick);
@@ -430,22 +499,18 @@
       });
     }
 
-    function handleExpensesClick(e) {
+    async function handleExpensesClick(e) {
       // Prop toggle
       const propBtn = e.target.closest("[data-field='prop-toggle']");
       if (propBtn) { propBtn.classList.toggle("on"); return; }
 
-      // Delete cat
-      const delBtn = e.target.closest(".btn-delete-cat");
-      if (delBtn) {
-        if (!confirm(`¿Eliminar la categoría "${delBtn.dataset.catName}"?`)) return;
-        deleteCategory(uid, delBtn.dataset.catId).then(async () => {
-          categories = categories.filter(c => c.id !== delBtn.dataset.catId);
-          showToast("Categoría eliminada.", "success");
-          await loadBudget();
-        });
-        return;
-      }
+      // Ocultar cat este mes
+      const hideBtn = e.target.closest(".btn-hide-cat");
+      if (hideBtn) { hideCategory(hideBtn.dataset.catName); return; }
+
+      // Restaurar cat oculta
+      const restoreBtn = e.target.closest(".btn-restore-cat");
+      if (restoreBtn) { restoreCategory(restoreBtn.dataset.catName); return; }
 
       // Add cat button
       const addBtn = e.target.closest("[data-add-type]");
@@ -464,7 +529,20 @@
         const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
         const name   = formEl.querySelector(".inline-add-input").value.trim();
         if (!name) { showToast("Escribe un nombre.", "error"); return; }
-        addCategory(uid, { name, type }).then(async () => {
+        const existing = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          if (hiddenCats.includes(existing.name)) {
+            formEl.classList.remove("open");
+            formEl.querySelector(".inline-add-input").value = "";
+            const addBtn2 = document.querySelector(`[data-add-type="${type}"]`);
+            if (addBtn2) addBtn2.style.display = "";
+            await restoreCategory(existing.name);
+          } else {
+            showToast(`"${existing.name}" ya existe.`, "error");
+          }
+          return;
+        }
+        addCategory(uid, { name, type, visibleFromMonth: selectedMonth }).then(async () => {
           showToast("Categoría agregada.", "success");
           categories = await getCategories(uid);
           await loadBudget();
@@ -483,6 +561,38 @@
         if (addBtn2) addBtn2.style.display = "";
         return;
       }
+    }
+
+    // ── Ocultar / restaurar categoría (solo este mes) ────
+    async function hideCategory(catName) {
+      if (hiddenCats.includes(catName)) return;
+      hiddenCats = [...hiddenCats, catName];
+      await setBudget(uid, selectedMonth, {
+        categories: currentBudget?.categories || {},
+        income: currentBudget?.income || {},
+        categoryMeta: currentBudget?.categoryMeta || {},
+        hiddenCats,
+        budgetInitialized: currentBudget?.budgetInitialized || false
+      });
+      currentBudget = { ...currentBudget, hiddenCats };
+      renderStats();
+      renderExpensesForm();
+      showToast(`"${catName}" oculta este mes.`, "success");
+    }
+
+    async function restoreCategory(catName) {
+      hiddenCats = hiddenCats.filter(n => n !== catName);
+      await setBudget(uid, selectedMonth, {
+        categories: currentBudget?.categories || {},
+        income: currentBudget?.income || {},
+        categoryMeta: currentBudget?.categoryMeta || {},
+        hiddenCats,
+        budgetInitialized: currentBudget?.budgetInitialized || false
+      });
+      currentBudget = { ...currentBudget, hiddenCats };
+      renderStats();
+      renderExpensesForm();
+      showToast(`"${catName}" restaurada.`, "success");
     }
 
     // ── Income form ───────────────────────────────────────
@@ -630,11 +740,18 @@
         }
       });
 
+      // Preservar valores de categorías ocultas
+      hiddenCats.forEach(name => {
+        if (currentBudget?.categories?.[name] !== undefined && categoriesData[name] === undefined) {
+          categoriesData[name] = currentBudget.categories[name];
+        }
+      });
+
       btn.disabled = true; btn.textContent = "Guardando...";
       try {
         await Promise.all(renamePromises);
-        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta });
-        currentBudget = { categories: categoriesData, income: incomeData, categoryMeta };
+        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta, hiddenCats, budgetInitialized: true });
+        currentBudget = { categories: categoriesData, income: incomeData, categoryMeta, hiddenCats, budgetInitialized: true };
         categories = await getCategories(uid);
         showToast("Presupuesto guardado.", "success");
         document.getElementById("copy-banner").style.display = "none";
