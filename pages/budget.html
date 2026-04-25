@@ -196,6 +196,14 @@
     .inline-add-actions { display: flex; gap: 8px; }
     .inline-add-confirm { flex: 1; padding: 8px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
     .inline-add-cancel { padding: 8px 14px; background: #f0f4f8; color: #888; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
+    /* ── Category picker overlay fix ────────────────────── */
+    .cat-picker-overlay {
+      position: fixed !important; inset: 0; background: rgba(15,52,96,0.4);
+      z-index: 9999 !important; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      display: flex !important; align-items: center; justify-content: center; padding: 16px;
+    }
+    .cat-picker-overlay.open { opacity: 1 !important; pointer-events: all; }
   </style>
 </head>
 <body>
@@ -268,8 +276,6 @@
       { key: "GASTO NO ESENCIAL",  label: "Gasto no esencial",  dot: "noesencial",bg: "#fbeaf0", stroke: "#993556" },
       { key: "AHORRO O INVERSIÓN", label: "Ahorro o inversión", dot: "ahorro",    bg: "#eaf3de", stroke: "#3b6d11" },
     ];
-
-    categories = await getCategories(uid);
 
     categories = await getCategories(uid);
 
@@ -363,8 +369,16 @@
       const meta      = currentBudget?.categoryMeta || {};
       const el        = document.getElementById("expenses-form");
 
+      // Merge active cats + ghost cats from saved budget
+      const savedNames   = Object.keys(savedCats);
+      const activeCatNames = new Set(categories.map(c => c.name));
+      const ghostCats    = savedNames
+        .filter(name => !activeCatNames.has(name))
+        .map(name => ({ id: "ghost-" + name, name, type: "GASTO BÁSICO", ghost: true }));
+      const allCats = [...categories, ...ghostCats];
+
       el.innerHTML = TYPES.map(type => {
-        const cats = categories.filter(c => c.type === type.key);
+        const cats = allCats.filter(c => c.type === type.key);
         const typeTotal = cats.reduce((s,c) => s + Number(savedCats[c.name]||0), 0);
         return `
           <div class="type-section">
@@ -548,8 +562,9 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
 
     // ── Category picker ──────────────────────────────────
     let pickerType = "";
+    let pickerAllCats = [];
 
-    function openCatPicker(type) {
+    async function openCatPicker(type) {
       pickerType = type;
       const typeLabels = {
         "GASTO BÁSICO": "gasto básico",
@@ -558,9 +573,13 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
       };
       document.getElementById("cat-picker-title").textContent = `Agregar en ${typeLabels[type]||type}`;
       document.getElementById("cat-picker-search").value = "";
-      renderPickerList("");
+      document.getElementById("cat-picker-list").innerHTML =
+        `<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Cargando...</div>`;
       document.getElementById("cat-picker-overlay").classList.add("open");
-      setTimeout(() => document.getElementById("cat-picker-search").focus(), 200);
+      // Load all cats ONCE and cache
+      pickerAllCats = await getCategories(uid, { includeArchived: true });
+      renderPickerList("");
+      setTimeout(() => document.getElementById("cat-picker-search").focus(), 100);
     }
 
     function closeCatPicker() {
@@ -576,10 +595,10 @@ Desaparecerá de futuros presupuestos pero se conservará en los meses anteriore
       renderPickerList(e.target.value.trim());
     });
 
-    async function renderPickerList(search) {
+    function renderPickerList(search) {
       const el = document.getElementById("cat-picker-list");
-      const allCats = await getCategories(uid, { includeArchived: true });
-      const existing = new Set(categories.filter(c=>!c.archived).map(c=>c.name.toLowerCase()));
+      const allCats = pickerAllCats;
+      const existing = new Set(allCats.filter(c=>!c.archived).map(c=>c.name.toLowerCase()));
 
       const active   = allCats.filter(c => !c.archived && c.type === pickerType &&
         (!search || c.name.toLowerCase().includes(search.toLowerCase())));
