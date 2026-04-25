@@ -267,7 +267,7 @@
     renderBottomNav("budget");
     renderMonthSelector("month-selector-container", selectedMonth, async m => {
       selectedMonth = m;
-      await loadBudget();
+
     });
 
     // ── TIPOS de categoría ────────────────────────────────
@@ -278,8 +278,7 @@
     ];
 
     categories = await getCategories(uid);
-
-    // ── TIPOS de categoría ────────────────────────────────
+    await loadBudget();
 
     // Tabs
     document.getElementById("tab-gastos").addEventListener("click", () => switchTab("gastos"));
@@ -294,11 +293,17 @@
     }
 
     async function loadBudget() {
-      currentBudget = await getBudget(uid, selectedMonth);
-      renderStats();
-      renderExpensesForm();
-      renderIncomeForm();
-      checkCopyBanner();
+      try {
+        currentBudget = await getBudget(uid, selectedMonth);
+        renderStats();
+        renderExpensesForm();
+        renderIncomeForm();
+        checkCopyBanner();
+      } catch(err) {
+        console.error("loadBudget error:", err);
+        document.getElementById("expenses-form").innerHTML =
+          `<div style="color:#c0392b;padding:20px;font-size:13px;">Error cargando presupuesto: ${err.message}</div>`;
+      }
     }
 
     // ── Stats 3 cards ─────────────────────────────────────
