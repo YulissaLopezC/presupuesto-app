@@ -305,7 +305,7 @@
       <div class="field-lbl">Valor</div>
       <div class="valor-block">
         <span class="valor-sym">$</span>
-        <input type="number" class="valor-input" id="field-amount" placeholder="0" min="0" inputmode="decimal"/>
+        <input type="text" class="valor-input" id="field-amount" placeholder="0" inputmode="numeric"/>
       </div>
 
       <div class="field-row">
@@ -759,7 +759,7 @@
     async function saveItem() {
       const isG=activeTab==="gastos"||document.getElementById("expense-category-group").style.display!=="none";
       const date=document.getElementById("field-date").value;
-      const amount=Number(document.getElementById("field-amount").value);
+      const amount=getNumericValue(document.getElementById("field-amount"));
       const walletId=document.getElementById("field-wallet").value;
       const walletOpt=document.querySelector(`#field-wallet option[value="${walletId}"]`);
       const walletName=walletOpt?.dataset.name||"";
