@@ -378,7 +378,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getWallets, addWallet, updateWallet, deleteWallet, archiveWallet, restoreWallet, addTransfer } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP } from "../assets/utils.js";
+    import { formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     let uid, wallets = [], editingId = null, selectedTipo = "ahorro", selectedEmoji = "🏦";
 
@@ -462,6 +462,10 @@
       document.getElementById("field-balance").value = w.balance || 0;
       document.getElementById("field-credit-limit").value = w.creditLimit || "";
       updateTipoUI(); updateEmojiUI(); updateCreditFields();
+      setTimeout(() => {
+        applyNumericFormat(document.getElementById("field-balance"));
+        applyNumericFormat(document.getElementById("field-credit-limit"));
+      }, 50);
       openModal();
     };
     window.handleArchive = async (id) => {
@@ -478,6 +482,10 @@
     });
 
     function openNewModal() {
+      setTimeout(() => {
+        applyNumericFormat(document.getElementById("field-balance"));
+        applyNumericFormat(document.getElementById("field-credit-limit"));
+      }, 50);
       editingId = null; selectedTipo = "ahorro"; selectedEmoji = "🏦";
       document.getElementById("modal-title").textContent     = "Nueva cajita";
       document.getElementById("btn-save-wallet").textContent = "Guardar cajita";
@@ -485,6 +493,10 @@
       document.getElementById("field-balance").value = "";
       document.getElementById("field-credit-limit").value = "";
       updateTipoUI(); updateEmojiUI(); updateCreditFields();
+      setTimeout(() => {
+        applyNumericFormat(document.getElementById("field-balance"));
+        applyNumericFormat(document.getElementById("field-credit-limit"));
+      }, 50);
       openModal();
     }
     function openModal()  { document.getElementById("modal-overlay").classList.add("open"); }
@@ -521,8 +533,8 @@
     document.getElementById("btn-save-wallet").addEventListener("click", saveWallet);
     async function saveWallet() {
       const name    = document.getElementById("field-name").value.trim();
-      const balance = Number(document.getElementById("field-balance").value) || 0;
-      const limit   = Number(document.getElementById("field-credit-limit").value) || 0;
+      const balance = getNumericValue(document.getElementById("field-balance"));
+      const limit   = getNumericValue(document.getElementById("field-credit-limit"));
       const btn     = document.getElementById("btn-save-wallet");
       if (!name) { showToast("Escribe un nombre.", "error"); return; }
       btn.disabled = true; btn.textContent = "Guardando...";

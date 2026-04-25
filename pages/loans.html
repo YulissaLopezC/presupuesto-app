@@ -276,7 +276,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { addLoan, getLoans, deleteLoan, addLoanPayment, getLoanPayments, deleteLoanPayment, getWallets } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, formatDate, today } from "../assets/utils.js";
+    import { formatCOP, formatDate, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     let uid, loans = [], wallets = [], activeLoanId = null;
 
@@ -433,13 +433,13 @@
       document.getElementById("loan-wallet").value = "";
       document.getElementById("loan-notes").value  = "";
       document.getElementById("loan-overlay").classList.add("open");
-      setTimeout(() => document.getElementById("loan-debtor").focus(), 200);
+      setTimeout(() => { applyNumericFormat(document.getElementById("loan-amount")); document.getElementById("loan-debtor").focus(); }, 100);
     }
     function closeLoanModal() { document.getElementById("loan-overlay").classList.remove("open"); }
 
     document.getElementById("btn-save-loan").addEventListener("click", async () => {
       const debtor   = document.getElementById("loan-debtor").value.trim();
-      const amount   = Number(document.getElementById("loan-amount").value) || 0;
+      const amount   = getNumericValue(document.getElementById("loan-amount"));
       const date     = document.getElementById("loan-date").value;
       const walletId = document.getElementById("loan-wallet").value;
       const walletOpt= document.querySelector(`#loan-wallet option[value="${walletId}"]`);
@@ -468,7 +468,7 @@
       document.getElementById("pay-wallet").value = "";
       document.getElementById("pay-notes").value  = "";
       document.getElementById("pay-overlay").classList.add("open");
-      setTimeout(() => document.getElementById("pay-amount").focus(), 200);
+      setTimeout(() => { applyNumericFormat(document.getElementById("pay-amount")); document.getElementById("pay-amount").focus(); }, 100);
     };
 
     document.getElementById("pay-close").addEventListener("click", () => {
@@ -481,7 +481,7 @@
     });
 
     document.getElementById("btn-save-pay").addEventListener("click", async () => {
-      const amount   = Number(document.getElementById("pay-amount").value) || 0;
+      const amount   = getNumericValue(document.getElementById("pay-amount"));
       const date     = document.getElementById("pay-date").value;
       const walletId = document.getElementById("pay-wallet").value;
       const walletOpt= document.querySelector(`#pay-wallet option[value="${walletId}"]`);

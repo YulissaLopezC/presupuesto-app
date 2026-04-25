@@ -128,3 +128,45 @@ export function estimatedCompletion(goal, current, monthlySaving) {
   const mm = String(target.getMonth() + 1).padStart(2, "0");
   return `${target.getFullYear()}-${mm}`;
 }
+
+// ── Formateo de inputs numéricos con puntos ───────────────
+// Llama esta función pasando un input o un selector CSS
+// Ejemplo: applyNumericFormat('#field-amount')
+//          applyNumericFormat(document.getElementById('field-amount'))
+export function applyNumericFormat(inputs) {
+  const els = typeof inputs === "string"
+    ? document.querySelectorAll(inputs)
+    : (inputs instanceof NodeList || Array.isArray(inputs)) ? inputs : [inputs];
+
+  els.forEach(inp => {
+    if (!inp || inp._numFmt) return; // avoid double-attach
+    inp._numFmt = true;
+    inp.setAttribute("inputmode", "numeric");
+    inp.type = "text";
+
+    const format = raw => raw ? Number(raw).toLocaleString("es-CO") : "";
+
+    // Set initial value if already has one
+    if (inp.value) {
+      const raw = inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+      inp.dataset.raw = raw;
+      inp.value = format(raw);
+    }
+
+    inp.addEventListener("input", () => {
+      const raw = inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+      inp.dataset.raw = raw;
+      inp.value = format(raw);
+    });
+
+    inp.addEventListener("focus", () => inp.select());
+  });
+}
+
+// Get raw numeric value from a formatted input
+export function getNumericValue(inp) {
+  if (typeof inp === "string") inp = document.querySelector(inp);
+  if (!inp) return 0;
+  const raw = inp.dataset.raw || inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+  return Number(raw) || 0;
+}

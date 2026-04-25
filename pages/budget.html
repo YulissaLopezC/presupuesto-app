@@ -239,7 +239,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
-    import { currentMonth, formatMonth, formatCOP } from "../assets/utils.js";
+    import { currentMonth, formatMonth, formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     let uid, selectedMonth, currentBudget = null, categories = [], activeTab = "gastos";
 
@@ -587,9 +587,8 @@
 
       // Categorías
       const categoriesData = {};
-      document.querySelectorAll(".budget-input[data-cat]").forEach(inp => {
-        const raw = inp.dataset.raw || inp.value.replace(/\./g, "");
-        const val = Number(raw) || 0;
+      document.querySelectorAll(".val-pill-input.budget-input[data-cat]").forEach(inp => {
+        const val = getNumericValue(inp);
         if (val > 0) categoriesData[inp.dataset.cat] = val;
       });
 

@@ -251,7 +251,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getGoals, addGoal, updateGoal, deleteGoal } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, formatDate } from "../assets/utils.js";
+    import { formatCOP, formatDate, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     let uid, goals = [], editingId = null, selectedEmoji = "🎯";
 
@@ -352,6 +352,10 @@
     });
 
     function openNewModal() {
+      setTimeout(() => {
+        applyNumericFormat(document.getElementById("field-target"));
+        applyNumericFormat(document.getElementById("field-saved"));
+      }, 50);
       editingId = null; selectedEmoji = "🎯";
       document.getElementById("modal-title").textContent = "Nueva meta";
       document.getElementById("btn-save").textContent    = "Guardar meta";
@@ -361,6 +365,10 @@
       document.getElementById("field-date").value   = "";
       document.getElementById("field-notes").value  = "";
       updateEmojiUI();
+      setTimeout(() => {
+        applyNumericFormat(document.getElementById("field-target"));
+        applyNumericFormat(document.getElementById("field-saved"));
+      }, 50);
       openModal();
     }
 
@@ -376,6 +384,10 @@
       document.getElementById("field-date").value   = g.targetDate   || "";
       document.getElementById("field-notes").value  = g.notes        || "";
       updateEmojiUI();
+      setTimeout(() => {
+        applyNumericFormat(document.getElementById("field-target"));
+        applyNumericFormat(document.getElementById("field-saved"));
+      }, 50);
       openModal();
     };
 
@@ -403,8 +415,8 @@
     document.getElementById("btn-save").addEventListener("click", saveGoal);
     async function saveGoal() {
       const name   = document.getElementById("field-name").value.trim();
-      const target = Number(document.getElementById("field-target").value) || 0;
-      const saved  = Number(document.getElementById("field-saved").value)  || 0;
+      const target = getNumericValue(document.getElementById("field-target"));
+      const saved  = getNumericValue(document.getElementById("field-saved"));
       const date   = document.getElementById("field-date").value;
       const notes  = document.getElementById("field-notes").value.trim();
       const btn    = document.getElementById("btn-save");

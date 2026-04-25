@@ -360,7 +360,7 @@
       getProportionalExpensesSummary
     } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=4";
-    import { formatCOP, currentMonth, formatDate, formatMonth, today } from "../assets/utils.js";
+    import { formatCOP, currentMonth, formatDate, formatMonth, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     let uid, selectedMonth;
     let allExpenses=[], allIncomes=[], categories=[], wallets=[], budget=null;
@@ -449,7 +449,10 @@
     }
 
     async function loadAll() {
-      await syncProportionalIncomes(uid, selectedMonth);
+      // Fire sync in background — don't block UI on it
+      syncProportionalIncomes(uid, selectedMonth).catch(console.error);
+
+      // Load all data in parallel
       const [exp, inc, bud, prop] = await Promise.all([
         getExpenses(uid, {month: selectedMonth}),
         getIncomes(uid,  {month: selectedMonth}),
@@ -457,7 +460,10 @@
         getProportionalSummary(uid, selectedMonth)
       ]);
       allExpenses=exp; allIncomes=inc; budget=bud; propSummary=prop;
+
+      // Also parallel with above would be ideal but needs expenses first
       propExpenses = await getProportionalExpensesSummary(uid, selectedMonth, allExpenses);
+
       renderHeroSum();
       renderFilters();
       if (activeTab==="gastos") { renderPropExpenses(); renderExpenses(); }
@@ -743,6 +749,7 @@
     function openDrawer(){
       document.getElementById("drawer-overlay").classList.add("open");
       document.getElementById("drawer").classList.add("open");
+      applyNumericFormat(document.getElementById("field-amount"));
     }
     function closeDrawer(){
       document.getElementById("drawer-overlay").classList.remove("open");
