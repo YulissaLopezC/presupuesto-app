@@ -398,7 +398,7 @@
       const today2   = new Date();
       const dayOfMonth = today2.getDate();
       const daysInMonth2 = new Date(today2.getFullYear(), today2.getMonth()+1, 0).getDate();
-      const canNext  = (daysInMonth2 - dayOfMonth) < 10;
+      const canNext  = (daysInMonth2 - dayOfMonth) < 5;
       const [cy, cm] = selectedMonth.split("-").map(Number);
       const maxY = canNext ? (cm===12?cy+1:cy) : cy;
       const maxM = canNext ? (cm===12?1:cm+1) : cm;

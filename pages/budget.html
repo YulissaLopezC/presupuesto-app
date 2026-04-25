@@ -231,9 +231,21 @@
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
+  <!-- Category picker modal -->
+  <div class="cat-picker-overlay" id="cat-picker-overlay">
+    <div class="cat-picker-modal">
+      <div class="cat-picker-hdr">
+        <div class="cat-picker-title" id="cat-picker-title">Agregar categoría</div>
+        <button class="cat-picker-close" id="cat-picker-close">×</button>
+      </div>
+      <input type="text" class="cat-picker-search" id="cat-picker-search" placeholder="Buscar o escribir nombre..."/>
+      <div id="cat-picker-list"></div>
+    </div>
+  </div>
+
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, syncProportionalIncomes } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, archiveCategory, restoreCategory, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
     import { currentMonth, formatMonth, formatCOP } from "../assets/utils.js";
 
@@ -258,7 +270,10 @@
     ];
 
     categories = await getCategories(uid);
-    await loadBudget();
+
+    categories = await getCategories(uid);
+
+    // ── TIPOS de categoría ────────────────────────────────
 
     // Tabs
     document.getElementById("tab-gastos").addEventListener("click", () => switchTab("gastos"));
@@ -394,13 +409,7 @@
                   </div>
                 </div>`;
             }).join("")}
-            <div class="inline-add-form" id="inline-add-${type.key.replace(/\s/g,"-")}">
-              <input type="text" class="inline-add-input" placeholder="Nombre de la categoría..."/>
-              <div class="inline-add-actions">
-                <button class="inline-add-confirm" data-type="${type.key}">Agregar</button>
-                <button class="inline-add-cancel" data-type="${type.key}">Cancelar</button>
-              </div>
-            </div>
+
             <button class="add-cat-btn" data-add-type="${type.key}">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>Agregar en ${type.label.toLowerCase()}</span>
@@ -417,52 +426,28 @@
       const propBtn = e.target.closest("[data-field='prop-toggle']");
       if (propBtn) { propBtn.classList.toggle("on"); return; }
 
-      // Delete cat
+      // Archive cat
       const delBtn = e.target.closest(".btn-delete-cat");
       if (delBtn) {
-        if (!confirm(`¿Eliminar la categoría "${delBtn.dataset.catName}"?`)) return;
-        deleteCategory(uid, delBtn.dataset.catId).then(async () => {
-          categories = categories.filter(c => c.id !== delBtn.dataset.catId);
-          showToast("Categoría eliminada.", "success");
+        const catId   = delBtn.dataset.catId;
+        const catName = delBtn.dataset.catName;
+        if (catId.startsWith("ghost-")) {
+          showToast("Esta categoría ya fue archivada.", "info"); return;
+        }
+        if (!confirm(`¿Archivar la categoría "${catName}"?
+Desaparecerá de futuros presupuestos pero se conservará en los meses anteriores.`)) return;
+        archiveCategory(uid, catId).then(async () => {
+          categories = await getCategories(uid);
+          showToast("Categoría archivada.", "success");
           await loadBudget();
         });
         return;
       }
 
-      // Add cat button
+      // Add cat button → open picker
       const addBtn = e.target.closest("[data-add-type]");
       if (addBtn) {
-        const type   = addBtn.dataset.addType;
-        const formId = "inline-add-" + type.replace(/\s/g, "-");
-        document.getElementById(formId).classList.add("open");
-        addBtn.style.display = "none";
-        return;
-      }
-
-      // Confirm add
-      const confirmBtn = e.target.closest(".inline-add-confirm");
-      if (confirmBtn) {
-        const type   = confirmBtn.dataset.type;
-        const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
-        const name   = formEl.querySelector(".inline-add-input").value.trim();
-        if (!name) { showToast("Escribe un nombre.", "error"); return; }
-        addCategory(uid, { name, type }).then(async () => {
-          showToast("Categoría agregada.", "success");
-          categories = await getCategories(uid);
-          await loadBudget();
-        });
-        return;
-      }
-
-      // Cancel add
-      const cancelBtn = e.target.closest(".inline-add-cancel");
-      if (cancelBtn) {
-        const type   = cancelBtn.dataset.type;
-        const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
-        formEl.classList.remove("open");
-        formEl.querySelector(".inline-add-input").value = "";
-        const addBtn2 = document.querySelector(`[data-add-type="${type}"]`);
-        if (addBtn2) addBtn2.style.display = "";
+        openCatPicker(addBtn.dataset.addType);
         return;
       }
     }
@@ -559,6 +544,117 @@
         };
         form.querySelectorAll(".cat-adv-input").forEach(inp => inp.addEventListener("input", recalc));
       });
+    }
+
+    // ── Category picker ──────────────────────────────────
+    let pickerType = "";
+
+    function openCatPicker(type) {
+      pickerType = type;
+      const typeLabels = {
+        "GASTO BÁSICO": "gasto básico",
+        "GASTO NO ESENCIAL": "gasto no esencial",
+        "AHORRO O INVERSIÓN": "ahorro o inversión"
+      };
+      document.getElementById("cat-picker-title").textContent = `Agregar en ${typeLabels[type]||type}`;
+      document.getElementById("cat-picker-search").value = "";
+      renderPickerList("");
+      document.getElementById("cat-picker-overlay").classList.add("open");
+      setTimeout(() => document.getElementById("cat-picker-search").focus(), 200);
+    }
+
+    function closeCatPicker() {
+      document.getElementById("cat-picker-overlay").classList.remove("open");
+    }
+
+    document.getElementById("cat-picker-close").addEventListener("click", closeCatPicker);
+    document.getElementById("cat-picker-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("cat-picker-overlay")) closeCatPicker();
+    });
+
+    document.getElementById("cat-picker-search").addEventListener("input", e => {
+      renderPickerList(e.target.value.trim());
+    });
+
+    async function renderPickerList(search) {
+      const el = document.getElementById("cat-picker-list");
+      const allCats = await getCategories(uid, { includeArchived: true });
+      const existing = new Set(categories.filter(c=>!c.archived).map(c=>c.name.toLowerCase()));
+
+      const active   = allCats.filter(c => !c.archived && c.type === pickerType &&
+        (!search || c.name.toLowerCase().includes(search.toLowerCase())));
+      const archived = allCats.filter(c =>  c.archived && c.type === pickerType &&
+        (!search || c.name.toLowerCase().includes(search.toLowerCase())));
+      const showNew  = search && !existing.has(search.toLowerCase()) &&
+        !archived.some(c => c.name.toLowerCase() === search.toLowerCase());
+
+      let html = "";
+
+      if (active.length) {
+        html += `<div class="cat-picker-section-lbl">Activas</div>`;
+        html += active.map(cat => `
+          <div class="cat-picker-item" data-action="select" data-name="${cat.name}">
+            <span class="cat-picker-item-name">${cat.name}</span>
+            <span class="cat-picker-item-badge">Activa</span>
+          </div>`).join("");
+      }
+
+      if (archived.length) {
+        html += `<div class="cat-picker-section-lbl" style="margin-top:10px;">Archivadas</div>`;
+        html += archived.map(cat => `
+          <div class="cat-picker-item" style="justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="cat-picker-item-name" style="color:#888;">🗃 ${cat.name}</span>
+            </div>
+            <button class="cat-picker-restore-btn" data-action="restore" data-id="${cat.id}" data-name="${cat.name}">
+              Restaurar y agregar
+            </button>
+          </div>`).join("");
+      }
+
+      if (!active.length && !archived.length && !showNew) {
+        html += `<div style="text-align:center;padding:20px;font-size:13px;color:#aaa;">Sin resultados</div>`;
+      }
+
+      if (showNew) {
+        html += `
+          <div class="cat-picker-new" data-action="create" data-name="${search}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f3460" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="cat-picker-new-lbl">Crear nueva: </span>
+            <span class="cat-picker-new-name">"${search}"</span>
+          </div>`;
+      }
+
+      el.innerHTML = html;
+
+      el.addEventListener("click", async e => {
+        const item    = e.target.closest("[data-action]");
+        if (!item) return;
+        const action  = item.dataset.action;
+        const name    = item.dataset.name;
+
+        if (action === "select") {
+          // Already active, just scroll to it
+          closeCatPicker();
+          showToast(`"${name}" ya está en el presupuesto.`, "info");
+        }
+
+        if (action === "restore") {
+          await restoreCategory(uid, item.dataset.id);
+          categories = await getCategories(uid);
+          showToast(`"${name}" restaurada.`, "success");
+          closeCatPicker();
+          await loadBudget();
+        }
+
+        if (action === "create") {
+          await addCategory(uid, { name, type: pickerType });
+          categories = await getCategories(uid);
+          showToast(`"${name}" agregada.`, "success");
+          closeCatPicker();
+          await loadBudget();
+        }
+      }, { once: false });
     }
 
     // ── Guardar ───────────────────────────────────────────

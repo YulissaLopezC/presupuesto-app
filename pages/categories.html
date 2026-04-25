@@ -190,7 +190,7 @@
 
   <script type="module">
     import { requireAuth }   from "../modules/auth.js";
-    import { getCategories, addCategory, updateCategory, deleteCategory } from "../modules/db.js";
+    import { getCategories, addCategory, updateCategory, deleteCategory, archiveCategory, restoreCategory } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
 
     let uid, categories = [], editingId = null, selectedType = "";
@@ -205,7 +205,7 @@
 
     // ── Cargar y renderizar ───────────────────────────────
     async function loadCategories() {
-      categories = await getCategories(uid);
+      categories = await getCategories(uid, { includeArchived: true });
       renderCategories();
     }
 

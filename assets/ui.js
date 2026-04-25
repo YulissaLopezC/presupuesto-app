@@ -422,7 +422,7 @@ export function renderMonthSelector(containerId, currentMonth, onChange) {
   const today       = new Date();
   const dayOfMonth  = today.getDate();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const canPlanNext = (daysInMonth - dayOfMonth) < 10; // últimos 10 días
+  const canPlanNext = (daysInMonth - dayOfMonth) < 5; // últimos 5 días
 
   const [cy, cm] = currentMonth.split("-").map(Number);
   // Mes máximo permitido: mes actual o siguiente si aplica
