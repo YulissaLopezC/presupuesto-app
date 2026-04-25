@@ -246,7 +246,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getIncomes, addIncome, updateIncome, deleteIncome, getWallets, getBudget, syncProportionalIncomes, getProportionalSummary } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, currentMonth, formatDate, today } from "../assets/utils.js";
+    import { formatCOP, currentMonth, formatDate, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     let uid, selectedMonth, incomes = [], wallets = [], budget = null, propSummary = [], editingId = null;
 
@@ -263,6 +263,7 @@
 
     wallets = await getWallets(uid);
     populateWalletSelect();
+    applyNumericFormat(document.getElementById("field-amount"));
     await loadAll();
 
     // ── Event listeners ───────────────────────────────────
@@ -482,7 +483,8 @@
       document.getElementById("drawer-title").textContent = "Nuevo ingreso";
       document.getElementById("field-date").value         = today();
       document.getElementById("field-source").value       = "";
-      document.getElementById("field-amount").value       = "";
+      const amtInp = document.getElementById("field-amount");
+      amtInp.dataset.raw = ""; amtInp.value = "";
       document.getElementById("field-wallet").value       = "";
       document.getElementById("field-description").value  = "";
       document.getElementById("btn-save").textContent     = "Registrar ingreso";
@@ -497,7 +499,10 @@
       document.getElementById("drawer-title").textContent = "Editar ingreso";
       document.getElementById("field-date").value         = i.date;
       document.getElementById("field-source").value       = i.source;
-      document.getElementById("field-amount").value       = i.amount;
+      const amtInp = document.getElementById("field-amount");
+      const rawAmt = String(i.amount || "").replace(/[^0-9]/g, "");
+      amtInp.dataset.raw = rawAmt;
+      amtInp.value = rawAmt ? Number(rawAmt).toLocaleString("es-CO") : "";
       document.getElementById("field-wallet").value       = i.walletId || "";
       document.getElementById("field-description").value  = i.description || "";
       document.getElementById("btn-save").textContent     = "Actualizar ingreso";
@@ -508,7 +513,7 @@
     async function saveIncome() {
       const date        = document.getElementById("field-date").value;
       const source      = document.getElementById("field-source").value.trim();
-      const amount      = Number(document.getElementById("field-amount").value);
+      const amount      = getNumericValue(document.getElementById("field-amount"));
       const walletId    = document.getElementById("field-wallet").value;
       const description = document.getElementById("field-description").value.trim();
       const btn         = document.getElementById("btn-save");

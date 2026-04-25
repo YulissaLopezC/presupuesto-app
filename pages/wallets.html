@@ -387,6 +387,9 @@
     renderTopbar(user);
     renderBottomNav("wallets");
     await loadWallets();
+    applyNumericFormat(document.getElementById("field-balance"));
+    applyNumericFormat(document.getElementById("field-credit-limit"));
+    applyNumericFormat(document.getElementById("transfer-amount"));
 
     // ── Load ──────────────────────────────────────────────
     async function loadWallets() {
@@ -458,14 +461,14 @@
       selectedEmoji = w.icon || "🏦";
       document.getElementById("modal-title").textContent = "Editar cajita";
       document.getElementById("btn-save-wallet").textContent = "Actualizar cajita";
-      document.getElementById("field-name").value    = w.name || "";
-      document.getElementById("field-balance").value = w.balance || 0;
-      document.getElementById("field-credit-limit").value = w.creditLimit || "";
+      document.getElementById("field-name").value = w.name || "";
+      [["field-balance", w.balance], ["field-credit-limit", w.creditLimit]].forEach(([fid, val]) => {
+        const inp = document.getElementById(fid);
+        const raw = String(val || "").replace(/[^0-9]/g, "");
+        inp.dataset.raw = raw;
+        inp.value = raw ? Number(raw).toLocaleString("es-CO") : "";
+      });
       updateTipoUI(); updateEmojiUI(); updateCreditFields();
-      setTimeout(() => {
-        applyNumericFormat(document.getElementById("field-balance"));
-        applyNumericFormat(document.getElementById("field-credit-limit"));
-      }, 50);
       openModal();
     };
     window.handleArchive = async (id) => {
@@ -482,21 +485,15 @@
     });
 
     function openNewModal() {
-      setTimeout(() => {
-        applyNumericFormat(document.getElementById("field-balance"));
-        applyNumericFormat(document.getElementById("field-credit-limit"));
-      }, 50);
       editingId = null; selectedTipo = "ahorro"; selectedEmoji = "🏦";
       document.getElementById("modal-title").textContent     = "Nueva cajita";
       document.getElementById("btn-save-wallet").textContent = "Guardar cajita";
-      document.getElementById("field-name").value    = "";
-      document.getElementById("field-balance").value = "";
-      document.getElementById("field-credit-limit").value = "";
+      document.getElementById("field-name").value = "";
+      ["field-balance","field-credit-limit"].forEach(id => {
+        const inp = document.getElementById(id);
+        inp.dataset.raw = ""; inp.value = "";
+      });
       updateTipoUI(); updateEmojiUI(); updateCreditFields();
-      setTimeout(() => {
-        applyNumericFormat(document.getElementById("field-balance"));
-        applyNumericFormat(document.getElementById("field-credit-limit"));
-      }, 50);
       openModal();
     }
     function openModal()  { document.getElementById("modal-overlay").classList.add("open"); }
@@ -570,7 +567,8 @@
       document.getElementById("transfer-to").innerHTML   = opts;
       // default to-wallet = second wallet
       if (active.length > 1) document.getElementById("transfer-to").value = active[1].id;
-      document.getElementById("transfer-amount").value   = "";
+      const amtInp = document.getElementById("transfer-amount");
+      amtInp.dataset.raw = ""; amtInp.value = "";
       updateBalanceLabels();
       document.getElementById("drawer-overlay").classList.add("open");
     }
@@ -588,17 +586,25 @@
       const chip = e.target.closest("[data-add]");
       const max  = e.target.closest("[data-max]");
       const inp  = document.getElementById("transfer-amount");
-      if (chip) inp.value = (Number(inp.value)||0) + Number(chip.dataset.add);
+      if (chip) {
+        const raw = String(getNumericValue(inp) + Number(chip.dataset.add));
+        inp.dataset.raw = raw;
+        inp.value = Number(raw).toLocaleString("es-CO");
+      }
       if (max) {
         const fromW = wallets.find(w=>w.id===document.getElementById("transfer-from").value);
-        if (fromW) inp.value = Math.max(fromW.balance||0, 0);
+        if (fromW) {
+          const raw = String(Math.max(fromW.balance||0, 0));
+          inp.dataset.raw = raw;
+          inp.value = Number(raw).toLocaleString("es-CO");
+        }
       }
     });
 
     document.getElementById("btn-do-transfer").addEventListener("click", async () => {
       const fromId = document.getElementById("transfer-from").value;
       const toId   = document.getElementById("transfer-to").value;
-      const amount = Number(document.getElementById("transfer-amount").value) || 0;
+      const amount = getNumericValue(document.getElementById("transfer-amount"));
       if (!amount || fromId === toId) { showToast("Revisa los datos.", "error"); return; }
       const fromW  = wallets.find(w=>w.id===fromId);
       const toW    = wallets.find(w=>w.id===toId);

@@ -287,6 +287,8 @@
     wallets = await getWallets(uid);
     populateWalletSelects();
     await loadLoans();
+    applyNumericFormat(document.getElementById("loan-amount"));
+    applyNumericFormat(document.getElementById("pay-amount"));
 
     async function loadLoans() {
       loans = await getLoans(uid);
@@ -428,12 +430,13 @@
 
     function openLoanModal() {
       document.getElementById("loan-debtor").value = "";
-      document.getElementById("loan-amount").value = "";
       document.getElementById("loan-date").value   = today();
       document.getElementById("loan-wallet").value = "";
       document.getElementById("loan-notes").value  = "";
+      const loanAmtInp = document.getElementById("loan-amount");
+      loanAmtInp.dataset.raw = ""; loanAmtInp.value = "";
       document.getElementById("loan-overlay").classList.add("open");
-      setTimeout(() => { applyNumericFormat(document.getElementById("loan-amount")); document.getElementById("loan-debtor").focus(); }, 100);
+      document.getElementById("loan-debtor").focus();
     }
     function closeLoanModal() { document.getElementById("loan-overlay").classList.remove("open"); }
 
@@ -463,12 +466,15 @@
     window.openPayModal = (loanId, debtor, pending) => {
       activeLoanId = loanId;
       document.getElementById("pay-title").textContent = `Abono de ${debtor}`;
-      document.getElementById("pay-amount").value = pending > 0 ? pending : "";
+      const payAmtInp = document.getElementById("pay-amount");
+      const raw = pending > 0 ? String(Math.round(pending)) : "";
+      payAmtInp.dataset.raw = raw;
+      payAmtInp.value = raw ? Number(raw).toLocaleString("es-CO") : "";
       document.getElementById("pay-date").value   = today();
       document.getElementById("pay-wallet").value = "";
       document.getElementById("pay-notes").value  = "";
       document.getElementById("pay-overlay").classList.add("open");
-      setTimeout(() => { applyNumericFormat(document.getElementById("pay-amount")); document.getElementById("pay-amount").focus(); }, 100);
+      payAmtInp.focus();
     };
 
     document.getElementById("pay-close").addEventListener("click", () => {

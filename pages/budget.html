@@ -516,11 +516,14 @@
         const idx = document.querySelectorAll(".income-card").length;
         const tmp = document.createElement("div");
         tmp.innerHTML = renderIncomeCard(newInc, idx, daysInMonth);
-        document.getElementById("income-cards").appendChild(tmp.firstElementChild);
+        const newCard = tmp.firstElementChild;
+        document.getElementById("income-cards").appendChild(newCard);
+        applyNumericFormat(newCard.querySelector(".income-amount-input"));
         attachToggleListeners();
       });
 
       attachToggleListeners();
+      document.querySelectorAll("#income-form .income-amount-input").forEach(inp => applyNumericFormat(inp));
     }
 
     function renderIncomeCard(inc, idx, daysInMonth) {
@@ -619,7 +622,7 @@
       const incomeData  = {};
       document.querySelectorAll(".income-card").forEach(card => {
         const name         = card.querySelector(".income-name-input")?.value.trim();
-        const amount       = Number(card.querySelector(".income-amount-input")?.value) || 0;
+        const amount       = getNumericValue(card.querySelector(".income-amount-input"));
         const type         = card.querySelector(".income-type-select")?.value || "fijo";
         const proportional = card.querySelector("[data-toggle]")?.classList.contains("on") || false;
         if (name && amount > 0) {

@@ -268,8 +268,8 @@
     });
 
     function recalc() {
-      const goal    = Number(document.getElementById("calc-goal").value)   || 0;
-      const saved   = Number(document.getElementById("calc-saved").value)  || 0;
+      const goal    = getNumericValue(document.getElementById("calc-goal"));
+      const saved   = getNumericValue(document.getElementById("calc-saved"));
       const months  = Number(document.getElementById("calc-months").value) || 1;
       const remaining = Math.max(goal - saved, 0);
       const monthly   = months > 0 ? Math.ceil(remaining / months) : 0;
@@ -280,6 +280,10 @@
       document.getElementById("calc-date").textContent     = goal > 0 ? `${MONTHS[estDate.getMonth()]} ${estDate.getFullYear()}` : "—";
     }
     recalc();
+    applyNumericFormat(document.getElementById("calc-goal"));
+    applyNumericFormat(document.getElementById("calc-saved"));
+    applyNumericFormat(document.getElementById("field-target"));
+    applyNumericFormat(document.getElementById("field-saved"));
 
     // ── Load goals ────────────────────────────────────────
     async function loadGoals() {
@@ -352,23 +356,17 @@
     });
 
     function openNewModal() {
-      setTimeout(() => {
-        applyNumericFormat(document.getElementById("field-target"));
-        applyNumericFormat(document.getElementById("field-saved"));
-      }, 50);
       editingId = null; selectedEmoji = "🎯";
       document.getElementById("modal-title").textContent = "Nueva meta";
       document.getElementById("btn-save").textContent    = "Guardar meta";
-      document.getElementById("field-name").value   = "";
-      document.getElementById("field-target").value = "";
-      document.getElementById("field-saved").value  = "";
-      document.getElementById("field-date").value   = "";
-      document.getElementById("field-notes").value  = "";
+      document.getElementById("field-name").value  = "";
+      document.getElementById("field-date").value  = "";
+      document.getElementById("field-notes").value = "";
+      ["field-target","field-saved"].forEach(id => {
+        const inp = document.getElementById(id);
+        inp.dataset.raw = ""; inp.value = "";
+      });
       updateEmojiUI();
-      setTimeout(() => {
-        applyNumericFormat(document.getElementById("field-target"));
-        applyNumericFormat(document.getElementById("field-saved"));
-      }, 50);
       openModal();
     }
 
@@ -378,16 +376,16 @@
       editingId = id; selectedEmoji = g.icon || "🎯";
       document.getElementById("modal-title").textContent = "Editar meta";
       document.getElementById("btn-save").textContent    = "Actualizar meta";
-      document.getElementById("field-name").value   = g.name || "";
-      document.getElementById("field-target").value = g.targetAmount || "";
-      document.getElementById("field-saved").value  = g.savedAmount  || "";
-      document.getElementById("field-date").value   = g.targetDate   || "";
-      document.getElementById("field-notes").value  = g.notes        || "";
+      document.getElementById("field-name").value  = g.name || "";
+      document.getElementById("field-date").value  = g.targetDate || "";
+      document.getElementById("field-notes").value = g.notes || "";
+      [["field-target", g.targetAmount], ["field-saved", g.savedAmount]].forEach(([fid, val]) => {
+        const inp = document.getElementById(fid);
+        const raw = String(val || "").replace(/[^0-9]/g, "");
+        inp.dataset.raw = raw;
+        inp.value = raw ? Number(raw).toLocaleString("es-CO") : "";
+      });
       updateEmojiUI();
-      setTimeout(() => {
-        applyNumericFormat(document.getElementById("field-target"));
-        applyNumericFormat(document.getElementById("field-saved"));
-      }, 50);
       openModal();
     };
 
