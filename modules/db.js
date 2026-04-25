@@ -324,11 +324,9 @@ export async function addCategory(uid, data) {
   return addDoc(userCol(uid, "categories"), data);
 }
 
-export async function getCategories(uid, { includeArchived = false } = {}) {
+export async function getCategories(uid) {
   const snap = await getDocs(userCol(uid, "categories"));
-  return snap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
-    .filter(c => includeArchived || !c.archived);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 export async function updateCategory(uid, categoryId, data) {
@@ -337,14 +335,6 @@ export async function updateCategory(uid, categoryId, data) {
 
 export async function deleteCategory(uid, categoryId) {
   return deleteDoc(userDoc(uid, "categories", categoryId));
-}
-
-export async function archiveCategory(uid, categoryId) {
-  return updateDoc(userDoc(uid, "categories", categoryId), { archived: true });
-}
-
-export async function restoreCategory(uid, categoryId) {
-  return updateDoc(userDoc(uid, "categories", categoryId), { archived: false });
 }
 
 // ── METAS DE AHORRO (goals) ───────────────────────────────

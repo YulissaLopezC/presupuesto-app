@@ -196,43 +196,10 @@
     .inline-add-actions { display: flex; gap: 8px; }
     .inline-add-confirm { flex: 1; padding: 8px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
     .inline-add-cancel { padding: 8px 14px; background: #f0f4f8; color: #888; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
-    /* ── Category picker overlay fix ────────────────────── */
-    .cat-picker-overlay {
-      position: fixed !important; inset: 0; background: rgba(15,52,96,0.4);
-      z-index: 9999 !important; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s;
-      display: flex !important; align-items: center; justify-content: center; padding: 16px;
-    }
-    .cat-picker-overlay.open { opacity: 1 !important; pointer-events: all; }
-    .cat-picker-modal {
-      background: #fff; border-radius: 16px; padding: 20px;
-      width: 100%; max-width: 400px;
-      transform: scale(0.95); opacity: 0;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-      max-height: 80vh; overflow-y: auto;
-    }
-    body.dark .cat-picker-modal { background: #1a1a1a; }
-    .cat-picker-overlay.open .cat-picker-modal { transform: scale(1); opacity: 1; }
-    .cat-picker-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .cat-picker-title { font-size: 16px; font-weight: 500; color: var(--text); }
-    .cat-picker-close { background: none; border: none; font-size: 20px; color: #888; cursor: pointer; line-height:1; }
-    .cat-picker-search {
-      width: 100%; padding: 10px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: #fff; outline: none; margin-bottom: 14px; box-sizing: border-box;
-    }
-    body.dark .cat-picker-search { background: #222; border-color: #333; }
-    .cat-picker-search:focus { border-color: #0f3460; }
-    .cat-picker-section-lbl { font-size: 10px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; padding: 0 2px; display: block; }
-    .cat-picker-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s; margin-bottom: 4px; }
-    .cat-picker-item:hover { background: #f0f4f8; }
-    .cat-picker-item-name { font-size: 13px; color: var(--text); }
-    .cat-picker-item-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: #f0f4f8; color: #888; }
-    .cat-picker-restore-btn { font-size: 11px; padding: 4px 10px; border-radius: 7px; background: #e6f1fb; color: #185fa5; border: none; cursor: pointer; font-family: "DM Sans", sans-serif; }
-    .cat-picker-new { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; cursor: pointer; border: 1.5px dashed #cdd5e0; margin-top: 8px; transition: border-color 0.15s; }
-    .cat-picker-new:hover { border-color: #0f3460; }
-    .cat-picker-new-lbl { font-size: 13px; color: #888; }
-    .cat-picker-new-name { font-size: 13px; color: #0f3460; font-weight: 500; }
+    /* ── Number input formatting ─────────────────────────── */
+    .val-pill-input { -moz-appearance: textfield; }
+    .val-pill-input::-webkit-outer-spin-button,
+    .val-pill-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
 <body>
@@ -268,21 +235,9 @@
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Category picker modal -->
-  <div class="cat-picker-overlay" id="cat-picker-overlay">
-    <div class="cat-picker-modal">
-      <div class="cat-picker-hdr">
-        <div class="cat-picker-title" id="cat-picker-title">Agregar categoría</div>
-        <button class="cat-picker-close" id="cat-picker-close">×</button>
-      </div>
-      <input type="text" class="cat-picker-search" id="cat-picker-search" placeholder="Buscar o escribir nombre..."/>
-      <div id="cat-picker-list"></div>
-    </div>
-  </div>
-
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, archiveCategory, restoreCategory, syncProportionalIncomes } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, addCategory, updateCategory, deleteCategory, syncProportionalIncomes } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
     import { currentMonth, formatMonth, formatCOP } from "../assets/utils.js";
 
@@ -296,7 +251,7 @@
     renderBottomNav("budget");
     renderMonthSelector("month-selector-container", selectedMonth, async m => {
       selectedMonth = m;
-
+      await loadBudget();
     });
 
     // ── TIPOS de categoría ────────────────────────────────
@@ -322,17 +277,11 @@
     }
 
     async function loadBudget() {
-      try {
-        currentBudget = await getBudget(uid, selectedMonth);
-        renderStats();
-        renderExpensesForm();
-        renderIncomeForm();
-        checkCopyBanner();
-      } catch(err) {
-        console.error("loadBudget error:", err);
-        document.getElementById("expenses-form").innerHTML =
-          `<div style="color:#c0392b;padding:20px;font-size:13px;">Error cargando presupuesto: ${err.message}</div>`;
-      }
+      currentBudget = await getBudget(uid, selectedMonth);
+      renderStats();
+      renderExpensesForm();
+      renderIncomeForm();
+      checkCopyBanner();
     }
 
     // ── Stats 3 cards ─────────────────────────────────────
@@ -403,17 +352,8 @@
       const meta      = currentBudget?.categoryMeta || {};
       const el        = document.getElementById("expenses-form");
 
-      // Merge active cats + ghost cats from saved budget, filter hidden for this month
-      const hiddenCats   = new Set(currentBudget?.hiddenCats || []);
-      const savedNames   = Object.keys(savedCats);
-      const activeCatNames = new Set(categories.map(c => c.name));
-      const ghostCats    = savedNames
-        .filter(name => !activeCatNames.has(name) && !hiddenCats.has(name))
-        .map(name => ({ id: "ghost-" + name, name, type: "GASTO BÁSICO", ghost: true }));
-      const allCats = [...categories.filter(c => !hiddenCats.has(c.name)), ...ghostCats];
-
       el.innerHTML = TYPES.map(type => {
-        const cats = allCats.filter(c => c.type === type.key);
+        const cats = categories.filter(c => c.type === type.key);
         const typeTotal = cats.reduce((s,c) => s + Number(savedCats[c.name]||0), 0);
         return `
           <div class="type-section">
@@ -458,7 +398,13 @@
                   </div>
                 </div>`;
             }).join("")}
-
+            <div class="inline-add-form" id="inline-add-${type.key.replace(/\s/g,"-")}">
+              <input type="text" class="inline-add-input" placeholder="Nombre de la categoría..."/>
+              <div class="inline-add-actions">
+                <button class="inline-add-confirm" data-type="${type.key}">Agregar</button>
+                <button class="inline-add-cancel" data-type="${type.key}">Cancelar</button>
+              </div>
+            </div>
             <button class="add-cat-btn" data-add-type="${type.key}">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>Agregar en ${type.label.toLowerCase()}</span>
@@ -466,60 +412,75 @@
           </div>`;
       }).join("");
 
-      // Event delegation — use onclick to avoid duplicates
-      el.onclick = handleExpensesClick;
+      // Event delegation
+      el.addEventListener("click", handleExpensesClick);
 
-      // Format number inputs
+      // Format number inputs with dots
       el.querySelectorAll(".val-pill-input").forEach(inp => {
-        // Set initial formatted value
         if (inp.value) {
-          inp.dataset.rawValue = inp.value;
+          inp.dataset.raw = inp.value;
           inp.value = Number(inp.value).toLocaleString("es-CO");
         }
         inp.addEventListener("input", () => {
-          const cursor = inp.selectionStart;
           const raw = inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
-          inp.dataset.rawValue = raw;
-          if (raw) inp.value = Number(raw).toLocaleString("es-CO");
-          else inp.value = "";
+          inp.dataset.raw = raw;
+          inp.value = raw ? Number(raw).toLocaleString("es-CO") : "";
         });
-        inp.addEventListener("focus", () => {
-          inp.select();
-        });
+        inp.addEventListener("focus", () => inp.select());
       });
     }
 
-    async function handleExpensesClick(e) {
+    function handleExpensesClick(e) {
       // Prop toggle
       const propBtn = e.target.closest("[data-field='prop-toggle']");
       if (propBtn) { propBtn.classList.toggle("on"); return; }
 
-      // Hide cat from THIS month only
+      // Delete cat
       const delBtn = e.target.closest(".btn-delete-cat");
       if (delBtn) {
-        const catId   = delBtn.dataset.catId;
-        const catName = delBtn.dataset.catName;
-        if (!confirm(`¿Ocultar "${catName}" de este mes?
-Seguirá disponible en otros meses.`)) return;
-        // Save hidden cats in budget doc for this month
-        const hiddenCats = currentBudget?.hiddenCats || [];
-        if (!hiddenCats.includes(catName)) hiddenCats.push(catName);
-        await setBudget(uid, selectedMonth, {
-          categories: currentBudget?.categories || {},
-          income: currentBudget?.income || {},
-          categoryMeta: currentBudget?.categoryMeta || {},
-          hiddenCats
+        if (!confirm(`¿Eliminar la categoría "${delBtn.dataset.catName}"?`)) return;
+        deleteCategory(uid, delBtn.dataset.catId).then(async () => {
+          categories = categories.filter(c => c.id !== delBtn.dataset.catId);
+          showToast("Categoría eliminada.", "success");
+          await loadBudget();
         });
-        currentBudget = { ...currentBudget, hiddenCats };
-        showToast(`"${catName}" oculta para este mes.`, "success");
-        await loadBudget();
         return;
       }
 
-      // Add cat button → open picker
+      // Add cat button
       const addBtn = e.target.closest("[data-add-type]");
       if (addBtn) {
-        openCatPicker(addBtn.dataset.addType);
+        const type   = addBtn.dataset.addType;
+        const formId = "inline-add-" + type.replace(/\s/g, "-");
+        document.getElementById(formId).classList.add("open");
+        addBtn.style.display = "none";
+        return;
+      }
+
+      // Confirm add
+      const confirmBtn = e.target.closest(".inline-add-confirm");
+      if (confirmBtn) {
+        const type   = confirmBtn.dataset.type;
+        const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
+        const name   = formEl.querySelector(".inline-add-input").value.trim();
+        if (!name) { showToast("Escribe un nombre.", "error"); return; }
+        addCategory(uid, { name, type }).then(async () => {
+          showToast("Categoría agregada.", "success");
+          categories = await getCategories(uid);
+          await loadBudget();
+        });
+        return;
+      }
+
+      // Cancel add
+      const cancelBtn = e.target.closest(".inline-add-cancel");
+      if (cancelBtn) {
+        const type   = cancelBtn.dataset.type;
+        const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
+        formEl.classList.remove("open");
+        formEl.querySelector(".inline-add-input").value = "";
+        const addBtn2 = document.querySelector(`[data-add-type="${type}"]`);
+        if (addBtn2) addBtn2.style.display = "";
         return;
       }
     }
@@ -585,18 +546,6 @@ Seguirá disponible en otros meses.`)) return;
         </div>`;
     }
 
-    function formatNumberInput(input) {
-      const raw = input.value.replace(/\./g, "").replace(/[^0-9]/g, "");
-      input.dataset.rawValue = raw;
-      if (raw) {
-        input.value = Number(raw).toLocaleString("es-CO");
-      }
-    }
-
-    function getInputRaw(input) {
-      return Number((input.dataset.rawValue || input.value).replace(/\./g, "").replace(/[^0-9]/g, "")) || 0;
-    }
-
     function attachToggleListeners() {
       document.querySelectorAll("[data-toggle]").forEach(el => {
         el.onclick = () => el.classList.toggle("on");
@@ -630,122 +579,6 @@ Seguirá disponible en otros meses.`)) return;
       });
     }
 
-    // ── Category picker ──────────────────────────────────
-    let pickerType = "";
-    let pickerAllCats = [];
-
-    async function openCatPicker(type) {
-      pickerType = type;
-      const typeLabels = {
-        "GASTO BÁSICO": "gasto básico",
-        "GASTO NO ESENCIAL": "gasto no esencial",
-        "AHORRO O INVERSIÓN": "ahorro o inversión"
-      };
-      document.getElementById("cat-picker-title").textContent = `Agregar en ${typeLabels[type]||type}`;
-      document.getElementById("cat-picker-search").value = "";
-      document.getElementById("cat-picker-list").innerHTML =
-        `<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Cargando...</div>`;
-      document.getElementById("cat-picker-overlay").classList.add("open");
-      // Load all cats ONCE and cache
-      pickerAllCats = await getCategories(uid, { includeArchived: true });
-      renderPickerList("");
-      setTimeout(() => document.getElementById("cat-picker-search").focus(), 100);
-    }
-
-    function closeCatPicker() {
-      document.getElementById("cat-picker-overlay").classList.remove("open");
-    }
-
-    document.getElementById("cat-picker-close").addEventListener("click", closeCatPicker);
-    document.getElementById("cat-picker-overlay").addEventListener("click", e => {
-      if (e.target === document.getElementById("cat-picker-overlay")) closeCatPicker();
-    });
-
-    document.getElementById("cat-picker-search").addEventListener("input", e => {
-      renderPickerList(e.target.value.trim());
-    });
-
-    function renderPickerList(search) {
-      const el = document.getElementById("cat-picker-list");
-      const allCats = pickerAllCats;
-      const existing = new Set(allCats.filter(c=>!c.archived).map(c=>c.name.toLowerCase()));
-
-      const active   = allCats.filter(c => !c.archived && c.type === pickerType &&
-        (!search || c.name.toLowerCase().includes(search.toLowerCase())));
-      const archived = allCats.filter(c =>  c.archived && c.type === pickerType &&
-        (!search || c.name.toLowerCase().includes(search.toLowerCase())));
-      const showNew  = search && !existing.has(search.toLowerCase()) &&
-        !archived.some(c => c.name.toLowerCase() === search.toLowerCase());
-
-      let html = "";
-
-      if (active.length) {
-        html += `<div class="cat-picker-section-lbl">Activas</div>`;
-        html += active.map(cat => `
-          <div class="cat-picker-item" data-action="select" data-name="${cat.name}">
-            <span class="cat-picker-item-name">${cat.name}</span>
-            <span class="cat-picker-item-badge">Activa</span>
-          </div>`).join("");
-      }
-
-      if (archived.length) {
-        html += `<div class="cat-picker-section-lbl" style="margin-top:10px;">Archivadas</div>`;
-        html += archived.map(cat => `
-          <div class="cat-picker-item" style="justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="cat-picker-item-name" style="color:#888;">🗃 ${cat.name}</span>
-            </div>
-            <button class="cat-picker-restore-btn" data-action="restore" data-id="${cat.id}" data-name="${cat.name}">
-              Restaurar y agregar
-            </button>
-          </div>`).join("");
-      }
-
-      if (!active.length && !archived.length && !showNew) {
-        html += `<div style="text-align:center;padding:20px;font-size:13px;color:#aaa;">Sin resultados</div>`;
-      }
-
-      if (showNew) {
-        html += `
-          <div class="cat-picker-new" data-action="create" data-name="${search}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f3460" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span class="cat-picker-new-lbl">Crear nueva: </span>
-            <span class="cat-picker-new-name">"${search}"</span>
-          </div>`;
-      }
-
-      el.innerHTML = html;
-
-      el.onclick = async e => {
-        const item    = e.target.closest("[data-action]");
-        if (!item) return;
-        const action  = item.dataset.action;
-        const name    = item.dataset.name;
-
-        if (action === "select") {
-          // Already active, just scroll to it
-          closeCatPicker();
-          showToast(`"${name}" ya está en el presupuesto.`, "info");
-        }
-
-        if (action === "restore") {
-          await restoreCategory(uid, item.dataset.id);
-          categories = await getCategories(uid);
-          showToast(`"${name}" restaurada.`, "success");
-          closeCatPicker();
-          await loadBudget();
-        }
-
-        if (action === "create") {
-          await addCategory(uid, { name, type: pickerType });
-          categories = await getCategories(uid);
-          showToast(`"${name}" agregada.`, "success");
-          closeCatPicker();
-          await loadBudget();
-        }
-      };
-    }
-
     // ── Guardar ───────────────────────────────────────────
     document.getElementById("btn-save").addEventListener("click", saveBudget);
 
@@ -754,8 +587,9 @@ Seguirá disponible en otros meses.`)) return;
 
       // Categorías
       const categoriesData = {};
-      document.querySelectorAll(".val-pill-input.budget-input[data-cat]").forEach(inp => {
-        const val = Number(inp.dataset.rawValue || inp.value.replace(/\./g, "") || 0);
+      document.querySelectorAll(".budget-input[data-cat]").forEach(inp => {
+        const raw = inp.dataset.raw || inp.value.replace(/\./g, "");
+        const val = Number(raw) || 0;
         if (val > 0) categoriesData[inp.dataset.cat] = val;
       });
 
@@ -797,7 +631,7 @@ Seguirá disponible en otros meses.`)) return;
       btn.disabled = true; btn.textContent = "Guardando...";
       try {
         await Promise.all(renamePromises);
-        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta, hiddenCats: currentBudget?.hiddenCats || [] });
+        await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta });
         currentBudget = { categories: categoriesData, income: incomeData, categoryMeta };
         categories = await getCategories(uid);
         showToast("Presupuesto guardado.", "success");
