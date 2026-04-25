@@ -489,7 +489,7 @@
       });
     }
 
-    function handleExpensesClick(e) {
+    async function handleExpensesClick(e) {
       // Prop toggle
       const propBtn = e.target.closest("[data-field='prop-toggle']");
       if (propBtn) { propBtn.classList.toggle("on"); return; }
