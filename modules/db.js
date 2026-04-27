@@ -3,12 +3,15 @@
 // Capa de acceso a Firestore.
 //
 // Estructura en Firestore:
-//   users/{uid}/expenses/{id}       — gastos diarios
-//   users/{uid}/incomes/{id}        — ingresos reales registrados
-//   users/{uid}/budgets/{YYYY-MM}   — presupuesto mensual
-//   users/{uid}/wallets/{id}        — cajitas/cuentas permanentes
-//   users/{uid}/categories/{id}     — categorías de gasto
-//   users/{uid}/goals/{id}          — metas de ahorro
+//   users/{uid}/expenses/{id}                      — gastos diarios
+//   users/{uid}/incomes/{id}                       — ingresos reales registrados
+//   users/{uid}/budgets/{YYYY-MM}                  — presupuesto mensual
+//   users/{uid}/wallets/{id}                       — cajitas/cuentas permanentes
+//   users/{uid}/categories/{id}                    — categorías de gasto
+//   users/{uid}/goals/{id}                         — metas de ahorro
+//   users/{uid}/debtors/{id}                       — deudores
+//   users/{uid}/debtors/{id}/loans/{id}            — préstamos individuales por deudor
+//   users/{uid}/debtors/{id}/payments/{id}         — abonos por deudor
 // ============================================================
 
 import {
@@ -573,104 +576,203 @@ export async function getProportionalExpensesSummary(uid, month, realExpenses = 
     .filter(s => s.amount > 0);
 }
 
-// ── PRÉSTAMOS (loans) ─────────────────────────────────────
+// ── DEUDORES / PRÉSTAMOS (nueva estructura) ───────────────
 //
-// data: {
-//   debtorName:  "Juan Pérez",
-//   amount:      500000,
-//   date:        "2026-03-24",
-//   walletId:    "...",
-//   walletName:  "Banco",
-//   notes:       "Para arriendo"
-// }
-// Al crear, descuenta de la cajita origen.
-// Los abonos se guardan en loans/{id}/payments/{id}
+// users/{uid}/debtors/{debtorId}
+//   name, totalAmount, totalPaid, status, createdAt
+// users/{uid}/debtors/{debtorId}/loans/{loanId}
+//   amount, date, walletId, walletName, notes
+// users/{uid}/debtors/{debtorId}/payments/{paymentId}
+//   amount, date, walletId, walletName, notes
 
-export async function addLoan(uid, data) {
-  const loanRef  = doc(userCol(uid, "loans"));
-  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
-  const amount    = Number(data.amount);
+function debtorCol(uid)                        { return collection(db, "users", uid, "debtors"); }
+function debtorDoc(uid, did)                   { return doc(db, "users", uid, "debtors", did); }
+function loanCol(uid, did)                     { return collection(db, "users", uid, "debtors", did, "loans"); }
+function loanDoc(uid, did, lid)                { return doc(db, "users", uid, "debtors", did, "loans", lid); }
+function paymentCol(uid, did)                  { return collection(db, "users", uid, "debtors", did, "payments"); }
+function paymentDoc(uid, did, pid)             { return doc(db, "users", uid, "debtors", did, "payments", pid); }
+
+// Crea un deudor nuevo con su primer préstamo
+export async function addDebtor(uid, name, loanData) {
+  const dRef      = doc(debtorCol(uid));
+  const lRef      = doc(loanCol(uid, dRef.id));
+  const walletRef = loanData.walletId ? userDoc(uid, "wallets", loanData.walletId) : null;
+  const amount    = Number(loanData.amount);
 
   await runTransaction(db, async (tx) => {
-    tx.set(loanRef, {
-      ...data,
-      amount,
-      amountPaid: 0,
-      status: "pendiente",
-      createdAt: serverTimestamp()
+    tx.set(dRef, { name, totalAmount: amount, totalPaid: 0, status: "pendiente", createdAt: serverTimestamp() });
+    tx.set(lRef, {
+      amount, date: loanData.date || "", walletId: loanData.walletId || "",
+      walletName: loanData.walletName || "", notes: loanData.notes || "", createdAt: serverTimestamp()
     });
     if (walletRef) tx.update(walletRef, { balance: increment(-amount) });
   });
-  return loanRef;
+  return dRef;
 }
 
-export async function getLoans(uid) {
-  const snap = await getDocs(userCol(uid, "loans"));
+export async function getDebtors(uid) {
+  const snap = await getDocs(debtorCol(uid));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-export async function updateLoan(uid, loanId, data) {
-  return updateDoc(userDoc(uid, "loans", loanId), data);
+// Elimina un deudor completo revertiendo cada préstamo/abono en sus cajitas
+export async function deleteDebtor(uid, debtorId) {
+  const [loansSnap, paymentsSnap] = await Promise.all([
+    getDocs(loanCol(uid, debtorId)),
+    getDocs(paymentCol(uid, debtorId))
+  ]);
+  const batch = writeBatch(db);
+  for (const d of loansSnap.docs) {
+    const l = d.data();
+    if (l.walletId) batch.update(userDoc(uid, "wallets", l.walletId), { balance: increment(Number(l.amount || 0)) });
+    batch.delete(d.ref);
+  }
+  for (const d of paymentsSnap.docs) {
+    const p = d.data();
+    if (p.walletId) batch.update(userDoc(uid, "wallets", p.walletId), { balance: increment(-Number(p.amount || 0)) });
+    batch.delete(d.ref);
+  }
+  batch.delete(debtorDoc(uid, debtorId));
+  await batch.commit();
 }
 
-export async function deleteLoan(uid, loanId, loanData) {
+// Agrega un préstamo adicional a un deudor existente
+export async function addLoan(uid, debtorId, loanData) {
+  const lRef      = doc(loanCol(uid, debtorId));
+  const dRef      = debtorDoc(uid, debtorId);
+  const walletRef = loanData.walletId ? userDoc(uid, "wallets", loanData.walletId) : null;
+  const amount    = Number(loanData.amount);
+
   await runTransaction(db, async (tx) => {
-    // Revertir el monto original a la cajita
-    if (loanData?.walletId) {
-      tx.update(userDoc(uid, "wallets", loanData.walletId),
-        { balance: increment(Number(loanData.amount)) });
-    }
-    tx.delete(userDoc(uid, "loans", loanId));
+    tx.set(lRef, {
+      amount, date: loanData.date || "", walletId: loanData.walletId || "",
+      walletName: loanData.walletName || "", notes: loanData.notes || "", createdAt: serverTimestamp()
+    });
+    tx.update(dRef, { totalAmount: increment(amount), status: "pendiente" });
+    if (walletRef) tx.update(walletRef, { balance: increment(-amount) });
+  });
+  return lRef;
+}
+
+export async function getLoans(uid, debtorId) {
+  const snap = await getDocs(loanCol(uid, debtorId));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+}
+
+// Elimina un préstamo individual y corrige el total del deudor
+export async function deleteLoan(uid, debtorId, loanId, loanData) {
+  const dRef      = debtorDoc(uid, debtorId);
+  const lRef      = loanDoc(uid, debtorId, loanId);
+  const amount    = Number(loanData.amount);
+  const walletRef = loanData.walletId ? userDoc(uid, "wallets", loanData.walletId) : null;
+
+  await runTransaction(db, async (tx) => {
+    const dSnap = await tx.get(dRef);
+    if (!dSnap.exists()) throw new Error("Deudor no encontrado");
+    const d         = dSnap.data();
+    const newTotal  = Math.max(Number(d.totalAmount || 0) - amount, 0);
+    const newStatus = Number(d.totalPaid || 0) >= newTotal ? "pagado" : "pendiente";
+    tx.delete(lRef);
+    tx.update(dRef, { totalAmount: newTotal, status: newStatus });
+    if (walletRef) tx.update(walletRef, { balance: increment(amount) });
   });
 }
 
-// ── ABONOS DE PRÉSTAMO (loan payments) ────────────────────
-export async function addLoanPayment(uid, loanId, data) {
-  const payRef    = doc(collection(db, "users", uid, "loans", loanId, "payments"));
-  const loanRef   = userDoc(uid, "loans", loanId);
+// Registra un abono: se aplica al total del deudor
+export async function addLoanPayment(uid, debtorId, data) {
+  const pRef      = doc(paymentCol(uid, debtorId));
+  const dRef      = debtorDoc(uid, debtorId);
   const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
   const amount    = Number(data.amount);
 
   await runTransaction(db, async (tx) => {
-    const loanSnap = await tx.get(loanRef);
-    if (!loanSnap.exists()) throw new Error("Préstamo no encontrado");
-    const loan       = loanSnap.data();
-    const newPaid    = Number(loan.amountPaid || 0) + amount;
-    const newStatus  = newPaid >= Number(loan.amount) ? "pagado" : "pendiente";
-
-    tx.set(payRef, { ...data, amount, createdAt: serverTimestamp() });
-    tx.update(loanRef, { amountPaid: newPaid, status: newStatus });
+    const dSnap = await tx.get(dRef);
+    if (!dSnap.exists()) throw new Error("Deudor no encontrado");
+    const d         = dSnap.data();
+    const newPaid   = Number(d.totalPaid || 0) + amount;
+    const newStatus = newPaid >= Number(d.totalAmount || 0) ? "pagado" : "pendiente";
+    tx.set(pRef, { ...data, amount, createdAt: serverTimestamp() });
+    tx.update(dRef, { totalPaid: newPaid, status: newStatus });
     if (walletRef) tx.update(walletRef, { balance: increment(amount) });
   });
-  return payRef;
+  return pRef;
 }
 
-export async function getLoanPayments(uid, loanId) {
-  const snap = await getDocs(
-    collection(db, "users", uid, "loans", loanId, "payments")
-  );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
-    return (b.date || "").localeCompare(a.date || "");
-  });
+export async function getLoanPayments(uid, debtorId) {
+  const snap = await getDocs(paymentCol(uid, debtorId));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
-export async function deleteLoanPayment(uid, loanId, paymentId, paymentData) {
-  const payRef  = doc(db, "users", uid, "loans", loanId, "payments", paymentId);
-  const loanRef = userDoc(uid, "loans", loanId);
-  const amount  = Number(paymentData.amount);
+export async function deleteLoanPayment(uid, debtorId, paymentId, paymentData) {
+  const pRef  = paymentDoc(uid, debtorId, paymentId);
+  const dRef  = debtorDoc(uid, debtorId);
+  const amount = Number(paymentData.amount);
 
   await runTransaction(db, async (tx) => {
-    const loanSnap = await tx.get(loanRef);
-    if (!loanSnap.exists()) throw new Error("Préstamo no encontrado");
-    const loan      = loanSnap.data();
-    const newPaid   = Math.max(Number(loan.amountPaid || 0) - amount, 0);
-    const newStatus = newPaid >= Number(loan.amount) ? "pagado" : "pendiente";
-
-    tx.delete(payRef);
-    tx.update(loanRef, { amountPaid: newPaid, status: newStatus });
-    if (paymentData.walletId) {
-      tx.update(userDoc(uid, "wallets", paymentData.walletId),
-        { balance: increment(-amount) });
-    }
+    const dSnap = await tx.get(dRef);
+    if (!dSnap.exists()) throw new Error("Deudor no encontrado");
+    const d         = dSnap.data();
+    const newPaid   = Math.max(Number(d.totalPaid || 0) - amount, 0);
+    const newStatus = newPaid >= Number(d.totalAmount || 0) ? "pagado" : "pendiente";
+    tx.delete(pRef);
+    tx.update(dRef, { totalPaid: newPaid, status: newStatus });
+    if (paymentData.walletId) tx.update(userDoc(uid, "wallets", paymentData.walletId), { balance: increment(-amount) });
   });
+}
+
+// Migra datos del esquema anterior (users/{uid}/loans) al nuevo esquema
+// Solo corre si la colección debtors está vacía
+export async function migrateOldLoans(uid) {
+  const existingSnap = await getDocs(debtorCol(uid));
+  if (!existingSnap.empty) return 0;
+  const oldSnap = await getDocs(userCol(uid, "loans"));
+  if (oldSnap.empty) return 0;
+
+  const groups = {};
+  for (const d of oldSnap.docs) {
+    const l = { id: d.id, docRef: d.ref, ...d.data() };
+    const key = (l.debtorName || "Sin nombre").trim();
+    if (!groups[key]) groups[key] = { loans: [], payments: [] };
+    groups[key].loans.push(l);
+  }
+
+  for (const g of Object.values(groups)) {
+    for (const loan of g.loans) {
+      const pSnap = await getDocs(collection(db, "users", uid, "loans", loan.id, "payments"));
+      for (const p of pSnap.docs) g.payments.push({ ...p.data(), id: p.id });
+    }
+  }
+
+  const batch = writeBatch(db);
+  let count = 0;
+  for (const [name, g] of Object.entries(groups)) {
+    const totalAmount = g.loans.reduce((s, l) => s + Number(l.amount || 0), 0);
+    const totalPaid   = g.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+    const dRef        = doc(debtorCol(uid));
+    batch.set(dRef, {
+      name, totalAmount, totalPaid,
+      status: totalPaid >= totalAmount ? "pagado" : "pendiente",
+      createdAt: serverTimestamp()
+    });
+    for (const loan of g.loans) {
+      batch.set(doc(loanCol(uid, dRef.id)), {
+        amount: Number(loan.amount || 0), date: loan.date || "",
+        walletId: loan.walletId || "", walletName: loan.walletName || "",
+        notes: loan.notes || "", createdAt: loan.createdAt || serverTimestamp()
+      });
+      batch.delete(loan.docRef);
+    }
+    for (const pay of g.payments) {
+      batch.set(doc(paymentCol(uid, dRef.id)), {
+        amount: Number(pay.amount || 0), date: pay.date || "",
+        walletId: pay.walletId || "", walletName: pay.walletName || "",
+        notes: pay.notes || "", createdAt: pay.createdAt || serverTimestamp()
+      });
+    }
+    count++;
+  }
+  await batch.commit();
+  return count;
 }

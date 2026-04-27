@@ -16,7 +16,7 @@
     .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
     .page-sub { font-size: 12px; color: #888; margin-top: 3px; }
 
-    /* ── Stats ───────────────────────────────────────────── */
+    /* Stats */
     .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
     .stat-card { background: #fff; border-radius: 16px; padding: 18px; }
     body.dark .stat-card { background: #1a1a1a; }
@@ -28,11 +28,11 @@
     .stat-ico.pending { background: #e6f1fb; }
     .stat-ico.paid    { background: #eaf3de; }
 
-    /* ── Section header ──────────────────────────────────── */
+    /* Section header */
     .section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .section-title { font-size: 15px; font-weight: 500; color: var(--text); }
 
-    /* ── Loan card ───────────────────────────────────────── */
+    /* Debtor card */
     .loan-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 10px; }
     body.dark .loan-card { background: #1a1a1a; }
     .loan-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
@@ -45,19 +45,16 @@
     .loan-info { flex: 1; min-width: 0; }
     .loan-name { font-size: 14px; font-weight: 500; color: var(--text); }
     .loan-meta { font-size: 11px; color: #888; margin-top: 2px; }
-    .loan-badge {
-      font-size: 10px; font-weight: 500; padding: 4px 10px;
-      border-radius: 99px; flex-shrink: 0;
-    }
+    .loan-badge { font-size: 10px; font-weight: 500; padding: 4px 10px; border-radius: 99px; flex-shrink: 0; }
     .loan-badge.pendiente { background: #e6f4ea; color: #3b6d11; }
     .loan-badge.pagado    { background: #f0f4f8; color: #888; }
 
     .loan-amounts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .loan-amt-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
     .loan-amt-val { font-size: 14px; font-weight: 500; }
-    .loan-amt-val.total   { color: var(--text); }
-    .loan-amt-val.paid-v  { color: #3b6d11; }
-    .loan-amt-val.pend-v  { color: #c0392b; }
+    .loan-amt-val.total  { color: var(--text); }
+    .loan-amt-val.paid-v { color: #3b6d11; }
+    .loan-amt-val.pend-v { color: #c0392b; }
 
     .loan-prog-row { display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-bottom: 5px; }
     .loan-prog-pct { font-weight: 500; color: #3b6d11; }
@@ -65,11 +62,21 @@
     body.dark .loan-prog-bar { background: #2a2a2a; }
     .loan-prog-fill { height: 100%; border-radius: 99px; background: #3b6d11; }
 
-    .loan-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .loan-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .detail-toggle { font-size: 11px; color: #185fa5; cursor: pointer; background: none; border: none; font-family: "DM Sans", sans-serif; padding: 0; text-decoration: underline; text-underline-offset: 2px; margin-right: auto; }
+    .loan-new-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: #f0f4f8; color: #185fa5;
+      border: 1.5px solid #d0dce8; border-radius: 8px;
+      padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif;
+    }
+    body.dark .loan-new-btn { background: #222; color: #6fa8dc; border-color: #333; }
+    .loan-new-btn:hover { background: #e0eaf6; }
     .loan-abono-btn {
-      display: flex; align-items: center; gap: 6px;
+      display: flex; align-items: center; gap: 5px;
       background: #0f3460; color: #fff; border: none; border-radius: 8px;
-      padding: 7px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
+      padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer;
       font-family: "DM Sans", sans-serif;
     }
     .loan-abono-btn:hover { background: #1a4a7a; }
@@ -77,18 +84,25 @@
     body.dark .loan-del-btn { background: #222; }
     .loan-del-btn:hover { background: #fbeaea; color: #c0392b; }
 
-    /* Historial abonos */
-    .payments-toggle { font-size: 11px; color: #185fa5; cursor: pointer; background: none; border: none; font-family: "DM Sans", sans-serif; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
-    .payments-list { margin-top: 10px; border-top: 0.5px solid #f0f0f0; padding-top: 8px; }
-    body.dark .payments-list { border-top-color: #2a2a2a; }
-    .payment-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 0.5px solid #f8f8f8; font-size: 12px; }
-    body.dark .payment-row { border-bottom-color: #222; }
-    .payment-row:last-child { border-bottom: none; }
-    .payment-date { color: #888; }
-    .payment-wallet { color: #aaa; }
-    .payment-amount { font-weight: 500; color: #3b6d11; }
-    .payment-del { background: none; border: none; color: #ddd; font-size: 12px; cursor: pointer; }
-    .payment-del:hover { color: #c0392b; }
+    /* Detalle expandido */
+    .debtor-detail { border-top: 0.5px solid #f0f0f0; padding-top: 12px; margin-top: 8px; }
+    body.dark .debtor-detail { border-top-color: #2a2a2a; }
+    .detail-section { margin-bottom: 12px; }
+    .detail-section:last-child { margin-bottom: 0; }
+    .detail-section-hdr { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .item-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid #f8f8f8; font-size: 12px; }
+    body.dark .item-row { border-bottom-color: #222; }
+    .item-row:last-child { border-bottom: none; }
+    .item-main { flex: 1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-width: 0; }
+    .item-date { color: #888; white-space: nowrap; }
+    .item-wallet { color: #aaa; }
+    .item-note { color: #bbb; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .item-amount { font-weight: 500; flex-shrink: 0; }
+    .item-amount.total-v   { color: var(--text); }
+    .item-amount.payment-v { color: #3b6d11; }
+    .item-del { background: none; border: none; color: #ddd; font-size: 11px; cursor: pointer; flex-shrink: 0; padding: 3px 5px; }
+    .item-del:hover { color: #c0392b; }
+    .no-items { font-size: 12px; color: #aaa; padding: 4px 0 6px; }
 
     /* FAB */
     .fab {
@@ -128,14 +142,14 @@
     .f-input {
       width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
       font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: #fff; outline: none; transition: border-color 0.15s;
+      background: #fff; outline: none; transition: border-color 0.15s; box-sizing: border-box;
     }
     body.dark .f-input { background: #222; border-color: #333; }
     .f-input:focus { border-color: #0f3460; }
     .f-textarea {
       width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
       font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: #fff; outline: none; resize: none; height: 80px;
+      background: #fff; outline: none; resize: none; height: 80px; box-sizing: border-box;
     }
     body.dark .f-textarea { background: #222; border-color: #333; }
     .f-input-icon { position: relative; }
@@ -153,6 +167,7 @@
       font-family: "DM Sans", sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .modal-save-btn:hover { background: #1a4a7a; }
+    .modal-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -169,82 +184,117 @@
     </div>
 
     <div class="section-hdr">
-      <div class="section-title">Préstamos activos</div>
+      <div class="section-title">Deudores</div>
     </div>
-    <div id="loans-list" style="margin-bottom:90px;">
-      <div class="skeleton" style="height:180px;border-radius:16px;"></div>
+    <div id="debtors-list" style="margin-bottom:90px;">
+      <div class="skeleton" style="height:200px;border-radius:16px;"></div>
     </div>
   </div>
 
   <button class="fab" id="fab">+</button>
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Modal nuevo préstamo -->
-  <div class="modal-overlay" id="loan-overlay">
+  <!-- Modal: Nuevo deudor (FAB) -->
+  <div class="modal-overlay" id="debtor-overlay">
     <div class="modal">
       <div class="modal-hdr">
-        <div class="modal-title">Nuevo préstamo</div>
-        <button class="modal-close" id="loan-close">×</button>
+        <div class="modal-title">Nuevo deudor</div>
+        <button class="modal-close" id="debtor-close">×</button>
       </div>
-      <div class="modal-subtitle">Registra una nueva transacción de salida.</div>
+      <div class="modal-subtitle">Registra un deudor con su primer préstamo.</div>
 
       <div class="field-block">
         <div class="field-lbl">¿A quién le prestas?</div>
         <div class="f-input-icon">
           <span class="f-ico">👤</span>
-          <input type="text" class="f-input" id="loan-debtor" placeholder="Nombre del contacto" maxlength="60"/>
+          <input type="text" class="f-input" id="debtor-name" placeholder="Nombre del contacto" maxlength="60"/>
         </div>
+      </div>
+
+      <div class="field-lbl">Monto prestado</div>
+      <div class="amount-block">
+        <span class="amount-sym">$</span>
+        <input type="number" class="amount-input" id="debtor-amount" placeholder="0" min="0" inputmode="decimal"/>
       </div>
 
       <div class="two-col">
         <div>
-          <div class="field-lbl">Monto prestado</div>
-          <div class="f-input-icon">
-            <span class="f-ico" style="font-size:13px;color:#185fa5;font-weight:500;">$</span>
-            <input type="number" class="f-input" id="loan-amount" placeholder="0.00" min="0"/>
-          </div>
+          <div class="field-lbl">Fecha</div>
+          <input type="date" class="f-input" id="debtor-date"/>
         </div>
         <div>
-          <div class="field-lbl">Fecha</div>
-          <input type="date" class="f-input" id="loan-date"/>
-        </div>
-      </div>
-
-      <div class="field-block">
-        <div class="field-lbl">¿De cuál cajita sale?</div>
-        <div class="f-input-icon">
-          <span class="f-ico">🏦</span>
-          <select class="f-input" id="loan-wallet" style="padding-left:34px;-webkit-appearance:none;">
-            <option value="">Selecciona una cuenta</option>
+          <div class="field-lbl">¿De cuál cajita sale?</div>
+          <select class="f-input" id="debtor-wallet" style="-webkit-appearance:none;">
+            <option value="">Sin cajita</option>
           </select>
         </div>
       </div>
 
       <div class="field-block">
         <div class="field-lbl">Notas <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
-        <textarea class="f-textarea" id="loan-notes" placeholder="Motivo o recordatorio del préstamo..."></textarea>
+        <textarea class="f-textarea" id="debtor-notes" placeholder="Motivo o recordatorio del préstamo..."></textarea>
       </div>
 
-      <button class="modal-save-btn" id="btn-save-loan">
+      <button class="modal-save-btn" id="btn-save-debtor">
         Registrar préstamo
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- Modal abono -->
+  <!-- Modal: Nuevo préstamo a deudor existente -->
+  <div class="modal-overlay" id="loan-overlay">
+    <div class="modal">
+      <div class="modal-hdr">
+        <div class="modal-title" id="loan-modal-title">Nuevo préstamo</div>
+        <button class="modal-close" id="loan-close">×</button>
+      </div>
+      <div class="modal-subtitle">Agrega otro préstamo al mismo deudor.</div>
+
+      <div class="field-lbl">Monto prestado</div>
+      <div class="amount-block">
+        <span class="amount-sym">$</span>
+        <input type="number" class="amount-input" id="loan-amount" placeholder="0" min="0" inputmode="decimal"/>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="field-lbl">Fecha</div>
+          <input type="date" class="f-input" id="loan-date"/>
+        </div>
+        <div>
+          <div class="field-lbl">¿De cuál cajita sale?</div>
+          <select class="f-input" id="loan-wallet" style="-webkit-appearance:none;">
+            <option value="">Sin cajita</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-block">
+        <div class="field-lbl">Notas <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
+        <textarea class="f-textarea" id="loan-notes" placeholder="Motivo del préstamo..."></textarea>
+      </div>
+
+      <button class="modal-save-btn" id="btn-save-loan">
+        Agregar préstamo
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar abono -->
   <div class="modal-overlay" id="pay-overlay">
     <div class="modal">
       <div class="modal-hdr">
         <div class="modal-title" id="pay-title">Registrar abono</div>
         <button class="modal-close" id="pay-close">×</button>
       </div>
-      <div class="modal-subtitle">Ingresa los detalles para registrar el pago y actualizar el saldo.</div>
+      <div class="modal-subtitle">El abono se aplica al total del deudor.</div>
 
       <div class="field-lbl">Monto del abono</div>
       <div class="amount-block">
         <span class="amount-sym">$</span>
-        <input type="number" class="amount-input" id="pay-amount" placeholder="0.00" min="0" inputmode="decimal"/>
+        <input type="number" class="amount-input" id="pay-amount" placeholder="0" min="0" inputmode="decimal"/>
       </div>
 
       <div class="two-col">
@@ -262,7 +312,7 @@
 
       <div class="field-block">
         <div class="field-lbl">Notas <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
-        <textarea class="f-textarea" id="pay-notes" placeholder="Ej. Pago extraordinario de bonificación..."></textarea>
+        <textarea class="f-textarea" id="pay-notes" placeholder="Ej. Pago parcial..."></textarea>
       </div>
 
       <button class="modal-save-btn" id="btn-save-pay">
@@ -274,11 +324,17 @@
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { addLoan, getLoans, deleteLoan, addLoanPayment, getLoanPayments, deleteLoanPayment, getWallets } from "../modules/db.js";
+    import {
+      addDebtor, getDebtors, deleteDebtor,
+      addLoan, getLoans, deleteLoan,
+      addLoanPayment, getLoanPayments, deleteLoanPayment,
+      migrateOldLoans, getWallets
+    } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
     import { formatCOP, formatDate, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
-    let uid, loans = [], wallets = [], activeLoanId = null;
+    let uid, debtors = [], wallets = [], activeDebtorId = null;
+    const detailCache = {};
 
     const user = await requireAuth();
     uid = user.uid;
@@ -286,22 +342,28 @@
     renderBottomNav("loans");
     wallets = await getWallets(uid);
     populateWalletSelects();
-    await loadLoans();
+
+    try {
+      const n = await migrateOldLoans(uid);
+      if (n > 0) showToast(`${n} deudor${n > 1 ? "es migrados" : " migrado"} al nuevo formato.`, "success");
+    } catch(e) { console.warn("Migration error:", e); }
+
+    await loadDebtors();
+    applyNumericFormat(document.getElementById("debtor-amount"));
     applyNumericFormat(document.getElementById("loan-amount"));
     applyNumericFormat(document.getElementById("pay-amount"));
 
-    async function loadLoans() {
-      loans = await getLoans(uid);
+    // ── Data ─────────────────────────────────────────────────
+    async function loadDebtors() {
+      debtors = await getDebtors(uid);
       renderStats();
-      renderLoans();
+      renderDebtors();
     }
 
-    // ── Stats ─────────────────────────────────────────────
+    // ── Stats ─────────────────────────────────────────────────
     function renderStats() {
-      const pending    = loans.filter(l => l.status !== "pagado");
-      const paid       = loans.filter(l => l.status === "pagado");
-      const totalPend  = pending.reduce((s,l) => s + Math.max(Number(l.amount) - Number(l.amountPaid||0), 0), 0);
-      const totalPaid  = paid.reduce((s,l) => s + Number(l.amount), 0);
+      const totalPend = debtors.reduce((s, d) => s + Math.max(Number(d.totalAmount||0) - Number(d.totalPaid||0), 0), 0);
+      const totalPaid = debtors.reduce((s, d) => s + Number(d.totalPaid||0), 0);
       document.getElementById("stats-row").innerHTML = `
         <div class="stat-card">
           <div class="stat-lbl">Por cobrar</div>
@@ -319,199 +381,309 @@
         </div>`;
     }
 
-    // ── Loans list ────────────────────────────────────────
-    function renderLoans() {
-      const el     = document.getElementById("loans-list");
-      const active = loans.filter(l => l.status !== "pagado");
-      const paid   = loans.filter(l => l.status === "pagado");
+    // ── Debtor list ───────────────────────────────────────────
+    function renderDebtors() {
+      const el     = document.getElementById("debtors-list");
+      const active = debtors.filter(d => d.status !== "pagado");
+      const paid   = debtors.filter(d => d.status === "pagado");
       const all    = [...active, ...paid];
       if (!all.length) {
         el.innerHTML = `<div class="empty-state"><p>No tienes préstamos registrados.</p>
           <p style="margin-top:6px;font-size:12px;color:#888;">Toca <strong style="color:#0f3460;">+</strong> para registrar uno.</p></div>`;
         return;
       }
-      el.innerHTML = all.map(loan => {
-        const amount  = Number(loan.amount||0);
-        const paid2   = Number(loan.amountPaid||0);
-        const pending = Math.max(amount - paid2, 0);
-        const pct     = amount > 0 ? Math.min(Math.round(paid2/amount*100), 100) : 0;
-        const isPaid  = loan.status === "pagado";
-        const initials = (loan.debtorName||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
-        return `
-          <div class="loan-card" id="lcard-${loan.id}">
-            <div class="loan-top">
-              <div class="loan-avatar ${isPaid?"paid":""}">${initials}</div>
-              <div class="loan-info">
-                <div class="loan-name">${loan.debtorName}</div>
-                <div class="loan-meta">${loan.walletName||"Sin cajita"} · ${formatDate(loan.date)}${loan.notes?` · ${loan.notes}`:""}</div>
-              </div>
-              <span class="loan-badge ${loan.status}">${isPaid?"✓ Pagado":"Pendiente"}</span>
-            </div>
-            <div class="loan-amounts">
-              <div>
-                <div class="loan-amt-lbl">Total</div>
-                <div class="loan-amt-val total">${formatCOP(amount)}</div>
-              </div>
-              <div>
-                <div class="loan-amt-lbl">Pagado</div>
-                <div class="loan-amt-val paid-v">${formatCOP(paid2)}</div>
-              </div>
-              <div>
-                <div class="loan-amt-lbl">Pendiente</div>
-                <div class="loan-amt-val pend-v">${isPaid?"$0":formatCOP(pending)}</div>
-              </div>
-            </div>
-            <div class="loan-prog-row">
-              <span>Progreso de pago</span>
-              <span class="loan-prog-pct">${pct}%</span>
-            </div>
-            <div class="loan-prog-bar"><div class="loan-prog-fill" style="width:${pct}%;"></div></div>
-            <div class="loan-actions">
-              <button class="payments-toggle" onclick="togglePayments('${loan.id}')">Ver abonos</button>
-              ${!isPaid ? `<button class="loan-abono-btn" onclick="openPayModal('${loan.id}','${loan.debtorName}',${pending})">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                + Abono
-              </button>` : ""}
-              <button class="loan-del-btn" onclick="handleDelete('${loan.id}')">🗑</button>
-            </div>
-            <div class="payments-list" id="plist-${loan.id}" style="display:none;"></div>
-          </div>`;
-      }).join("");
+      el.innerHTML = all.map(renderDebtorCard).join("");
     }
 
-    // ── Toggle payments ───────────────────────────────────
-    window.togglePayments = async (id) => {
-      const el  = document.getElementById(`plist-${id}`);
-      const btn = el.previousElementSibling.querySelector(".payments-toggle");
-      const isOpen = el.style.display !== "none";
-      el.style.display = isOpen ? "none" : "block";
-      btn.textContent  = isOpen ? "Ver abonos" : "Ocultar abonos";
-      if (!isOpen) {
-        el.innerHTML = "<div style='font-size:12px;color:#888;padding:8px 0;'>Cargando...</div>";
-        const payments = await getLoanPayments(uid, id);
-        if (!payments.length) { el.innerHTML = "<div style='font-size:12px;color:#aaa;padding:8px 0;'>Sin abonos registrados.</div>"; return; }
-        el.innerHTML = payments.map(p => `
-          <div class="payment-row">
-            <span class="payment-date">${formatDate(p.date)}</span>
-            <span class="payment-wallet">${p.walletName||"Sin cajita"}</span>
-            <span class="payment-amount">+${formatCOP(p.amount)}</span>
-            <button class="payment-del" onclick="handleDelPay('${id}','${p.id}',${p.amount},'${p.walletId||""}')">✕</button>
-          </div>`).join("");
+    function renderDebtorCard(d) {
+      const totalAmt  = Number(d.totalAmount || 0);
+      const totalPaid = Number(d.totalPaid   || 0);
+      const pending   = Math.max(totalAmt - totalPaid, 0);
+      const pct       = totalAmt > 0 ? Math.min(Math.round(totalPaid / totalAmt * 100), 100) : 0;
+      const isPaid    = d.status === "pagado";
+      const initials  = (d.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+      return `
+        <div class="loan-card" id="dcard-${d.id}">
+          <div class="loan-top">
+            <div class="loan-avatar ${isPaid ? "paid" : ""}">${initials}</div>
+            <div class="loan-info">
+              <div class="loan-name">${d.name}</div>
+              <div class="loan-meta">${isPaid ? "Deuda saldada" : "Deuda pendiente"}</div>
+            </div>
+            <span class="loan-badge ${d.status}">${isPaid ? "✓ Pagado" : "Pendiente"}</span>
+          </div>
+          <div class="loan-amounts">
+            <div>
+              <div class="loan-amt-lbl">Total prestado</div>
+              <div class="loan-amt-val total">${formatCOP(totalAmt)}</div>
+            </div>
+            <div>
+              <div class="loan-amt-lbl">Abonado</div>
+              <div class="loan-amt-val paid-v">${formatCOP(totalPaid)}</div>
+            </div>
+            <div>
+              <div class="loan-amt-lbl">Pendiente</div>
+              <div class="loan-amt-val pend-v">${isPaid ? "$0" : formatCOP(pending)}</div>
+            </div>
+          </div>
+          <div class="loan-prog-row">
+            <span>Progreso de pago</span>
+            <span class="loan-prog-pct">${pct}%</span>
+          </div>
+          <div class="loan-prog-bar"><div class="loan-prog-fill" style="width:${pct}%;"></div></div>
+          <div class="loan-actions">
+            <button class="detail-toggle" onclick="toggleDetail('${d.id}')">Ver detalle</button>
+            <button class="loan-new-btn" onclick="openAddLoanModal('${d.id}')">+ Préstamo</button>
+            ${!isPaid ? `<button class="loan-abono-btn" onclick="openPayModal('${d.id}',${pending})">+ Abono</button>` : ""}
+            <button class="loan-del-btn" onclick="handleDeleteDebtor('${d.id}')">🗑</button>
+          </div>
+          <div class="debtor-detail" id="ddetail-${d.id}" style="display:none;"></div>
+        </div>`;
+    }
+
+    // ── Expandir detalle ──────────────────────────────────────
+    window.toggleDetail = async (id) => {
+      const el  = document.getElementById(`ddetail-${id}`);
+      const btn = document.querySelector(`#dcard-${id} .detail-toggle`);
+      if (el.style.display !== "none") {
+        el.style.display = "none";
+        btn.textContent  = "Ver detalle";
+        return;
       }
+      el.style.display = "block";
+      btn.textContent  = "Ocultar detalle";
+      el.innerHTML = "<div style='font-size:12px;color:#888;padding:8px 0;'>Cargando...</div>";
+      const [loans, payments] = await Promise.all([getLoans(uid, id), getLoanPayments(uid, id)]);
+      detailCache[id] = { loans, payments };
+      renderDetail(id, loans, payments);
     };
 
-    window.handleDelPay = async (loanId, payId, amount, walletId) => {
-      if (!confirm("¿Eliminar este abono?")) return;
+    function renderDetail(debtorId, loans, payments) {
+      const el = document.getElementById(`ddetail-${debtorId}`);
+
+      const loansHTML = loans.length
+        ? loans.map(l => `
+            <div class="item-row">
+              <div class="item-main">
+                <span class="item-date">${formatDate(l.date)}</span>
+                ${l.walletName ? `<span class="item-wallet">${l.walletName}</span>` : ""}
+                ${l.notes      ? `<span class="item-note">${l.notes}</span>`       : ""}
+              </div>
+              <span class="item-amount total-v">${formatCOP(l.amount)}</span>
+              <button class="item-del" onclick="handleDeleteLoan('${debtorId}','${l.id}')">✕</button>
+            </div>`).join("")
+        : `<div class="no-items">Sin préstamos individuales registrados</div>`;
+
+      const paysHTML = payments.length
+        ? payments.map(p => `
+            <div class="item-row">
+              <div class="item-main">
+                <span class="item-date">${formatDate(p.date)}</span>
+                ${p.walletName ? `<span class="item-wallet">${p.walletName}</span>` : ""}
+                ${p.notes      ? `<span class="item-note">${p.notes}</span>`       : ""}
+              </div>
+              <span class="item-amount payment-v">+${formatCOP(p.amount)}</span>
+              <button class="item-del" onclick="handleDelPay('${debtorId}','${p.id}')">✕</button>
+            </div>`).join("")
+        : `<div class="no-items">Sin abonos registrados</div>`;
+
+      el.innerHTML = `
+        <div class="detail-section">
+          <div class="detail-section-hdr">Préstamos individuales</div>
+          ${loansHTML}
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-hdr">Abonos</div>
+          ${paysHTML}
+        </div>`;
+    }
+
+    // ── Eliminar deudor completo ──────────────────────────────
+    window.handleDeleteDebtor = async (id) => {
+      if (!confirm("¿Eliminar este deudor y todos sus registros?\nSe revertirán los montos en cajitas.")) return;
       try {
-        await deleteLoanPayment(uid, loanId, payId, { amount, walletId });
-        showToast("Abono eliminado.", "success");
-        wallets = await getWallets(uid); populateWalletSelects();
-        await loadLoans();
-      } catch(e) { showToast("Error.", "error"); }
+        await deleteDebtor(uid, id);
+        showToast("Deudor eliminado.", "success");
+        wallets = await getWallets(uid);
+        populateWalletSelects();
+        await loadDebtors();
+      } catch(e) { showToast("Error al eliminar.", "error"); console.error(e); }
     };
 
-    window.handleDelete = async (id) => {
-      if (!confirm("¿Eliminar este préstamo?")) return;
+    // ── Eliminar préstamo individual ──────────────────────────
+    window.handleDeleteLoan = async (debtorId, loanId) => {
+      if (!confirm("¿Eliminar este préstamo? Se revertirá el monto a la cajita.")) return;
+      const loan = detailCache[debtorId]?.loans.find(l => l.id === loanId);
+      if (!loan) { showToast("Error: recarga la página.", "error"); return; }
       try {
-        const loan = loans.find(l=>l.id===id);
-        await deleteLoan(uid, id, loan);
+        await deleteLoan(uid, debtorId, loanId, { amount: loan.amount, walletId: loan.walletId || "" });
         showToast("Préstamo eliminado.", "success");
-        wallets = await getWallets(uid); populateWalletSelects();
-        await loadLoans();
-      } catch(e) { showToast("Error.", "error"); }
+        wallets = await getWallets(uid);
+        populateWalletSelects();
+        await loadDebtors();
+      } catch(e) { showToast("Error al eliminar.", "error"); console.error(e); }
     };
 
-    // ── Modal nuevo préstamo ──────────────────────────────
-    document.getElementById("fab").addEventListener("click", openLoanModal);
-    document.getElementById("loan-close").addEventListener("click", () => closeLoanModal());
-    document.getElementById("loan-overlay").addEventListener("click", e => {
-      if (e.target === document.getElementById("loan-overlay")) closeLoanModal();
+    // ── Eliminar abono ────────────────────────────────────────
+    window.handleDelPay = async (debtorId, payId) => {
+      if (!confirm("¿Eliminar este abono?")) return;
+      const pay = detailCache[debtorId]?.payments.find(p => p.id === payId);
+      if (!pay) { showToast("Error: recarga la página.", "error"); return; }
+      try {
+        await deleteLoanPayment(uid, debtorId, payId, { amount: pay.amount, walletId: pay.walletId || "" });
+        showToast("Abono eliminado.", "success");
+        wallets = await getWallets(uid);
+        populateWalletSelects();
+        await loadDebtors();
+      } catch(e) { showToast("Error al eliminar.", "error"); console.error(e); }
+    };
+
+    // ── Modal: Nuevo deudor ───────────────────────────────────
+    document.getElementById("fab").addEventListener("click", openDebtorModal);
+    document.getElementById("debtor-close").addEventListener("click", closeDebtorModal);
+    document.getElementById("debtor-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("debtor-overlay")) closeDebtorModal();
     });
 
-    function openLoanModal() {
-      document.getElementById("loan-debtor").value = "";
-      document.getElementById("loan-date").value   = today();
-      document.getElementById("loan-wallet").value = "";
-      document.getElementById("loan-notes").value  = "";
-      const loanAmtInp = document.getElementById("loan-amount");
-      loanAmtInp.dataset.raw = ""; loanAmtInp.value = "";
-      document.getElementById("loan-overlay").classList.add("open");
-      document.getElementById("loan-debtor").focus();
+    function openDebtorModal() {
+      document.getElementById("debtor-name").value   = "";
+      document.getElementById("debtor-date").value   = today();
+      document.getElementById("debtor-wallet").value = "";
+      document.getElementById("debtor-notes").value  = "";
+      const inp = document.getElementById("debtor-amount");
+      inp.dataset.raw = ""; inp.value = "";
+      document.getElementById("debtor-overlay").classList.add("open");
+      document.getElementById("debtor-name").focus();
     }
-    function closeLoanModal() { document.getElementById("loan-overlay").classList.remove("open"); }
+    function closeDebtorModal() { document.getElementById("debtor-overlay").classList.remove("open"); }
 
-    document.getElementById("btn-save-loan").addEventListener("click", async () => {
-      const debtor   = document.getElementById("loan-debtor").value.trim();
-      const amount   = getNumericValue(document.getElementById("loan-amount"));
-      const date     = document.getElementById("loan-date").value;
-      const walletId = document.getElementById("loan-wallet").value;
-      const walletOpt= document.querySelector(`#loan-wallet option[value="${walletId}"]`);
+    document.getElementById("btn-save-debtor").addEventListener("click", async () => {
+      const name     = document.getElementById("debtor-name").value.trim();
+      const amount   = getNumericValue(document.getElementById("debtor-amount"));
+      const date     = document.getElementById("debtor-date").value;
+      const walletId = document.getElementById("debtor-wallet").value;
+      const walletOpt  = document.querySelector(`#debtor-wallet option[value="${walletId}"]`);
       const walletName = walletOpt?.dataset.name || "";
-      const notes    = document.getElementById("loan-notes").value.trim();
-      const btn      = document.getElementById("btn-save-loan");
-      if (!debtor) { showToast("Escribe el nombre del deudor.", "error"); return; }
-      if (!amount) { showToast("Ingresa el monto prestado.", "error"); return; }
+      const notes    = document.getElementById("debtor-notes").value.trim();
+      const btn      = document.getElementById("btn-save-debtor");
+
+      if (!name)   { showToast("Escribe el nombre del deudor.", "error"); return; }
+      if (!amount) { showToast("Ingresa el monto prestado.",   "error"); return; }
+
       btn.disabled = true; btn.childNodes[0].textContent = "Guardando...";
       try {
-        await addLoan(uid, { debtorName: debtor, amount, date, walletId, walletName, notes });
-        showToast("Préstamo registrado.", "success");
-        closeLoanModal();
-        wallets = await getWallets(uid); populateWalletSelects();
-        await loadLoans();
+        await addDebtor(uid, name, { amount, date, walletId, walletName, notes });
+        showToast("Deudor registrado.", "success");
+        closeDebtorModal();
+        wallets = await getWallets(uid);
+        populateWalletSelects();
+        await loadDebtors();
       } catch(e) { showToast("Error.", "error"); console.error(e); }
       finally { btn.disabled = false; btn.childNodes[0].textContent = "Registrar préstamo"; }
     });
 
-    // ── Modal abono ───────────────────────────────────────
-    window.openPayModal = (loanId, debtor, pending) => {
-      activeLoanId = loanId;
-      document.getElementById("pay-title").textContent = `Abono de ${debtor}`;
-      const payAmtInp = document.getElementById("pay-amount");
+    // ── Modal: Nuevo préstamo a deudor existente ──────────────
+    window.openAddLoanModal = (debtorId) => {
+      activeDebtorId = debtorId;
+      const d = debtors.find(x => x.id === debtorId);
+      document.getElementById("loan-modal-title").textContent = `Nuevo préstamo · ${d?.name || ""}`;
+      document.getElementById("loan-date").value   = today();
+      document.getElementById("loan-wallet").value = "";
+      document.getElementById("loan-notes").value  = "";
+      const inp = document.getElementById("loan-amount");
+      inp.dataset.raw = ""; inp.value = "";
+      document.getElementById("loan-overlay").classList.add("open");
+      inp.focus();
+    };
+
+    function closeLoanModal() {
+      document.getElementById("loan-overlay").classList.remove("open");
+      activeDebtorId = null;
+    }
+    document.getElementById("loan-close").addEventListener("click", closeLoanModal);
+    document.getElementById("loan-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("loan-overlay")) closeLoanModal();
+    });
+
+    document.getElementById("btn-save-loan").addEventListener("click", async () => {
+      const amount   = getNumericValue(document.getElementById("loan-amount"));
+      const date     = document.getElementById("loan-date").value;
+      const walletId = document.getElementById("loan-wallet").value;
+      const walletOpt  = document.querySelector(`#loan-wallet option[value="${walletId}"]`);
+      const walletName = walletOpt?.dataset.name || "";
+      const notes    = document.getElementById("loan-notes").value.trim();
+      const btn      = document.getElementById("btn-save-loan");
+
+      if (!amount || !activeDebtorId) { showToast("Ingresa el monto prestado.", "error"); return; }
+
+      btn.disabled = true; btn.childNodes[0].textContent = "Guardando...";
+      try {
+        await addLoan(uid, activeDebtorId, { amount, date, walletId, walletName, notes });
+        showToast("Préstamo agregado.", "success");
+        closeLoanModal();
+        wallets = await getWallets(uid);
+        populateWalletSelects();
+        await loadDebtors();
+      } catch(e) { showToast("Error.", "error"); console.error(e); }
+      finally { btn.disabled = false; btn.childNodes[0].textContent = "Agregar préstamo"; }
+    });
+
+    // ── Modal: Registrar abono ────────────────────────────────
+    window.openPayModal = (debtorId, pending) => {
+      activeDebtorId = debtorId;
+      const d = debtors.find(x => x.id === debtorId);
+      document.getElementById("pay-title").textContent = `Abono de ${d?.name || ""}`;
+      const inp = document.getElementById("pay-amount");
       const raw = pending > 0 ? String(Math.round(pending)) : "";
-      payAmtInp.dataset.raw = raw;
-      payAmtInp.value = raw ? Number(raw).toLocaleString("es-CO") : "";
+      inp.dataset.raw = raw;
+      inp.value = raw ? Number(raw).toLocaleString("es-CO") : "";
       document.getElementById("pay-date").value   = today();
       document.getElementById("pay-wallet").value = "";
       document.getElementById("pay-notes").value  = "";
       document.getElementById("pay-overlay").classList.add("open");
-      payAmtInp.focus();
+      inp.focus();
     };
 
-    document.getElementById("pay-close").addEventListener("click", () => {
-      document.getElementById("pay-overlay").classList.remove("open"); activeLoanId = null;
-    });
+    function closePayModal() {
+      document.getElementById("pay-overlay").classList.remove("open");
+      activeDebtorId = null;
+    }
+    document.getElementById("pay-close").addEventListener("click", closePayModal);
     document.getElementById("pay-overlay").addEventListener("click", e => {
-      if (e.target === document.getElementById("pay-overlay")) {
-        document.getElementById("pay-overlay").classList.remove("open"); activeLoanId = null;
-      }
+      if (e.target === document.getElementById("pay-overlay")) closePayModal();
     });
 
     document.getElementById("btn-save-pay").addEventListener("click", async () => {
       const amount   = getNumericValue(document.getElementById("pay-amount"));
       const date     = document.getElementById("pay-date").value;
       const walletId = document.getElementById("pay-wallet").value;
-      const walletOpt= document.querySelector(`#pay-wallet option[value="${walletId}"]`);
+      const walletOpt  = document.querySelector(`#pay-wallet option[value="${walletId}"]`);
       const walletName = walletOpt?.dataset.name || "";
       const notes    = document.getElementById("pay-notes").value.trim();
       const btn      = document.getElementById("btn-save-pay");
-      if (!amount) { showToast("Ingresa el monto del abono.", "error"); return; }
-      if (!activeLoanId) return;
+
+      if (!amount || !activeDebtorId) { showToast("Ingresa el monto del abono.", "error"); return; }
+
       btn.disabled = true; btn.childNodes[0].textContent = "Guardando...";
       try {
-        await addLoanPayment(uid, activeLoanId, { amount, date, walletId, walletName, notes });
+        await addLoanPayment(uid, activeDebtorId, { amount, date, walletId, walletName, notes });
         showToast("Abono registrado.", "success");
-        document.getElementById("pay-overlay").classList.remove("open"); activeLoanId = null;
-        wallets = await getWallets(uid); populateWalletSelects();
-        await loadLoans();
+        closePayModal();
+        wallets = await getWallets(uid);
+        populateWalletSelects();
+        await loadDebtors();
       } catch(e) { showToast("Error.", "error"); console.error(e); }
       finally { btn.disabled = false; btn.childNodes[0].textContent = "Registrar abono"; }
     });
 
+    // ── Wallets ───────────────────────────────────────────────
     function populateWalletSelects() {
       const opts = `<option value="">Sin cajita asignada</option>` +
-        wallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon||"🏦"} ${w.name} · ${formatCOP(w.balance||0)}</option>`).join("");
-      document.getElementById("loan-wallet").innerHTML = opts;
-      document.getElementById("pay-wallet").innerHTML  = opts;
+        wallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon || "🏦"} ${w.name} · ${formatCOP(w.balance || 0)}</option>`).join("");
+      ["debtor-wallet", "loan-wallet", "pay-wallet"].forEach(id => {
+        document.getElementById(id).innerHTML = opts;
+      });
     }
   </script>
 </body>
