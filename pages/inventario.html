@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inventario · Mi Presupuesto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    body { background: #f0f4f8; }
+    body.dark { background: #111; }
+
+    /* ── Page header ── */
+    .inv-page-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 14px 0; max-width: 100%;
+    }
+    .inv-page-title { font-size: 20px; font-weight: 500; color: var(--text); }
+
+    /* ── Layout dos paneles ── */
+    .inv-layout {
+      display: flex; gap: 12px;
+      padding: 12px 14px 90px;
+    }
+    .inv-panel-left {
+      width: 260px; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .inv-panel-right {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    @media (max-width: 767px) {
+      .inv-layout { flex-direction: column; }
+      .inv-panel-left  { width: 100%; }
+      .inv-panel-right { display: none; }
+      .inv-layout.show-right .inv-panel-left  { display: none; }
+      .inv-layout.show-right .inv-panel-right { display: flex; }
+    }
+
+    /* ── Panel header ── */
+    .panel-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .panel-hdr-title {
+      font-size: 11px; font-weight: 500; color: #888;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    /* ── Lista card ── */
+    .lista-card {
+      background: #fff; border-radius: 12px; padding: 11px 13px;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      border: 1.5px solid transparent;
+      display: flex; align-items: center; gap: 10px;
+    }
+    body.dark .lista-card { background: #1a1a1a; }
+    .lista-card:hover { border-color: #cdd5e0; }
+    .lista-card.active { border-color: #0f3460; background: #e6f1fb; }
+    body.dark .lista-card.active { background: #0a1f3d; border-color: #1a4a7a; }
+    .lista-ico {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: #e6f1fb; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
+    }
+    body.dark .lista-ico { background: #0a1f3d; }
+    .lista-info { flex: 1; min-width: 0; }
+    .lista-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lista-sub  { font-size: 11px; color: #888; margin-top: 1px; }
+    .lista-del  { background: none; border: none; color: #cdd5e0; font-size: 14px; cursor: pointer; padding: 4px; flex-shrink: 0; transition: color 0.15s; }
+    .lista-del:hover { color: #c0392b; }
+
+    /* ── Btn nueva lista ── */
+    .btn-nueva-lista {
+      width: 100%; border: 1.5px dashed #cdd5e0; border-radius: 12px;
+      padding: 11px; display: flex; align-items: center; justify-content: center;
+      gap: 7px; background: none; cursor: pointer; font-family: "DM Sans", sans-serif;
+      transition: border-color 0.15s; margin-bottom: 2px;
+    }
+    .btn-nueva-lista:hover { border-color: #0f3460; }
+    .btn-nueva-lista span { font-size: 12px; color: #888; }
+
+    /* ── Empty state ── */
+    .inv-empty {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 48px 20px;
+      background: #fff; border-radius: 14px; min-height: 200px;
+    }
+    body.dark .inv-empty { background: #1a1a1a; }
+    .inv-empty-ico { font-size: 38px; margin-bottom: 12px; }
+    .inv-empty-txt { font-size: 14px; color: #888; line-height: 1.5; }
+
+    /* ── Detalle header ── */
+    .det-hdr {
+      background: #fff; border-radius: 12px; padding: 13px 15px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px;
+    }
+    body.dark .det-hdr { background: #1a1a1a; }
+    .det-hdr-left { display: flex; align-items: center; gap: 8px; }
+    .det-back-btn {
+      display: none; background: none; border: none;
+      cursor: pointer; color: #888; font-size: 20px; padding: 0 4px; line-height: 1;
+    }
+    @media (max-width: 767px) { .det-back-btn { display: block; } }
+    .det-lista-name { font-size: 15px; font-weight: 500; color: var(--text); }
+    .det-lista-cat  { font-size: 11px; color: #888; margin-top: 1px; }
+    .det-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* ── Botones pequeños ── */
+    .btn-psm {
+      padding: 7px 13px; border: none; border-radius: 8px;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif; white-space: nowrap; transition: background 0.15s;
+    }
+    .btn-psm.primary { background: #0f3460; color: #fff; }
+    .btn-psm.primary:hover { background: #1a4a7a; }
+    .btn-psm.ghost {
+      background: none; border: 1.5px solid #e2e8f0; color: #555;
+    }
+    body.dark .btn-psm.ghost { border-color: #333; color: #aaa; }
+    .btn-psm.ghost:hover { border-color: #0f3460; color: #0f3460; }
+
+    /* ── Stock alert ── */
+    .stock-alert {
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
+      padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: #c0392b;
+    }
+    body.dark .stock-alert { background: #2a1515; border-color: #4a2020; color: #e07070; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 11px; font-weight: 500; color: #888;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 6px 0 6px;
+    }
+
+    /* ── Gap list ── */
+    .gap-list { display: flex; flex-direction: column; gap: 6px; }
+
+    /* ── Producto card ── */
+    .prod-card {
+      background: #fff; border-radius: 12px; padding: 11px 13px;
+      display: flex; align-items: center; gap: 11px;
+    }
+    body.dark .prod-card { background: #1a1a1a; }
+    .prod-bar-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px; flex-shrink: 0; width: 32px;
+    }
+    .prod-bar-track {
+      width: 6px; height: 42px; background: #f0f4f8; border-radius: 99px;
+      position: relative; overflow: hidden;
+    }
+    body.dark .prod-bar-track { background: #222; }
+    .prod-bar-fill {
+      position: absolute; bottom: 0; left: 0; right: 0; border-radius: 99px;
+      transition: height 0.3s;
+    }
+    .prod-bar-fill.ok  { background: #3b6d11; }
+    .prod-bar-fill.low { background: #c0392b; }
+    .prod-bar-fill.mid { background: #d97706; }
+    .prod-bar-num { font-size: 10px; color: #888; font-weight: 500; }
+    .prod-info { flex: 1; min-width: 0; }
+    .prod-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .prod-meta { font-size: 11px; color: #888; margin-top: 1px; }
+    .prod-stock-lbl { font-size: 10px; font-weight: 500; margin-top: 3px; }
+    .prod-stock-lbl.ok  { color: #3b6d11; }
+    .prod-stock-lbl.low { color: #c0392b; }
+    .prod-stock-lbl.mid { color: #d97706; }
+    .prod-price { text-align: right; flex-shrink: 0; }
+    .prod-price-val  { font-size: 13px; font-weight: 500; color: var(--text); }
+    .prod-price-unit { font-size: 10px; color: #888; }
+    .prod-btns { display: flex; gap: 2px; flex-shrink: 0; }
+    .prod-btn {
+      background: none; border: none; color: #cdd5e0; font-size: 13px;
+      cursor: pointer; padding: 5px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+    }
+    .prod-btn:hover        { background: #f0f4f8; color: #0f3460; }
+    .prod-btn.del:hover    { background: #fef2f2; color: #c0392b; }
+    body.dark .prod-btn:hover     { background: #222; }
+    body.dark .prod-btn.del:hover { background: #2a1515; color: #e07070; }
+
+    /* ── Historial ── */
+    .hist-card {
+      background: #fff; border-radius: 12px; padding: 11px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    body.dark .hist-card { background: #1a1a1a; }
+    .hist-info { flex: 1; min-width: 0; }
+    .hist-cat   { font-size: 13px; font-weight: 500; color: var(--text); }
+    .hist-count { font-size: 11px; color: #888; margin-top: 1px; }
+    .hist-right { text-align: right; flex-shrink: 0; }
+    .hist-total { font-size: 14px; font-weight: 500; color: #0f3460; }
+    .hist-date  { font-size: 11px; color: #888; margin-top: 1px; }
+
+    /* ── Modal overlay ── */
+    .inv-overlay {
+      position: fixed; inset: 0; background: rgba(15,52,96,0.4);
+      z-index: 150; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .inv-overlay.open { opacity: 1; pointer-events: all; }
+    .inv-modal {
+      background: #fff; border-radius: 16px; padding: 22px 20px 20px;
+      width: 100%; max-width: 460px; z-index: 160;
+      transform: scale(0.95); opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .inv-overlay.open .inv-modal { transform: scale(1); opacity: 1; }
+    body.dark .inv-modal { background: #1a1a1a; }
+    .inv-modal.lg { max-width: 580px; }
+    .inv-modal-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 18px;
+    }
+    .inv-modal-title { font-size: 16px; font-weight: 500; color: var(--text); }
+    .inv-modal-close {
+      background: none; border: none; cursor: pointer;
+      color: #888; font-size: 22px; line-height: 1; padding: 0;
+    }
+
+    /* ── Modal tabs ── */
+    .mtabs {
+      display: flex; background: #f0f4f8; border-radius: 8px;
+      padding: 3px; margin-bottom: 16px;
+    }
+    body.dark .mtabs { background: #222; }
+    .mtab {
+      flex: 1; text-align: center; padding: 7px;
+      font-size: 12px; font-weight: 500; border-radius: 6px;
+      cursor: pointer; color: #888; transition: all 0.15s; user-select: none;
+    }
+    .mtab.active { background: #fff; color: #1a1a2e; }
+    body.dark .mtab.active { background: #1a1a1a; color: #e8e8e8; }
+
+    /* ── Form fields ── */
+    .f-block { margin-bottom: 12px; }
+    .f-row2  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .f-row3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .f-lbl   { font-size: 10px; font-weight: 500; color: #8a9ab0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .f-inp, .f-sel {
+      width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-family: "DM Sans", sans-serif; color: #1a1a2e;
+      background: #fff; outline: none; transition: border-color 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    body.dark .f-inp, body.dark .f-sel { background: #222; border-color: #333; color: #e8e8e8; }
+    .f-inp:focus, .f-sel:focus { border-color: #0f3460; }
+
+    /* ── Save btn ── */
+    .inv-save-btn {
+      width: 100%; padding: 12px; background: #0f3460; color: #fff; border: none;
+      border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+      font-family: "DM Sans", sans-serif; margin-top: 6px; transition: background 0.15s;
+    }
+    .inv-save-btn:hover     { background: #1a4a7a; }
+    .inv-save-btn:disabled  { opacity: 0.5; cursor: not-allowed; }
+    .inv-save-btn.green     { background: #3b6d11; }
+    .inv-save-btn.green:hover { background: #2d540d; }
+
+    /* ── Compra tabla ── */
+    .compra-table {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 14px;
+    }
+    .compra-table th {
+      text-align: left; padding: 6px 8px; font-size: 10px; font-weight: 500;
+      color: #888; text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1.5px solid #e2e8f0;
+    }
+    body.dark .compra-table th { border-bottom-color: #333; }
+    .compra-table td { padding: 8px; border-bottom: 0.5px solid #f0f0f0; color: var(--text); }
+    body.dark .compra-table td { border-bottom-color: #2a2a2a; }
+    .compra-table tr:last-child td { border-bottom: none; }
+    .compra-total {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #f0f4f8; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+    }
+    body.dark .compra-total { background: #222; }
+    .compra-total-lbl { font-size: 13px; font-weight: 500; color: var(--text); }
+    .compra-total-val { font-size: 16px; font-weight: 500; color: #0f3460; }
+
+    /* ── File drop ── */
+    .file-drop {
+      border: 2px dashed #cdd5e0; border-radius: 10px; padding: 24px;
+      text-align: center; cursor: pointer; transition: border-color 0.15s;
+    }
+    .file-drop:hover, .file-drop.over { border-color: #0f3460; }
+    .file-drop-txt { font-size: 13px; color: #888; }
+    .file-drop-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+    /* ── Preview tabla masiva ── */
+    .preview-wrap { overflow-x: auto; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .preview-table th { background: #f0f4f8; padding: 5px 8px; text-align: left; font-weight: 500; color: #888; font-size: 10px; text-transform: uppercase; position: sticky; top: 0; }
+    body.dark .preview-table th { background: #222; }
+    .preview-table td { padding: 5px 8px; border-bottom: 0.5px solid #f0f4f8; color: var(--text); }
+    body.dark .preview-table td { border-bottom-color: #2a2a2a; }
+
+    /* ── Descarga link ── */
+    .dl-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; color: #185fa5; cursor: pointer; background: #e6f1fb;
+      border: none; border-radius: 6px; padding: 6px 11px;
+      font-family: "DM Sans", sans-serif; transition: background 0.15s;
+    }
+    .dl-link:hover { background: #cce3f7; }
+
+    /* ── Compra actions row ── */
+    .compra-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .compra-actions .spacer { flex: 1; }
+
+    /* ── Paginación productos ── */
+    .pag-wrap { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 10px 0 2px; }
+    .pag-btn {
+      width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e2e8f0;
+      background: #fff; color: #888; cursor: pointer; font-size: 15px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s, color 0.15s; font-family: "DM Sans", sans-serif;
+    }
+    body.dark .pag-btn { background: #1a1a1a; border-color: #333; }
+    .pag-btn:hover:not(:disabled) { border-color: #0f3460; color: #0f3460; }
+    .pag-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .pag-lbl { font-size: 12px; color: #888; min-width: 90px; text-align: center; }
+
+    /* ── Checklist de compra ── */
+    .compra-check { width: 16px; height: 16px; cursor: pointer; accent-color: #0f3460; }
+    .compra-table tr.desmarcado td { opacity: 0.35; }
+
+    /* ── Preview diff de stock masivo ── */
+    .diff-new  { color: #185fa5; font-weight: 500; }
+    .diff-same { color: #aaa; }
+
+    /* ── Banner de productos ignorados ── */
+    .ignored-banner {
+      background: #fef3cd; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 10px 14px; font-size: 12px; color: #92400e; margin-bottom: 12px;
+    }
+    body.dark .ignored-banner { background: #2a1f0a; border-color: #4a3010; color: #d4a04e; }
+
+    /* ── Historial — botones y badge ── */
+    .hist-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .hist-btns  { display: flex; gap: 4px; }
+    .hist-btn {
+      padding: 4px 9px; border-radius: 6px; border: 1.5px solid #e2e8f0;
+      background: none; color: #555; font-size: 11px; font-weight: 500;
+      cursor: pointer; font-family: "DM Sans", sans-serif; white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    body.dark .hist-btn { border-color: #333; color: #aaa; }
+    .hist-btn:hover        { border-color: #0f3460; color: #0f3460; }
+    .hist-btn.danger:hover { border-color: #c0392b; color: #c0392b; }
+    .hist-card.anulada { opacity: 0.55; }
+    .badge-anulada {
+      display: inline-block; font-size: 9px; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      background: #fecaca; color: #991b1b;
+      border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: middle;
+    }
+    body.dark .badge-anulada { background: #4a2020; color: #e07070; }
+  </style>
+</head>
+<body>
+  <div id="topbar" class="topbar" style="padding:12px 14px 0;"></div>
+
+  <div class="inv-page-hdr">
+    <div class="inv-page-title">Inventario</div>
+  </div>
+
+  <!-- Layout principal -->
+  <div class="inv-layout" id="inv-layout">
+
+    <!-- Panel izquierdo: listas -->
+    <div class="inv-panel-left">
+      <div class="panel-hdr">
+        <span class="panel-hdr-title">Mis listas</span>
+      </div>
+      <button class="btn-nueva-lista" id="btn-nueva-lista">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Nueva lista</span>
+      </button>
+      <div id="listas-container" class="gap-list"></div>
+    </div>
+
+    <!-- Panel derecho: detalle -->
+    <div class="inv-panel-right">
+
+      <!-- Estado vacío -->
+      <div class="inv-empty" id="panel-vacio">
+        <div class="inv-empty-ico">🛒</div>
+        <div class="inv-empty-txt">Selecciona o crea una lista<br>para ver sus productos</div>
+      </div>
+
+      <!-- Detalle de lista seleccionada -->
+      <div id="panel-detalle" style="display:none; flex-direction:column; gap:10px;">
+
+        <div class="det-hdr">
+          <div class="det-hdr-left">
+            <button class="det-back-btn" id="btn-back">‹</button>
+            <div>
+              <div class="det-lista-name" id="det-nombre">—</div>
+              <div class="det-lista-cat"  id="det-cat">—</div>
+            </div>
+          </div>
+          <div class="det-actions">
+            <button class="btn-psm ghost" id="btn-editar-lista">Editar lista</button>
+            <button class="btn-psm ghost" id="btn-generar-compra">🛒 Generar compra</button>
+            <button class="btn-psm ghost" id="btn-actualizar-stock">📊 Actualizar stock</button>
+            <button class="btn-psm primary" id="btn-add-producto">+ Producto</button>
+          </div>
+        </div>
+
+        <!-- Alerta stock bajo -->
+        <div id="stock-alert" class="stock-alert" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span id="stock-alert-txt"></span>
+        </div>
+
+        <!-- Productos -->
+        <div>
+          <div class="section-title">Productos</div>
+          <div id="productos-container" class="gap-list">
+            <div class="skeleton" style="height:68px;border-radius:12px;"></div>
+          </div>
+        </div>
+
+        <!-- Historial -->
+        <div>
+          <div class="section-title" style="margin-top:6px;">Historial de compras</div>
+          <div id="historial-container" class="gap-list"></div>
+        </div>
+
+      </div><!-- /panel-detalle -->
+    </div><!-- /panel-right -->
+  </div><!-- /inv-layout -->
+
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- Modal: Actualizar stock masivo                        -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="inv-overlay" id="modal-stock">
+    <div class="inv-modal lg">
+      <div class="inv-modal-hdr">
+        <div class="inv-modal-title">Actualizar stock masivo</div>
+        <button class="inv-modal-close" data-close="modal-stock">×</button>
+      </div>
+      <p style="font-size:12px;color:#888;margin-bottom:14px;line-height:1.5;">
+        Descarga el Excel con los productos actuales, edita los valores de stock y súbelo de nuevo.
+      </p>
+      <div style="margin-bottom:14px;">
+        <button class="dl-link" id="btn-dl-stock">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar stock actual (.xlsx)
+        </button>
+      </div>
+      <div class="file-drop" id="file-drop-stock">
+        <div class="file-drop-txt">📂 Arrastra el archivo editado aquí</div>
+        <div class="file-drop-sub">o haz clic para seleccionar</div>
+        <input type="file" id="file-inp-stock" accept=".xlsx,.xls,.csv" style="display:none;"/>
+      </div>
+      <div id="stock-preview-wrap" style="display:none;margin-top:14px;">
+        <div id="ignored-banner" class="ignored-banner" style="display:none;"></div>
+        <div class="preview-wrap">
+          <table class="preview-table" id="stock-preview-table"></table>
+        </div>
+        <button class="inv-save-btn green" id="btn-aplicar-stock" style="margin-top:12px;">Aplicar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- Modal: Nueva / Editar Lista                           -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="inv-overlay" id="modal-lista">
+    <div class="inv-modal">
+      <div class="inv-modal-hdr">
+        <div class="inv-modal-title" id="modal-lista-title">Nueva lista</div>
+        <button class="inv-modal-close" data-close="modal-lista">×</button>
+      </div>
+      <div class="f-block">
+        <div class="f-lbl">Nombre de la lista</div>
+        <input type="text" class="f-inp" id="lista-nombre-inp" placeholder="Ej: Mercado semanal" maxlength="60"/>
+      </div>
+      <div class="f-block">
+        <div class="f-lbl">Categoría de presupuesto</div>
+        <select class="f-sel" id="lista-cat-inp">
+          <option value="">Sin categoría</option>
+        </select>
+      </div>
+      <button class="inv-save-btn" id="btn-guardar-lista">Guardar lista</button>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- Modal: Agregar / Editar Producto                      -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="inv-overlay" id="modal-producto">
+    <div class="inv-modal">
+      <div class="inv-modal-hdr">
+        <div class="inv-modal-title" id="modal-prod-title">Agregar producto</div>
+        <button class="inv-modal-close" data-close="modal-producto">×</button>
+      </div>
+
+      <div class="mtabs" id="prod-tabs">
+        <div class="mtab active" data-tab="uno">Uno a uno</div>
+        <div class="mtab" data-tab="masiva">Carga masiva</div>
+      </div>
+
+      <!-- Tab: uno a uno -->
+      <div id="tab-uno">
+        <div class="f-block">
+          <div class="f-lbl">Nombre del producto</div>
+          <input type="text" class="f-inp" id="prod-nombre" placeholder="Ej: Leche" maxlength="60"/>
+        </div>
+        <div class="f-row2">
+          <div>
+            <div class="f-lbl">Unidad</div>
+            <input type="text" class="f-inp" id="prod-unidad" placeholder="litros, kg, und…" maxlength="20"/>
+          </div>
+          <div>
+            <div class="f-lbl">Frecuencia</div>
+            <select class="f-sel" id="prod-frecuencia">
+              <option value="semanal">Semanal</option>
+              <option value="quincenal">Quincenal</option>
+              <option value="mensual">Mensual</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-row3">
+          <div>
+            <div class="f-lbl">Stock actual</div>
+            <input type="text" class="f-inp" id="prod-actual" placeholder="0" inputmode="numeric"/>
+          </div>
+          <div>
+            <div class="f-lbl">Mínimo</div>
+            <input type="text" class="f-inp" id="prod-min" placeholder="0" inputmode="numeric"/>
+          </div>
+          <div>
+            <div class="f-lbl">Máximo</div>
+            <input type="text" class="f-inp" id="prod-max" placeholder="0" inputmode="numeric"/>
+          </div>
+        </div>
+        <div class="f-block" style="margin-bottom:16px;">
+          <div class="f-lbl">Precio unitario ($)</div>
+          <input type="text" class="f-inp" id="prod-precio" placeholder="0" inputmode="numeric"/>
+        </div>
+        <button class="inv-save-btn" id="btn-guardar-prod">Guardar producto</button>
+      </div>
+
+      <!-- Tab: carga masiva -->
+      <div id="tab-masiva" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:13px;color:var(--text);">Sube tu archivo Excel</span>
+          <button class="dl-link" id="btn-plantilla">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar plantilla
+          </button>
+        </div>
+        <div class="file-drop" id="file-drop">
+          <div class="file-drop-txt">📂 Arrastra tu .xlsx aquí</div>
+          <div class="file-drop-sub">o haz clic para seleccionar</div>
+          <input type="file" id="file-inp" accept=".xlsx,.xls,.csv" style="display:none;"/>
+        </div>
+        <div id="bulk-preview" style="display:none;">
+          <div style="font-size:12px;color:#888;margin-top:10px;" id="bulk-count"></div>
+          <div class="preview-wrap">
+            <table class="preview-table" id="preview-table"></table>
+          </div>
+          <button class="inv-save-btn green" id="btn-importar" style="margin-top:12px;">Importar productos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- Modal: Editar Compra                                  -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="inv-overlay" id="modal-editar-compra">
+    <div class="inv-modal">
+      <div class="inv-modal-hdr">
+        <div class="inv-modal-title">Editar compra</div>
+        <button class="inv-modal-close" data-close="modal-editar-compra">×</button>
+      </div>
+      <div class="f-block">
+        <div class="f-lbl">Categoría de presupuesto</div>
+        <select class="f-sel" id="edit-compra-cat">
+          <option value="">Sin categoría</option>
+        </select>
+      </div>
+      <div class="f-block" style="margin-bottom:16px;">
+        <div class="f-lbl">Fecha</div>
+        <input type="date" class="f-inp" id="edit-compra-fecha"/>
+      </div>
+      <button class="inv-save-btn" id="btn-guardar-edicion-compra">Guardar cambios</button>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- Modal: Generar Compra                                 -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="inv-overlay" id="modal-compra">
+    <div class="inv-modal lg">
+      <div class="inv-modal-hdr">
+        <div class="inv-modal-title">Lista de compra</div>
+        <button class="inv-modal-close" data-close="modal-compra">×</button>
+      </div>
+      <div id="compra-content">
+        <div class="skeleton" style="height:200px;border-radius:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from "../modules/auth.js";
+    import {
+      getCategories, addExpense, deleteExpense, getExpense, updateExpenseFields, getWallets,
+      getAppConfig,
+      getListas, addLista, updateLista, deleteLista,
+      getProductos, addProducto, updateProducto, softDeleteProducto, revertirStockProducto,
+      addCompra, getCompras, updateCompra
+    } from "../modules/db.js";
+    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js";
+    import { formatCOP, today, applyNumericFormat, getNumericValue, formatDate } from "../assets/utils.js";
+
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
+    // ── Estado ────────────────────────────────────────────
+    let uid, listas = [], productosActuales = [], categorias = [], wallets = [];
+    let listaSeleccionada = null, editandoListaId = null, editandoProdId = null;
+    let bulkProductos = [], productosParaComprar = [], comprasActuales = [];
+    let editandoCompraId = null, editandoCompraData = null;
+    let paginaProductos = 0;
+    const POR_PAG = 5;
+    let cambiosStock = [], ignoradosStock = [];
+
+    // ── Init ──────────────────────────────────────────────
+    const user = await requireAuth();
+    uid = user.uid;
+
+    const config = await getAppConfig(uid);
+    if (!config.inventarioActivo) {
+      window.location.href = "../pages/budget.html";
+      throw new Error("Módulo de inventario no activo");
+    }
+
+    renderTopbar(user);
+    renderBottomNav("inventario");
+
+    [categorias, wallets, listas] = await Promise.all([
+      getCategories(uid),
+      getWallets(uid),
+      getListas(uid)
+    ]);
+
+    poblarCatSelect("lista-cat-inp");
+    renderListas();
+
+    // ── Helpers de select ─────────────────────────────────
+    function poblarCatSelect(selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = `<option value="">Sin categoría</option>` +
+        categorias.map(c => `<option value="${c.name}">${c.name}</option>`).join("");
+    }
+
+    // ── LISTAS ────────────────────────────────────────────
+    function renderListas() {
+      const container = document.getElementById("listas-container");
+      if (!listas.length) {
+        container.innerHTML = `<div style="font-size:13px;color:#888;text-align:center;padding:16px 0;">Sin listas aún. Crea la primera.</div>`;
+        return;
+      }
+      container.innerHTML = listas.map(l => `
+        <div class="lista-card ${l.id === listaSeleccionada?.id ? "active" : ""}" data-lid="${l.id}">
+          <div class="lista-ico">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="1.5" stroke-linecap="round">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+          </div>
+          <div class="lista-info">
+            <div class="lista-name">${l.nombre}</div>
+            <div class="lista-sub">${l.categoriaPresupuesto || "Sin categoría"}</div>
+          </div>
+          <button class="lista-del" data-del-lista="${l.id}" title="Eliminar lista">✕</button>
+        </div>
+      `).join("");
+
+      container.onclick = e => {
+        const del  = e.target.closest("[data-del-lista]");
+        const card = e.target.closest("[data-lid]");
+        if (del)  { e.stopPropagation(); eliminarLista(del.dataset.delLista); return; }
+        if (card) seleccionarLista(card.dataset.lid);
+      };
+    }
+
+    async function seleccionarLista(listaId) {
+      listaSeleccionada = listas.find(l => l.id === listaId);
+      if (!listaSeleccionada) return;
+      renderListas();
+
+      document.getElementById("panel-vacio").style.display = "none";
+      const det = document.getElementById("panel-detalle");
+      det.style.display = "flex";
+
+      document.getElementById("det-nombre").textContent = listaSeleccionada.nombre;
+      document.getElementById("det-cat").textContent    = listaSeleccionada.categoriaPresupuesto || "Sin categoría";
+
+      document.getElementById("inv-layout").classList.add("show-right");
+
+      await Promise.all([cargarProductos(), cargarHistorial()]);
+    }
+
+    async function cargarProductos() {
+      document.getElementById("productos-container").innerHTML =
+        `<div class="skeleton" style="height:68px;border-radius:12px;"></div>`;
+      productosActuales = await getProductos(uid, listaSeleccionada.id);
+      paginaProductos = 0;
+      renderProductos();
+    }
+
+    function renderProductos() {
+      const container = document.getElementById("productos-container");
+      const bajos = productosActuales.filter(p => p.stockActual < p.stockMinimo);
+      const alertEl = document.getElementById("stock-alert");
+      if (bajos.length) {
+        alertEl.style.display = "flex";
+        document.getElementById("stock-alert-txt").textContent =
+          `${bajos.length} producto${bajos.length > 1 ? "s" : ""} por debajo del stock mínimo`;
+      } else {
+        alertEl.style.display = "none";
+      }
+
+      if (!productosActuales.length) {
+        container.innerHTML = `<div style="font-size:13px;color:#888;text-align:center;padding:20px 0;">Sin productos. Agrega el primero.</div>`;
+        return;
+      }
+
+      const totalPags = Math.ceil(productosActuales.length / POR_PAG);
+      paginaProductos = Math.min(paginaProductos, totalPags - 1);
+      const inicio    = paginaProductos * POR_PAG;
+      const pagina    = productosActuales.slice(inicio, inicio + POR_PAG);
+
+      const cardsHtml = pagina.map(p => {
+        const pct   = p.stockMaximo > 0 ? Math.min(p.stockActual / p.stockMaximo, 1) : 0;
+        const state = (p.stockActual === 0 && p.stockMinimo > 0) ? "low"
+                    : (p.stockActual > 0 && p.stockActual < p.stockMinimo) ? "mid"
+                    : "ok";
+        const lbl   = state === "low" ? "Sin stock" : state === "mid" ? "Bajo mínimo" : "En stock";
+        return `
+          <div class="prod-card">
+            <div class="prod-bar-wrap">
+              <div class="prod-bar-track">
+                <div class="prod-bar-fill ${state}" style="height:${Math.round(pct * 100)}%;"></div>
+              </div>
+              <div class="prod-bar-num">${p.stockActual}</div>
+            </div>
+            <div class="prod-info">
+              <div class="prod-name">${p.nombre}</div>
+              <div class="prod-meta">${p.unidad} · ${p.frecuencia} · mín ${p.stockMinimo} / máx ${p.stockMaximo}</div>
+              <div class="prod-stock-lbl ${state}">${lbl}</div>
+            </div>
+            <div class="prod-price">
+              <div class="prod-price-val">${formatCOP(p.valorUnitario)}</div>
+              <div class="prod-price-unit">/ ${p.unidad}</div>
+            </div>
+            <div class="prod-btns">
+              <button class="prod-btn" data-edit-prod="${p.id}" title="Editar">✏️</button>
+              <button class="prod-btn del" data-del-prod="${p.id}" title="Eliminar">✕</button>
+            </div>
+          </div>`;
+      }).join("");
+
+      const pagHtml = totalPags > 1 ? `
+        <div class="pag-wrap">
+          <button class="pag-btn" id="pag-prev" ${paginaProductos === 0 ? "disabled" : ""}>‹</button>
+          <span class="pag-lbl">Página ${paginaProductos + 1} de ${totalPags}</span>
+          <button class="pag-btn" id="pag-next" ${paginaProductos >= totalPags - 1 ? "disabled" : ""}>›</button>
+        </div>` : "";
+
+      container.innerHTML = cardsHtml + pagHtml;
+
+      container.onclick = e => {
+        const editBtn = e.target.closest("[data-edit-prod]");
+        const delBtn  = e.target.closest("[data-del-prod]");
+        const prevBtn = e.target.closest("#pag-prev");
+        const nextBtn = e.target.closest("#pag-next");
+        if (editBtn) abrirEditarProd(editBtn.dataset.editProd);
+        if (delBtn)  eliminarProducto(delBtn.dataset.delProd);
+        if (prevBtn && paginaProductos > 0)               { paginaProductos--; renderProductos(); }
+        if (nextBtn && paginaProductos < totalPags - 1)   { paginaProductos++; renderProductos(); }
+      };
+    }
+
+    async function cargarHistorial() {
+      console.log("[inventario] cargarHistorial — listaId:", listaSeleccionada?.id);
+      const container = document.getElementById("historial-container");
+      container.innerHTML = `<div class="skeleton" style="height:48px;border-radius:12px;"></div>`;
+      try {
+        comprasActuales = await getCompras(uid, listaSeleccionada.id);
+        if (!comprasActuales.length) {
+          container.innerHTML = `<div style="font-size:13px;color:#888;padding:4px 0;">Sin compras registradas aún.</div>`;
+          return;
+        }
+        container.innerHTML = comprasActuales.slice(0, 15).map(c => `
+          <div class="hist-card${c.anulada ? " anulada" : ""}">
+            <div class="hist-info">
+              <div class="hist-cat">
+                ${c.categoriaPresupuesto || "Sin categoría"}
+                ${c.anulada ? '<span class="badge-anulada">Anulada</span>' : ""}
+              </div>
+              <div class="hist-count">${c.descripcion || `${(c.productos || []).length} producto(s)`}</div>
+            </div>
+            <div class="hist-right">
+              ${!c.anulada ? `
+                <div class="hist-btns">
+                  <button class="hist-btn" data-editar-compra="${c.id}">Editar</button>
+                  <button class="hist-btn danger" data-anular-compra="${c.id}">Anular</button>
+                </div>` : ""}
+              <div class="hist-total">${formatCOP(c.total)}</div>
+              <div class="hist-date">${c.fecha || ""}</div>
+            </div>
+          </div>
+        `).join("");
+
+        container.onclick = e => {
+          const editBtn   = e.target.closest("[data-editar-compra]");
+          const anularBtn = e.target.closest("[data-anular-compra]");
+          if (editBtn)   abrirEditarCompra(editBtn.dataset.editarCompra);
+          if (anularBtn) anularCompra(anularBtn.dataset.anularCompra);
+        };
+      } catch(err) {
+        console.error("[inventario] error en cargarHistorial:", err);
+        container.innerHTML = `<div style="font-size:13px;color:#888;padding:4px 0;">Sin compras registradas aún.</div>`;
+      }
+    }
+
+    async function eliminarLista(listaId) {
+      if (!confirm("¿Eliminar esta lista? Los productos del historial se conservan en Firestore.")) return;
+      try {
+        await deleteLista(uid, listaId);
+        listas = listas.filter(l => l.id !== listaId);
+        if (listaSeleccionada?.id === listaId) {
+          listaSeleccionada = null;
+          document.getElementById("panel-vacio").style.display = "flex";
+          document.getElementById("panel-detalle").style.display = "none";
+          document.getElementById("inv-layout").classList.remove("show-right");
+        }
+        renderListas();
+        showToast("Lista eliminada.", "success");
+      } catch(err) { showToast("Error al eliminar.", "error"); }
+    }
+
+    // ── MODAL LISTA ───────────────────────────────────────
+    document.getElementById("btn-nueva-lista").addEventListener("click", () => {
+      editandoListaId = null;
+      document.getElementById("modal-lista-title").textContent = "Nueva lista";
+      document.getElementById("lista-nombre-inp").value = "";
+      document.getElementById("lista-cat-inp").value    = "";
+      abrirModal("modal-lista");
+    });
+
+    document.getElementById("btn-editar-lista").addEventListener("click", () => {
+      if (!listaSeleccionada) return;
+      editandoListaId = listaSeleccionada.id;
+      document.getElementById("modal-lista-title").textContent = "Editar lista";
+      document.getElementById("lista-nombre-inp").value = listaSeleccionada.nombre;
+      document.getElementById("lista-cat-inp").value    = listaSeleccionada.categoriaPresupuesto || "";
+      abrirModal("modal-lista");
+    });
+
+    document.getElementById("btn-guardar-lista").addEventListener("click", async () => {
+      const nombre = document.getElementById("lista-nombre-inp").value.trim();
+      const cat    = document.getElementById("lista-cat-inp").value;
+      if (!nombre) { showToast("Escribe un nombre para la lista.", "error"); return; }
+      const btn = document.getElementById("btn-guardar-lista");
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try {
+        const data = { nombre, categoriaPresupuesto: cat };
+        if (editandoListaId) {
+          await updateLista(uid, editandoListaId, data);
+          listas = listas.map(l => l.id === editandoListaId ? { ...l, ...data } : l);
+          if (listaSeleccionada?.id === editandoListaId) {
+            listaSeleccionada = { ...listaSeleccionada, ...data };
+            document.getElementById("det-nombre").textContent = nombre;
+            document.getElementById("det-cat").textContent    = cat || "Sin categoría";
+          }
+          showToast("Lista actualizada.", "success");
+        } else {
+          const ref = await addLista(uid, data);
+          listas.push({ id: ref.id, ...data, activa: true });
+          showToast("Lista creada.", "success");
+        }
+        renderListas();
+        cerrarModal("modal-lista");
+      } catch(err) { showToast("Error al guardar.", "error"); console.error(err); }
+      finally { btn.disabled = false; btn.textContent = "Guardar lista"; }
+    });
+
+    // ── MODAL PRODUCTO ────────────────────────────────────
+    document.getElementById("btn-add-producto").addEventListener("click", () => {
+      if (!listaSeleccionada) return;
+      editandoProdId = null;
+      document.getElementById("modal-prod-title").textContent = "Agregar producto";
+      ["prod-nombre","prod-unidad","prod-actual","prod-min","prod-max","prod-precio"].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = ""; el.dataset.raw = "";
+      });
+      document.getElementById("prod-frecuencia").value = "semanal";
+      switchProdTab("uno");
+      abrirModal("modal-producto");
+    });
+
+    function abrirEditarProd(prodId) {
+      const p = productosActuales.find(x => x.id === prodId);
+      if (!p) return;
+      editandoProdId = prodId;
+      document.getElementById("modal-prod-title").textContent = "Editar producto";
+      document.getElementById("prod-nombre").value    = p.nombre;
+      document.getElementById("prod-unidad").value    = p.unidad;
+      document.getElementById("prod-frecuencia").value = p.frecuencia;
+      setFmtVal("prod-actual", p.stockActual);
+      setFmtVal("prod-min",    p.stockMinimo);
+      setFmtVal("prod-max",    p.stockMaximo);
+      setFmtVal("prod-precio", p.valorUnitario);
+      switchProdTab("uno");
+      abrirModal("modal-producto");
+    }
+
+    function setFmtVal(id, value) {
+      const inp = document.getElementById(id);
+      const n = Number(value) || 0;
+      inp.dataset.raw = String(n);
+      inp.value = n > 0 ? n.toLocaleString("es-CO") : "";
+    }
+
+    // Tabs del modal producto
+    document.getElementById("prod-tabs").addEventListener("click", e => {
+      const tab = e.target.closest(".mtab");
+      if (tab) switchProdTab(tab.dataset.tab);
+    });
+
+    function switchProdTab(tab) {
+      document.querySelectorAll("#prod-tabs .mtab").forEach(t =>
+        t.classList.toggle("active", t.dataset.tab === tab));
+      document.getElementById("tab-uno").style.display    = tab === "uno"    ? "block" : "none";
+      document.getElementById("tab-masiva").style.display = tab === "masiva" ? "block" : "none";
+    }
+
+    // Formato numérico en campos del producto
+    ["prod-actual","prod-min","prod-max","prod-precio"].forEach(id =>
+      applyNumericFormat(document.getElementById(id))
+    );
+
+    document.getElementById("btn-guardar-prod").addEventListener("click", async () => {
+      const nombre       = document.getElementById("prod-nombre").value.trim();
+      const unidad       = document.getElementById("prod-unidad").value.trim();
+      const frecuencia   = document.getElementById("prod-frecuencia").value;
+      const stockActual  = getNumericValue(document.getElementById("prod-actual"));
+      const stockMinimo  = getNumericValue(document.getElementById("prod-min"));
+      const stockMaximo  = getNumericValue(document.getElementById("prod-max"));
+      const valorUnitario = getNumericValue(document.getElementById("prod-precio"));
+
+      if (!nombre || !unidad) { showToast("Nombre y unidad son obligatorios.", "error"); return; }
+      if (stockMaximo > 0 && stockMaximo < stockMinimo) {
+        showToast("El máximo no puede ser menor al mínimo.", "error"); return;
+      }
+
+      const data = { listaId: listaSeleccionada.id, nombre, unidad, frecuencia,
+                     stockActual, stockMinimo, stockMaximo, valorUnitario };
+      const btn = document.getElementById("btn-guardar-prod");
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try {
+        if (editandoProdId) {
+          await updateProducto(uid, editandoProdId, data);
+          showToast("Producto actualizado.", "success");
+        } else {
+          await addProducto(uid, data);
+          showToast("Producto agregado.", "success");
+        }
+        await cargarProductos();
+        cerrarModal("modal-producto");
+      } catch(err) { showToast("Error al guardar.", "error"); console.error(err); }
+      finally { btn.disabled = false; btn.textContent = "Guardar producto"; }
+    });
+
+    async function eliminarProducto(prodId) {
+      if (!confirm("¿Eliminar este producto?")) return;
+      try {
+        await softDeleteProducto(uid, prodId);
+        showToast("Producto eliminado.", "success");
+        await cargarProductos();
+      } catch(err) { showToast("Error.", "error"); }
+    }
+
+    // ── ANULAR / EDITAR COMPRA ────────────────────────────
+    async function anularCompra(compraId) {
+      const compra = comprasActuales.find(c => c.id === compraId);
+      if (!compra) return;
+      console.log("[anularCompra] compra:", compra);
+      console.log("[anularCompra] movimientoId:", compra.movimientoId);
+
+      const nProd     = (compra.productos || []).length;
+      const tieneGasto = !!compra.movimientoId;
+      const msgGasto   = tieneGasto
+        ? "y se eliminará el movimiento de gasto asociado."
+        : "(esta compra no tiene movimiento de gasto vinculado).";
+      if (!confirm(`¿Anular la compra del ${compra.fecha}?\nSe revertirá el stock de ${nProd} producto(s) ${msgGasto}`)) return;
+
+      try {
+        // 1. Revertir stock
+        const prods = compra.productos || [];
+        if (prods.length) {
+          await Promise.all(
+            prods.map(p => revertirStockProducto(uid, p.productoId, p.cantidadComprada))
+          );
+        }
+
+        // 2. Eliminar movimiento de gasto solo si existe el vínculo
+        if (compra.movimientoId) {
+          console.log("[anularCompra] buscando gasto con id:", compra.movimientoId);
+          const gasto = await getExpense(uid, compra.movimientoId);
+          console.log("[anularCompra] gasto encontrado:", gasto);
+          if (gasto) {
+            await deleteExpense(uid, compra.movimientoId, gasto);
+            console.log("[anularCompra] gasto eliminado.");
+          } else {
+            console.warn("[anularCompra] el movimiento no existe en Firestore (puede haber sido eliminado manualmente).");
+          }
+        } else {
+          console.log("[anularCompra] sin movimientoId — compra sin gasto vinculado, nada que eliminar.");
+        }
+
+        // 3. Marcar como anulada
+        await updateCompra(uid, compraId, { anulada: true });
+
+        const msg = tieneGasto
+          ? "Compra anulada, stock revertido y gasto eliminado."
+          : "Compra anulada y stock revertido. (Sin movimiento vinculado.)";
+        showToast(msg, "success");
+        await Promise.all([cargarProductos(), cargarHistorial()]);
+      } catch(err) {
+        showToast("Error al anular la compra.", "error");
+        console.error("[anularCompra] error:", err);
+      }
+    }
+
+    function abrirEditarCompra(compraId) {
+      const compra = comprasActuales.find(c => c.id === compraId);
+      if (!compra || compra.anulada) return;
+      editandoCompraId   = compraId;
+      editandoCompraData = compra;
+
+      const sel = document.getElementById("edit-compra-cat");
+      sel.innerHTML = `<option value="">Sin categoría</option>` +
+        categorias.map(c =>
+          `<option value="${c.name}" ${c.name === compra.categoriaPresupuesto ? "selected" : ""}>${c.name}</option>`
+        ).join("");
+
+      document.getElementById("edit-compra-fecha").value = compra.fecha || today();
+      abrirModal("modal-editar-compra");
+    }
+
+    document.getElementById("btn-guardar-edicion-compra").addEventListener("click", async () => {
+      if (!editandoCompraId || !editandoCompraData) return;
+      const cat   = document.getElementById("edit-compra-cat").value;
+      const fecha = document.getElementById("edit-compra-fecha").value;
+      if (!fecha) { showToast("Selecciona una fecha.", "error"); return; }
+      const btn = document.getElementById("btn-guardar-edicion-compra");
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try {
+        await updateCompra(uid, editandoCompraId, { categoriaPresupuesto: cat, fecha });
+
+        if (editandoCompraData.movimientoId) {
+          await updateExpenseFields(uid, editandoCompraData.movimientoId, {
+            category: cat,
+            date: fecha
+          });
+        }
+
+        showToast("Compra actualizada.", "success");
+        cerrarModal("modal-editar-compra");
+        await cargarHistorial();
+      } catch(err) {
+        showToast("Error al actualizar la compra.", "error");
+        console.error(err);
+      } finally {
+        btn.disabled = false; btn.textContent = "Guardar cambios";
+      }
+    });
+
+    // ── CARGA MASIVA ──────────────────────────────────────
+    document.getElementById("btn-plantilla").addEventListener("click", descargarPlantilla);
+
+    function descargarPlantilla() {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([
+        ["nombre","unidad","stock_inicial","stock_minimo","stock_maximo","precio_unitario","frecuencia"],
+        ["Leche","litros",2,1,4,5000,"semanal"],
+        ["Pan","unidades",10,5,20,2500,"semanal"],
+        ["Arroz","kilos",3,1,5,8000,"mensual"],
+      ]);
+      XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+      XLSX.writeFile(wb, "plantilla-inventario.xlsx");
+    }
+
+    const fileDropEl = document.getElementById("file-drop");
+    const fileInpEl  = document.getElementById("file-inp");
+
+    fileDropEl.addEventListener("click", () => fileInpEl.click());
+    fileDropEl.addEventListener("dragover",  e => { e.preventDefault(); fileDropEl.classList.add("over"); });
+    fileDropEl.addEventListener("dragleave", () => fileDropEl.classList.remove("over"));
+    fileDropEl.addEventListener("drop", e => {
+      e.preventDefault(); fileDropEl.classList.remove("over");
+      const f = e.dataTransfer.files[0];
+      if (f) procesarXlsx(f);
+    });
+    fileInpEl.addEventListener("change", () => {
+      if (fileInpEl.files[0]) procesarXlsx(fileInpEl.files[0]);
+    });
+
+    function procesarXlsx(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb   = XLSX.read(data, { type: "array" });
+          const ws   = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+          bulkProductos = rows
+            .filter(r => r.nombre || r.Nombre)
+            .map(r => ({
+              nombre:        String(r.nombre       || r.Nombre       || "").trim(),
+              unidad:        String(r.unidad        || r.Unidad        || "und").trim(),
+              stockActual:   Number(r.stock_inicial || r.stockActual  || 0),
+              stockMinimo:   Number(r.stock_minimo  || r.stockMinimo  || 0),
+              stockMaximo:   Number(r.stock_maximo  || r.stockMaximo  || 0),
+              valorUnitario: Number(r.precio_unitario || r.valorUnitario || 0),
+              frecuencia:    String(r.frecuencia    || "semanal").trim(),
+            }))
+            .filter(p => p.nombre);
+          mostrarPreviewBulk(bulkProductos);
+        } catch(err) { showToast("Error leyendo el archivo.", "error"); console.error(err); }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function mostrarPreviewBulk(productos) {
+      document.getElementById("bulk-count").textContent = `${productos.length} producto(s) encontrado(s)`;
+      document.getElementById("preview-table").innerHTML = `
+        <thead><tr>
+          <th>Nombre</th><th>Unidad</th><th>Ini.</th>
+          <th>Mín.</th><th>Máx.</th><th>Precio</th><th>Freq.</th>
+        </tr></thead>
+        <tbody>${productos.map(p => `
+          <tr>
+            <td>${p.nombre}</td><td>${p.unidad}</td>
+            <td>${p.stockActual}</td><td>${p.stockMinimo}</td><td>${p.stockMaximo}</td>
+            <td>${formatCOP(p.valorUnitario)}</td><td>${p.frecuencia}</td>
+          </tr>`).join("")}
+        </tbody>`;
+      document.getElementById("bulk-preview").style.display = "block";
+    }
+
+    document.getElementById("btn-importar").addEventListener("click", async () => {
+      if (!bulkProductos.length || !listaSeleccionada) return;
+      const btn = document.getElementById("btn-importar");
+      btn.disabled = true; btn.textContent = "Importando...";
+      try {
+        await Promise.all(bulkProductos.map(p =>
+          addProducto(uid, { ...p, listaId: listaSeleccionada.id })
+        ));
+        showToast(`${bulkProductos.length} productos importados.`, "success");
+        bulkProductos = [];
+        document.getElementById("bulk-preview").style.display = "none";
+        fileInpEl.value = "";
+        await cargarProductos();
+        cerrarModal("modal-producto");
+      } catch(err) { showToast("Error al importar.", "error"); console.error(err); }
+      finally { btn.disabled = false; btn.textContent = "Importar productos"; }
+    });
+
+    // ── GENERAR COMPRA ────────────────────────────────────
+    document.getElementById("btn-generar-compra").addEventListener("click", () => {
+      if (!listaSeleccionada || !productosActuales.length) {
+        showToast("No hay productos en esta lista.", ""); return;
+      }
+      generarListaCompras();
+    });
+
+    function generarListaCompras() {
+      const necesitan = productosActuales.filter(p => p.stockActual < p.stockMaximo);
+      if (!necesitan.length) {
+        showToast("¡Todos los productos tienen stock completo!", "success"); return;
+      }
+      productosParaComprar = necesitan.map(p => {
+        const cantidadComprar = p.stockMaximo - p.stockActual;
+        return { ...p, cantidadComprar, subtotal: cantidadComprar * p.valorUnitario };
+      });
+
+      const catPreselect  = listaSeleccionada.categoriaPresupuesto || "";
+      const walletOptions = wallets.map(w =>
+        `<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||'🏦'} ${w.name}</option>`
+      ).join("");
+
+      function calcTotal() {
+        return productosParaComprar.reduce((s, p, i) => {
+          const cb = document.getElementById(`chk-${i}`);
+          return s + (cb && cb.checked ? p.subtotal : 0);
+        }, 0);
+      }
+      function actualizarTotal() {
+        const el = document.getElementById("compra-total-val");
+        if (el) el.textContent = formatCOP(calcTotal());
+        productosParaComprar.forEach((_, i) => {
+          const row = document.getElementById(`row-${i}`);
+          const cb  = document.getElementById(`chk-${i}`);
+          if (row && cb) row.classList.toggle("desmarcado", !cb.checked);
+        });
+      }
+
+      const totalInicial = productosParaComprar.reduce((s, p) => s + p.subtotal, 0);
+
+      document.getElementById("compra-content").innerHTML = `
+        <div style="overflow-x:auto;margin-bottom:14px;">
+          <table class="compra-table">
+            <thead><tr>
+              <th><input type="checkbox" id="chk-all" class="compra-check" checked title="Marcar/desmarcar todos"/></th>
+              <th>Producto</th><th>Unidad</th>
+              <th>Actual</th><th>Necesario</th>
+              <th>Precio unit.</th><th>Subtotal</th>
+            </tr></thead>
+            <tbody>
+              ${productosParaComprar.map((p, i) => `
+                <tr id="row-${i}">
+                  <td><input type="checkbox" id="chk-${i}" class="compra-check" checked/></td>
+                  <td>${p.nombre}</td>
+                  <td>${p.unidad}</td>
+                  <td>${p.stockActual}</td>
+                  <td><strong>${p.cantidadComprar}</strong></td>
+                  <td>${formatCOP(p.valorUnitario)}</td>
+                  <td><strong>${formatCOP(p.subtotal)}</strong></td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="compra-total">
+          <span class="compra-total-lbl">Total estimado</span>
+          <span class="compra-total-val" id="compra-total-val">${formatCOP(totalInicial)}</span>
+        </div>
+
+        <div class="f-block" style="margin-bottom:12px;">
+          <div class="f-lbl">Categoría de presupuesto</div>
+          <select class="f-sel" id="compra-cat">
+            <option value="">Sin categoría</option>
+            ${categorias.map(c =>
+              `<option value="${c.name}" ${c.name === catPreselect ? "selected" : ""}>${c.name}</option>`
+            ).join("")}
+          </select>
+        </div>
+
+        <div class="f-block" style="margin-bottom:16px;">
+          <div class="f-lbl">¿De cuál cajita? (opcional)</div>
+          <select class="f-sel" id="compra-wallet">
+            <option value="">Sin cajita asignada</option>
+            ${walletOptions}
+          </select>
+        </div>
+
+        <div class="compra-actions">
+          <button class="dl-link" id="btn-dl-csv">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar lista
+          </button>
+          <div class="spacer"></div>
+          <button class="inv-save-btn green" id="btn-ejecutar" style="margin-top:0;width:auto;padding:10px 22px;">
+            ✓ Ejecutar compra
+          </button>
+        </div>
+      `;
+
+      document.getElementById("chk-all").addEventListener("change", e => {
+        productosParaComprar.forEach((_, i) => {
+          const cb = document.getElementById(`chk-${i}`);
+          if (cb) cb.checked = e.target.checked;
+        });
+        actualizarTotal();
+      });
+      productosParaComprar.forEach((_, i) => {
+        document.getElementById(`chk-${i}`).addEventListener("change", () => {
+          const todos = productosParaComprar.every((_, j) => document.getElementById(`chk-${j}`)?.checked);
+          document.getElementById("chk-all").checked = todos;
+          actualizarTotal();
+        });
+      });
+
+      document.getElementById("btn-dl-csv").addEventListener("click", () => {
+        const marcados = productosParaComprar.filter((_, i) => document.getElementById(`chk-${i}`)?.checked);
+        descargarCSV(marcados, marcados.reduce((s, p) => s + p.subtotal, 0));
+      });
+      document.getElementById("btn-ejecutar").addEventListener("click", ejecutarCompra);
+
+      abrirModal("modal-compra");
+    }
+
+    function descargarCSV(productos, total) {
+      const bom   = "﻿";
+      const lines = ["Producto,Unidad,Cantidad,Precio unitario,Subtotal"];
+      productos.forEach(p =>
+        lines.push(`"${p.nombre}","${p.unidad}",${p.cantidadComprar},${p.valorUnitario},${p.subtotal}`)
+      );
+      lines.push(`,,,,`);
+      lines.push(`"TOTAL",,,,${total}`);
+      const blob = new Blob([bom + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+      const a    = Object.assign(document.createElement("a"), {
+        href: url,
+        download: `lista-compras-${listaSeleccionada.nombre.replace(/[^a-zA-Z0-9]/g,"-")}-${today()}.csv`
+      });
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function ejecutarCompra() {
+      const marcados = productosParaComprar.filter((_, i) => {
+        const cb = document.getElementById(`chk-${i}`);
+        return cb && cb.checked;
+      });
+      if (!marcados.length) { showToast("Selecciona al menos un producto.", "error"); return; }
+
+      const categoria  = document.getElementById("compra-cat")?.value    || "";
+      const walletId   = document.getElementById("compra-wallet")?.value || "";
+      const walletOpt  = document.querySelector(`#compra-wallet option[value="${walletId}"]`);
+      const walletName = walletOpt?.dataset.name || "";
+      const walletType = walletOpt?.dataset.type || "ahorro";
+      const total      = marcados.reduce((s, p) => s + p.subtotal, 0);
+      const fecha      = today();
+      const btn        = document.getElementById("btn-ejecutar");
+
+      btn.disabled = true; btn.textContent = "Procesando...";
+      try {
+        await Promise.all(
+          marcados.map(p => updateProducto(uid, p.id, { stockActual: p.stockMaximo }))
+        );
+
+        let movimientoId = "";
+        if (categoria) {
+          const expRef = await addExpense(uid, {
+            date: fecha,
+            category: categoria,
+            amount: total,
+            description: `Compra ${listaSeleccionada.nombre} - ${fecha}`,
+            walletId,
+            walletName,
+            walletType,
+            toWalletId:   "",
+            toWalletName: ""
+          });
+          movimientoId = expRef.id;
+        }
+
+        await addCompra(uid, {
+          listaId: listaSeleccionada.id,
+          fecha,
+          total,
+          movimientoId,
+          categoriaPresupuesto: categoria,
+          descripcion: `${marcados.length} producto(s)`,
+          productos: marcados.map(p => ({
+            productoId:       p.id,
+            nombre:           p.nombre,
+            cantidadComprada: p.cantidadComprar,
+            valorUnitario:    p.valorUnitario,
+            subtotal:         p.subtotal
+          }))
+        });
+
+        showToast("¡Compra ejecutada! Stocks actualizados.", "success");
+        cerrarModal("modal-compra");
+        await Promise.all([cargarProductos(), cargarHistorial()]);
+      } catch(err) {
+        showToast("Error al ejecutar la compra.", "error"); console.error(err);
+        btn.disabled = false; btn.textContent = "✓ Ejecutar compra";
+      }
+    }
+
+    // ── BACK BTN (mobile) ─────────────────────────────────
+    document.getElementById("btn-back").addEventListener("click", () => {
+      document.getElementById("inv-layout").classList.remove("show-right");
+    });
+
+    // ── ACTUALIZAR STOCK MASIVO ───────────────────────────
+    document.getElementById("btn-actualizar-stock").addEventListener("click", () => {
+      console.log("[inventario] btn-actualizar-stock click — listaSeleccionada:", listaSeleccionada?.id, "productos:", productosActuales.length);
+      if (!listaSeleccionada || !productosActuales.length) {
+        showToast("No hay productos en esta lista.", ""); return;
+      }
+      document.getElementById("stock-preview-wrap").style.display = "none";
+      document.getElementById("ignored-banner").style.display     = "none";
+      document.getElementById("file-inp-stock").value = "";
+      cambiosStock = []; ignoradosStock = [];
+      abrirModal("modal-stock");
+    });
+
+    function descargarStockActual() {
+      const filas = productosActuales.map(p => ({
+        nombre:          p.nombre,
+        unidad:          p.unidad,
+        stock_actual:    p.stockActual,
+        stock_minimo:    p.stockMinimo,
+        stock_maximo:    p.stockMaximo,
+        precio_unitario: p.valorUnitario,
+        frecuencia:      p.frecuencia
+      }));
+      const ws = XLSX.utils.json_to_sheet(filas);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Stock");
+      const nombre = listaSeleccionada.nombre.replace(/[^a-zA-Z0-9]/g, "-");
+      XLSX.writeFile(wb, `stock-${nombre}-${today()}.xlsx`);
+    }
+
+    document.getElementById("btn-dl-stock").addEventListener("click", () => {
+      if (listaSeleccionada && productosActuales.length) descargarStockActual();
+    });
+
+    const fileDropStock = document.getElementById("file-drop-stock");
+    const fileInpStock  = document.getElementById("file-inp-stock");
+
+    fileDropStock.addEventListener("click",    () => fileInpStock.click());
+    fileDropStock.addEventListener("dragover",  e => { e.preventDefault(); fileDropStock.classList.add("over"); });
+    fileDropStock.addEventListener("dragleave", () => fileDropStock.classList.remove("over"));
+    fileDropStock.addEventListener("drop", e => {
+      e.preventDefault(); fileDropStock.classList.remove("over");
+      const f = e.dataTransfer.files[0];
+      if (f) procesarXlsxStock(f);
+    });
+    fileInpStock.addEventListener("change", () => {
+      if (fileInpStock.files[0]) procesarXlsxStock(fileInpStock.files[0]);
+    });
+
+    function procesarXlsxStock(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb   = XLSX.read(data, { type: "array" });
+          const ws   = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+
+          const mapaActual = new Map(
+            productosActuales.map(p => [p.nombre.toLowerCase().trim(), p])
+          );
+          cambiosStock  = [];
+          ignoradosStock = [];
+
+          rows.forEach(r => {
+            const nombreRaw = String(r.nombre || r.Nombre || "").trim();
+            if (!nombreRaw) return;
+            const prod = mapaActual.get(nombreRaw.toLowerCase());
+            if (!prod) { ignoradosStock.push(nombreRaw); return; }
+            const nuevo = {
+              stockActual:   Number(r.stock_actual    ?? r.stockActual    ?? prod.stockActual),
+              stockMinimo:   Number(r.stock_minimo    ?? r.stockMinimo    ?? prod.stockMinimo),
+              stockMaximo:   Number(r.stock_maximo    ?? r.stockMaximo    ?? prod.stockMaximo),
+              valorUnitario: Number(r.precio_unitario ?? r.valorUnitario  ?? prod.valorUnitario),
+            };
+            cambiosStock.push({ prod, nuevo });
+          });
+
+          renderPreviewStock(cambiosStock, ignoradosStock);
+        } catch(err) { showToast("Error leyendo el archivo.", "error"); console.error(err); }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function renderPreviewStock(cambios, ignorados) {
+      const banner = document.getElementById("ignored-banner");
+      if (ignorados.length) {
+        banner.style.display = "block";
+        banner.textContent = `⚠️ ${ignorados.length} producto(s) no encontrado(s) y serán ignorados: ${ignorados.join(", ")}`;
+      } else {
+        banner.style.display = "none";
+      }
+
+      document.getElementById("stock-preview-table").innerHTML = `
+        <thead><tr>
+          <th>Producto</th>
+          <th>Stock ant.</th><th>Stock nuevo</th>
+          <th>Mín ant.</th><th>Mín nuevo</th>
+          <th>Máx ant.</th><th>Máx nuevo</th>
+        </tr></thead>
+        <tbody>${cambios.map(({ prod, nuevo }) => {
+          const cs = (ant, nv) => ant !== nv
+            ? `<span class="diff-new">${nv}</span>`
+            : `<span class="diff-same">${nv}</span>`;
+          return `<tr>
+            <td>${prod.nombre}</td>
+            <td>${prod.stockActual}</td><td>${cs(prod.stockActual, nuevo.stockActual)}</td>
+            <td>${prod.stockMinimo}</td><td>${cs(prod.stockMinimo, nuevo.stockMinimo)}</td>
+            <td>${prod.stockMaximo}</td><td>${cs(prod.stockMaximo, nuevo.stockMaximo)}</td>
+          </tr>`;
+        }).join("")}</tbody>`;
+
+      document.getElementById("stock-preview-wrap").style.display = "block";
+    }
+
+    document.getElementById("btn-aplicar-stock").addEventListener("click", async () => {
+      if (!cambiosStock.length) return;
+      const btn = document.getElementById("btn-aplicar-stock");
+      btn.disabled = true; btn.textContent = "Aplicando...";
+      try {
+        await Promise.all(
+          cambiosStock.map(({ prod, nuevo }) => updateProducto(uid, prod.id, nuevo))
+        );
+        showToast(`${cambiosStock.length} producto(s) actualizados.`, "success");
+        cerrarModal("modal-stock");
+        await cargarProductos();
+      } catch(err) {
+        showToast("Error al aplicar cambios.", "error"); console.error(err);
+      } finally {
+        btn.disabled = false; btn.textContent = "Aplicar cambios";
+      }
+    });
+
+    // ── MODAL HELPERS ─────────────────────────────────────
+    function abrirModal(id)  { document.getElementById(id).classList.add("open"); }
+    function cerrarModal(id) { document.getElementById(id).classList.remove("open"); }
+
+    document.querySelectorAll("[data-close]").forEach(btn =>
+      btn.addEventListener("click", () => cerrarModal(btn.dataset.close))
+    );
+    document.querySelectorAll(".inv-overlay").forEach(overlay =>
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay) cerrarModal(overlay.id);
+      })
+    );
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape")
+        document.querySelectorAll(".inv-overlay.open").forEach(o => cerrarModal(o.id));
+    });
+  </script>
+</body>
+</html>

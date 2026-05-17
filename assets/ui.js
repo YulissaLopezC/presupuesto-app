@@ -108,6 +108,8 @@ export function renderBottomNav(activeItem) {
   const el = document.getElementById("bottom-nav");
   if (!el) return;
 
+  const inventarioActivo = localStorage.getItem("inventarioActivo") === "true";
+
   const items = [
     {
       id: "dashboard", href: "../pages/dashboard.html", label: "Inicio",
@@ -133,6 +135,10 @@ export function renderBottomNav(activeItem) {
       id: "loans", href: "../pages/loans.html", label: "Préstamos",
       icon: `<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`
     },
+    ...(inventarioActivo ? [{
+      id: "inventario", href: "../pages/inventario.html", label: "Inventario",
+      icon: `<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>`
+    }] : []),
     {
       id: "more", href: "#", label: "Más",
       icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`

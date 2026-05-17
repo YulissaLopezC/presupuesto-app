@@ -722,6 +722,116 @@ export async function deleteLoanPayment(uid, debtorId, paymentId, paymentData) {
   });
 }
 
+// ── APP CONFIG ────────────────────────────────────────────
+// Documento: users/{uid}/config/app
+// Campos: { inventarioActivo: boolean }
+
+export async function getAppConfig(uid) {
+  const snap = await getDoc(doc(db, "users", uid, "config", "app"));
+  return snap.exists() ? snap.data() : {};
+}
+
+export async function updateAppConfig(uid, data) {
+  return setDoc(doc(db, "users", uid, "config", "app"), data, { merge: true });
+}
+
+// ── INVENTARIO — LISTAS ───────────────────────────────────
+// users/{uid}/inv_listas/{listaId}
+// { nombre, categoriaPresupuesto, activa, fechaCreacion }
+
+function invListasCol(uid)        { return collection(db, "users", uid, "inv_listas"); }
+function invListaDoc(uid, lid)    { return doc(db, "users", uid, "inv_listas", lid); }
+
+export async function addLista(uid, data) {
+  return addDoc(invListasCol(uid), { ...data, activa: true, fechaCreacion: serverTimestamp() });
+}
+
+export async function getListas(uid) {
+  const snap = await getDocs(invListasCol(uid));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+}
+
+export async function updateLista(uid, listaId, data) {
+  return updateDoc(invListaDoc(uid, listaId), data);
+}
+
+export async function deleteLista(uid, listaId) {
+  return deleteDoc(invListaDoc(uid, listaId));
+}
+
+// ── INVENTARIO — PRODUCTOS ────────────────────────────────
+// users/{uid}/inv_productos/{productoId}
+// { listaId, nombre, unidad, stockActual, stockMinimo, stockMaximo,
+//   valorUnitario, frecuencia, activo, creadoEn }
+
+function invProductosCol(uid)     { return collection(db, "users", uid, "inv_productos"); }
+function invProductoDoc(uid, pid) { return doc(db, "users", uid, "inv_productos", pid); }
+
+export async function addProducto(uid, data) {
+  return addDoc(invProductosCol(uid), { ...data, activo: true, creadoEn: serverTimestamp() });
+}
+
+export async function getProductos(uid, listaId) {
+  const q = query(
+    invProductosCol(uid),
+    where("listaId", "==", listaId),
+    where("activo",   "==", true)
+  );
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+}
+
+export async function updateProducto(uid, productoId, data) {
+  return updateDoc(invProductoDoc(uid, productoId), { ...data, actualizadoEn: serverTimestamp() });
+}
+
+export async function softDeleteProducto(uid, productoId) {
+  return updateDoc(invProductoDoc(uid, productoId), { activo: false, actualizadoEn: serverTimestamp() });
+}
+
+// ── INVENTARIO — COMPRAS ──────────────────────────────────
+// users/{uid}/inv_compras/{compraId}
+// { listaId, fecha, total, categoriaPresupuesto, descripcion,
+//   productos: [{ productoId, nombre, cantidadComprada, valorUnitario, subtotal }] }
+
+function invComprasCol(uid) { return collection(db, "users", uid, "inv_compras"); }
+
+export async function addCompra(uid, data) {
+  return addDoc(invComprasCol(uid), { ...data, creadoEn: serverTimestamp() });
+}
+
+export async function getCompras(uid, listaId) {
+  // Sin orderBy para evitar requerir índice compuesto en Firestore.
+  // Se ordena por fecha en cliente (string YYYY-MM-DD, orden lexicográfico = cronológico).
+  const q    = query(invComprasCol(uid), where("listaId", "==", listaId));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+}
+export async function updateCompra(uid, compraId, data) {
+  return updateDoc(doc(db, "users", uid, "inv_compras", compraId), data);
+}
+
+// ── GASTOS — helpers de inventario ───────────────────────
+export async function getExpense(uid, expenseId) {
+  const snap = await getDoc(userDoc(uid, "expenses", expenseId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+export async function updateExpenseFields(uid, expenseId, fields) {
+  return updateDoc(userDoc(uid, "expenses", expenseId), fields);
+}
+export function revertirStockProducto(uid, productoId, cantidadComprada) {
+  return updateDoc(
+    doc(db, "users", uid, "inv_productos", productoId),
+    { stockActual: increment(-cantidadComprada), actualizadoEn: serverTimestamp() }
+  );
+}
+
 // Migra datos del esquema anterior (users/{uid}/loans) al nuevo esquema
 // Solo corre si la colección debtors está vacía
 export async function migrateOldLoans(uid) {

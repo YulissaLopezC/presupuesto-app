@@ -219,6 +219,28 @@
     .val-pill-input { -moz-appearance: textfield; }
     .val-pill-input::-webkit-outer-spin-button,
     .val-pill-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* ── Toggle módulo inventario ────────────────────────── */
+    .inv-module-card {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 0 14px 90px; background: #fff; border-radius: 12px;
+      padding: 12px 14px; border: 1.5px solid #e2e8f0;
+    }
+    body.dark .inv-module-card { background: #1a1a1a; border-color: #2a2a2a; }
+    .inv-module-title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .inv-module-sub { font-size: 11px; color: #888; margin-top: 2px; }
+    .inv-toggle-btn {
+      width: 40px; height: 22px; background: #ddd; border-radius: 99px;
+      position: relative; cursor: pointer; border: none; padding: 0; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .inv-toggle-btn.on { background: #0f3460; }
+    .inv-toggle-btn::after {
+      content: ""; position: absolute; width: 16px; height: 16px;
+      background: #fff; border-radius: 50%; top: 3px; left: 3px;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .inv-toggle-btn.on::after { transform: translateX(18px); }
   </style>
 </head>
 <body>
@@ -246,22 +268,33 @@
     <div id="expenses-form"></div>
     <div id="income-form" style="display:none;"></div>
 
-    <button class="save-budget-btn" id="btn-save">
+    <button class="save-budget-btn" id="btn-save" style="margin-bottom:14px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Guardar presupuesto
     </button>
+
+    <div class="inv-module-card">
+      <div>
+        <div class="inv-module-title">Módulo de Inventario</div>
+        <div class="inv-module-sub">Activa para gestionar stock y listas de compras</div>
+      </div>
+      <button class="inv-toggle-btn" id="inv-toggle" aria-label="Activar inventario"></button>
+    </div>
   </div>
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getBudget, setBudget, getCategories, addCategory, updateCategory, syncProportionalIncomes } from "../modules/db.js";
+    import { getBudget, setBudget, getCategories, addCategory, updateCategory, syncProportionalIncomes, getAppConfig, updateAppConfig } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
     import { currentMonth, formatMonth, formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, selectedMonth, currentBudget = null, categories = [], activeTab = "gastos";
     let hiddenCats = [];
+    let inventarioActivo = false;
 
     const user = await requireAuth();
     uid = user.uid;
@@ -283,6 +316,46 @@
 
     categories = await getCategories(uid);
     await loadBudget();
+
+    // ── Toggle Inventario ─────────────────────────────────
+    const appConfig = await getAppConfig(uid);
+    inventarioActivo = appConfig.inventarioActivo || false;
+    localStorage.setItem("inventarioActivo", inventarioActivo);
+    document.getElementById("inv-toggle").classList.toggle("on", inventarioActivo);
+    actualizarNavInventario(inventarioActivo);
+
+    document.getElementById("inv-toggle").addEventListener("click", async () => {
+      inventarioActivo = !inventarioActivo;
+      const btn = document.getElementById("inv-toggle");
+      btn.classList.toggle("on", inventarioActivo);
+      try {
+        await updateAppConfig(uid, { inventarioActivo });
+        localStorage.setItem("inventarioActivo", inventarioActivo);
+        actualizarNavInventario(inventarioActivo);
+        showToast(
+          inventarioActivo ? "Módulo de inventario activado." : "Inventario desactivado.",
+          "success"
+        );
+      } catch(err) {
+        inventarioActivo = !inventarioActivo;
+        btn.classList.toggle("on", inventarioActivo);
+        showToast("Error al guardar configuración.", "error");
+      }
+    });
+
+    function actualizarNavInventario(isActive) {
+      const sidebarNav = document.querySelector(".sidebar-nav");
+      if (!sidebarNav) return;
+      const existing = sidebarNav.querySelector("[data-inv-nav]");
+      if (isActive && !existing) {
+        const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>`;
+        sidebarNav.insertAdjacentHTML("beforeend",
+          `<a href="../pages/inventario.html" class="sidebar-item" data-inv-nav>${icon}<span>Inventario</span></a>`
+        );
+      } else if (!isActive && existing) {
+        existing.remove();
+      }
+    }
 
     // Tabs
     document.getElementById("tab-gastos").addEventListener("click", () => switchTab("gastos"));
