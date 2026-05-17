@@ -69,9 +69,25 @@ export function getCurrentUser() {
 }
 
 // ── Guardia de sesión ─────────────────────────────────────
+// Safari iOS puede dejar IndexedDB bloqueado tras background/memory pressure.
+// Si onAuthStateChanged no resuelve en 10 s, se fuerza un reload para
+// liberar el lock y reinicializar el SDK.
 export function requireAuth() {
   return new Promise((resolve, reject) => {
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        console.warn("[auth] requireAuth timeout — forzando reload (Safari iOS IndexedDB lock)");
+        window.location.reload();
+      }
+    }, 10000);
+
     const unsub = onAuthStateChanged(auth, (user) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       unsub();
       if (user) {
         resolve(user);

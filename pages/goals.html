@@ -253,6 +253,8 @@
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
     import { formatCOP, formatDate, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, goals = [], editingId = null, selectedEmoji = "🎯";
 
     const user = await requireAuth();

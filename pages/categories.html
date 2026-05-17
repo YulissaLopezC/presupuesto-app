@@ -193,6 +193,8 @@
     import { getCategories, addCategory, updateCategory, deleteCategory } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, categories = [], editingId = null, selectedType = "";
 
     // ── Init ─────────────────────────────────────────────

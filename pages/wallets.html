@@ -380,6 +380,8 @@
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
     import { formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, wallets = [], editingId = null, selectedTipo = "ahorro", selectedEmoji = "🏦";
 
     const user = await requireAuth();

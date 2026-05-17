@@ -362,10 +362,21 @@
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=4";
     import { formatCOP, currentMonth, formatDate, formatMonth, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
+    // BFCache: Safari restaura páginas del cache sin re-correr el módulo.
+    // Forzar reload para que uid, SDK y datos sean frescos.
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, selectedMonth;
     let allExpenses=[], allIncomes=[], categories=[], wallets=[], budget=null;
     let propSummary=[], propExpenses=[];
     let editingId=null, activeFilter="", activeTab="gastos";
+
+    // Utilidad: rechaza si la promesa tarda más de `ms` milisegundos
+    const withTimeout = (promise, ms = 15000, msg = "La operación tardó demasiado. Verifica tu conexión.") =>
+      Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), ms))
+      ]);
 
     const user = await requireAuth();
     uid = user.uid;
@@ -393,6 +404,11 @@
     }
 
     await loadAll();
+
+    // Recargar datos cuando el usuario vuelve a la pestaña desde background
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && uid) loadAll().catch(console.error);
+    });
 
     function renderMonthPill() {
       const today2   = new Date();
@@ -777,12 +793,12 @@
           const toWalletName=toWalletOpt?.dataset.name||"";
           if (!category){showToast("Selecciona una categoría.","error");btn.disabled=false;btn.textContent=editingId?"Actualizar gasto":"Guardar gasto";return;}
           const data={date,category,amount,description:desc,walletId,walletName,walletType,toWalletId,toWalletName};
-          if (editingId){const old=allExpenses.find(x=>x.id===editingId);await updateExpense(uid,editingId,old,data);showToast("Gasto actualizado.","success");}
-          else{await addExpense(uid,data);showToast("Gasto registrado.","success");}
+          if (editingId){const old=allExpenses.find(x=>x.id===editingId);await withTimeout(updateExpense(uid,editingId,old,data));showToast("Gasto actualizado.","success");}
+          else{await withTimeout(addExpense(uid,data));showToast("Gasto registrado.","success");}
         } else {
           const source=document.getElementById("field-source").value.trim();
           if (!source){showToast("Escribe la fuente.","error");btn.disabled=false;btn.textContent="Registrar ingreso";return;}
-          await addIncome(uid,{date,source,amount,description:desc,walletId,walletName});
+          await withTimeout(addIncome(uid,{date,source,amount,description:desc,walletId,walletName}));
           showToast("Ingreso registrado.","success");
         }
         wallets=await getWallets(uid); populateWalletSelect(); populateSavingsWalletSelect("");

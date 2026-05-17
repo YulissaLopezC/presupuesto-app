@@ -333,6 +333,8 @@
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
     import { formatCOP, formatDate, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, debtors = [], wallets = [], activeDebtorId = null;
     const detailCache = {};
 

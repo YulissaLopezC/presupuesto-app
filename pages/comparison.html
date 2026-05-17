@@ -140,6 +140,8 @@
     import { renderTopbar, renderBottomNav } from "../assets/ui.js?v=4";
     import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, selectedMonth, allData = [], categories = [], activeFilter = "";
 
     const user = await requireAuth();

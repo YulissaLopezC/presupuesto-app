@@ -247,6 +247,8 @@
     import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js?v=4";
     import { formatCOP, currentMonth, formatDate, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, selectedMonth;
     const user = await requireAuth();
     uid = user.uid;

@@ -245,6 +245,8 @@
     import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
     import { formatCOP, currentMonth, formatMonth, lastMonths } from "../assets/utils.js";
 
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
     let uid, selectedMonth, envelopes = [], editingId = null;
 
     // ── Init ─────────────────────────────────────────────
