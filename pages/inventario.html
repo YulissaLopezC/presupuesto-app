@@ -1199,7 +1199,7 @@
     });
 
     function generarListaCompras() {
-      const necesitan = productosActuales.filter(p => p.stockActual < p.stockMaximo);
+      const necesitan = productosActuales.filter(p => p.stockMinimo > 0 && p.stockActual < p.stockMinimo);
       if (!necesitan.length) {
         showToast("¡Todos los productos tienen stock completo!", "success"); return;
       }
