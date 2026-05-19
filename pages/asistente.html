@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Asistente · Mi Presupuesto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    /* ── Tema oscuro específico de esta página ──────────────── */
+    body {
+      background: #0f172a;
+      --bg:       #0f172a;
+      --surface:  #1e293b;
+      --surface2: #273449;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.12);
+      --text:     #f1f5f9;
+      --muted:    #94a3b8;
+      --muted2:   #64748b;
+      --accent:   #3b82f6;
+    }
+    body::before { display: none; }
+    body.dark {
+      background: #080e1a;
+      --bg: #080e1a;
+    }
+
+    /* ── Page layout ───────────────────────────────────────── */
+    .ai-page {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 0 190px;
+      min-height: 100vh;
+    }
+    @media (min-width: 768px) {
+      .ai-page { padding-bottom: 100px; }
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .ai-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 16px 14px;
+    }
+    .ai-header-ico {
+      width: 46px; height: 46px; border-radius: 14px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .ai-header-title {
+      font-size: 20px; font-weight: 500; color: #f1f5f9; line-height: 1.2;
+    }
+    .ai-header-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    /* ── Botones rápidos ─────────────────────────────────────── */
+    .quick-btns {
+      display: flex; gap: 8px;
+      padding: 0 16px 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .quick-btns::-webkit-scrollbar { display: none; }
+    .quick-btn {
+      background: #1e293b; color: #94a3b8;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 99px; padding: 9px 15px;
+      font-size: 12px; white-space: nowrap; cursor: pointer;
+      font-family: "DM Sans", sans-serif;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .quick-btn:hover  { background: #273449; color: #f1f5f9; border-color: rgba(59,130,246,0.5); }
+    .quick-btn:active { background: #1e3a5f; }
+    .quick-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Área de mensajes ────────────────────────────────────── */
+    .chat-messages {
+      padding: 4px 16px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* Mensaje del usuario */
+    .msg-user { display: flex; justify-content: flex-end; }
+    .msg-user .msg-bubble {
+      background: #3b82f6; color: #fff;
+      border-radius: 18px 18px 4px 18px;
+      padding: 12px 16px; max-width: 82%;
+      font-size: 14px; line-height: 1.55;
+      word-wrap: break-word;
+    }
+
+    /* Mensaje del asistente */
+    .msg-ai {
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .msg-ai-ico {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0; margin-top: 2px;
+    }
+    .msg-ai .msg-bubble {
+      background: #1e293b; color: #f1f5f9;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px 18px 18px 18px;
+      padding: 13px 16px; max-width: 88%;
+      font-size: 14px; line-height: 1.65;
+      word-wrap: break-word;
+    }
+    .msg-ai .msg-bubble strong { color: #93c5fd; font-weight: 500; }
+    .msg-ai .msg-bubble em     { color: #c4b5fd; font-style: normal; }
+    .msg-ai .msg-bubble ul     { padding-left: 18px; margin: 8px 0; }
+    .msg-ai .msg-bubble li     { margin-bottom: 5px; }
+    .msg-ai .msg-bubble h3     { font-size: 14px; font-weight: 500; color: #93c5fd; margin: 10px 0 5px; }
+    .msg-ai .msg-bubble br + br { display: block; margin-top: 4px; }
+
+    /* Indicador "escribiendo..." */
+    .typing-indicator {
+      display: flex; gap: 5px; align-items: center; padding: 4px 0;
+    }
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #475569;
+      animation: t-pulse 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes t-pulse {
+      0%, 60%, 100% { transform: scale(1);   opacity: 0.35; }
+      30%            { transform: scale(1.3); opacity: 1;    }
+    }
+
+    /* Burbuja de error */
+    .msg-error .msg-bubble {
+      background: #2a1515 !important;
+      border-color: rgba(239,68,68,0.25) !important;
+      color: #fca5a5 !important;
+    }
+
+    /* ── Input fijo al fondo ─────────────────────────────────── */
+    .chat-input-area {
+      position: fixed;
+      bottom: 60px; /* encima del bottom-nav en móvil */
+      left: 0; right: 0;
+      background: #0f172a;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 16px 10px;
+      z-index: 50;
+    }
+    @media (min-width: 768px) {
+      .chat-input-area {
+        bottom: 0;
+        left: 220px; /* ancho del sidebar */
+      }
+    }
+    .chat-input-inner {
+      max-width: 700px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 7px;
+    }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input {
+      flex: 1;
+      background: #1e293b; color: #f1f5f9;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 12px 14px;
+      font-size: 14px; font-family: "DM Sans", sans-serif;
+      outline: none; transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .chat-input:focus       { border-color: #3b82f6; }
+    .chat-input::placeholder { color: #475569; }
+    .chat-input:disabled    { opacity: 0.5; }
+
+    .btn-send {
+      width: 48px; height: 48px; flex-shrink: 0;
+      background: #3b82f6; color: #fff; border: none; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-send:hover    { background: #2563eb; }
+    .btn-send:disabled { background: #1d3461; cursor: not-allowed; }
+    .btn-send svg {
+      width: 18px; height: 18px;
+      stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .btn-clear {
+      background: none; border: none; padding: 0;
+      color: #334155; font-size: 11px;
+      cursor: pointer; font-family: "DM Sans", sans-serif;
+      text-align: right; transition: color 0.15s; align-self: flex-end;
+    }
+    .btn-clear:hover { color: #64748b; }
+  </style>
+</head>
+<body>
+  <div id="topbar" class="topbar"></div>
+
+  <div class="ai-page">
+
+    <!-- Header -->
+    <div class="ai-header">
+      <div class="ai-header-ico">✨</div>
+      <div>
+        <div class="ai-header-title">Asistente IA</div>
+        <div class="ai-header-sub">Análisis de tus finanzas personales</div>
+      </div>
+    </div>
+
+    <!-- Preguntas rápidas -->
+    <div class="quick-btns" id="quick-btns">
+      <button class="quick-btn" data-q="¿En qué categoría gasté más este mes? Dame el top 3 con los montos.">¿En qué gasté más?</button>
+      <button class="quick-btn" data-q="Compara mis gastos de este mes con el mes anterior. ¿Gasté más o menos? ¿En qué categorías hubo más diferencia?">Compara meses</button>
+      <button class="quick-btn" data-q="¿Cómo va mi presupuesto este mes? ¿En qué categorías estoy bien y en cuáles me estoy pasando?">¿Cómo va mi presupuesto?</button>
+      <button class="quick-btn" data-q="Dame un resumen completo de mis finanzas de este mes: total gastado, categorías principales, estado del presupuesto y mis cajitas.">Resumen del mes</button>
+      <button class="quick-btn" data-q="¿Cuánto dinero tengo disponible por categoría en mi presupuesto de este mes?">Disponible por categoría</button>
+    </div>
+
+    <!-- Mensajes del chat -->
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg-ai" id="msg-bienvenida">
+        <div class="msg-ai-ico">✨</div>
+        <div class="msg-bubble">
+          ¡Hola! Soy tu asistente financiero. Analizo tus gastos, presupuesto y cajitas reales para ayudarte a entender mejor tus finanzas.<br><br>
+          Usa los accesos rápidos de arriba o escríbeme directamente. ¿En qué te ayudo hoy?
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.ai-page -->
+
+  <!-- Input fijo al fondo -->
+  <div class="chat-input-area">
+    <div class="chat-input-inner">
+      <div class="chat-input-row">
+        <input
+          type="text"
+          class="chat-input"
+          id="chat-input"
+          placeholder="Escríbeme tu pregunta..."
+          autocomplete="off"
+          maxlength="500"
+        />
+        <button class="btn-send" id="btn-send" title="Enviar">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <button class="btn-clear" id="btn-clear">Limpiar chat</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+
+  <script type="module">
+    import { requireAuth }                                          from "../modules/auth.js";
+    import { getExpenses, getBudget, getWallets }                   from "../modules/db.js";
+    import { renderTopbar, renderBottomNav }                        from "../assets/ui.js";
+    import { formatCOP, currentMonth, formatMonth, sumByCategory }  from "../assets/utils.js";
+
+    const GEMINI_API_KEY    = "AIzaSyBIckVSeKzB4H0L3SFcshunjUGeJjOg7EI";
+    const GEMINI_ENDPOINT   = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+    const GEMINI_TIMEOUT_MS = 15000;
+
+    window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
+    const user = await requireAuth();
+    renderTopbar(user);
+    renderBottomNav("asistente");
+
+    const chatEl   = document.getElementById("chat-messages");
+    const inputEl  = document.getElementById("chat-input");
+    const sendBtn  = document.getElementById("btn-send");
+    const clearBtn = document.getElementById("btn-clear");
+    let isBusy = false;
+
+    // ── Botones rápidos ─────────────────────────────────────
+    document.querySelectorAll(".quick-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (isBusy) return;
+        enviarPregunta(btn.dataset.q);
+      });
+    });
+
+    // ── Enviar con Enter ────────────────────────────────────
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !isBusy) {
+        e.preventDefault();
+        const texto = inputEl.value.trim();
+        if (texto) enviarPregunta(texto);
+      }
+    });
+
+    sendBtn.addEventListener("click", () => {
+      if (isBusy) return;
+      const texto = inputEl.value.trim();
+      if (texto) enviarPregunta(texto);
+    });
+
+    clearBtn.addEventListener("click", limpiarChat);
+
+    // ── Flujo principal ─────────────────────────────────────
+    async function enviarPregunta(pregunta) {
+      if (isBusy || !pregunta) return;
+      setBusy(true);
+      inputEl.value = "";
+
+      agregarMensajeUsuario(pregunta);
+      const typingId = agregarTyping();
+
+      try {
+        const contexto  = await obtenerContextoUsuario();
+        const prompt    = construirPrompt(pregunta, contexto);
+        const respuesta = await consultarGemini(prompt);
+        quitarTyping(typingId);
+        renderRespuesta(respuesta);
+      } catch (err) {
+        quitarTyping(typingId);
+        renderError(err.message);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function setBusy(busy) {
+      isBusy = busy;
+      sendBtn.disabled = busy;
+      inputEl.disabled = busy;
+      document.querySelectorAll(".quick-btn").forEach(b => b.disabled = busy);
+    }
+
+    // ── Obtener datos de Firestore ──────────────────────────
+    async function obtenerContextoUsuario() {
+      const mesActual = currentMonth();
+      const [y, m]    = mesActual.split("-").map(Number);
+      const prevD     = new Date(y, m - 2, 1);
+      const mesAnterior = prevD.getFullYear() + "-" + String(prevD.getMonth() + 1).padStart(2, "0");
+
+      const [gastosActual, gastosAnterior, presupuesto, cajitas] = await Promise.all([
+        getExpenses(user.uid, { month: mesActual }),
+        getExpenses(user.uid, { month: mesAnterior }),
+        getBudget(user.uid, mesActual),
+        getWallets(user.uid)
+      ]);
+
+      return { mesActual, mesAnterior, gastosActual, gastosAnterior, presupuesto, cajitas };
+    }
+
+    // ── Construir prompt con contexto financiero ────────────
+    function construirPrompt(pregunta, ctx) {
+      const { mesActual, mesAnterior, gastosActual, gastosAnterior, presupuesto, cajitas } = ctx;
+
+      // Limita a 60 movimientos por mes para no exceder tokens
+      const g1 = gastosActual.slice(0, 60);
+      const g2 = gastosAnterior.slice(0, 60);
+
+      const fmtGastos = gastos => {
+        if (!gastos.length) return "  (sin movimientos registrados)";
+        return gastos.map(g => {
+          const desc = g.description ? ` | ${g.description}` : "";
+          return `  • ${g.date} | ${g.category} | ${formatCOP(Number(g.amount))}${desc}`;
+        }).join("\n");
+      };
+
+      const fmtPresupuesto = () => {
+        if (!presupuesto?.categories) return "  (sin presupuesto configurado este mes)";
+        const gastadoPorCat = sumByCategory(gastosActual);
+        return Object.entries(presupuesto.categories)
+          .filter(([, v]) => Number(v) > 0)
+          .map(([cat, asignado]) => {
+            const gastado    = gastadoPorCat[cat] || 0;
+            const disponible = Number(asignado) - gastado;
+            const pct        = Math.round((gastado / Number(asignado)) * 100);
+            return `  • ${cat}: presupuestado ${formatCOP(Number(asignado))} | gastado ${formatCOP(gastado)} | disponible ${formatCOP(disponible)} (${pct}% usado)`;
+          }).join("\n") || "  (sin categorías con presupuesto)";
+      };
+
+      const fmtCajitas = () => {
+        if (!cajitas.length) return "  (sin cajitas registradas)";
+        return cajitas.map(c => {
+          const ico   = c.icon || (c.type === "credito" ? "💳" : "🏦");
+          const saldo = Number(c.balance || 0);
+          const info  = c.type === "credito"
+            ? `${formatCOP(saldo)} usado${c.creditLimit ? ` de ${formatCOP(Number(c.creditLimit))} cupo` : ""}`
+            : formatCOP(saldo);
+          return `  • ${ico} ${c.name} (${c.type || "ahorro"}): ${info}`;
+        }).join("\n");
+      };
+
+      return `Eres un asistente financiero personal amigable. Analizas los datos reales del usuario y respondes en español de forma clara y concisa. Usa listas cuando sea útil para mayor claridad. Sé directo y práctico.
+
+=== DATOS FINANCIEROS DEL USUARIO ===
+
+Mes actual: ${formatMonth(mesActual)}
+Mes anterior: ${formatMonth(mesAnterior)}
+
+GASTOS DEL MES ACTUAL (${formatMonth(mesActual)}):
+${fmtGastos(g1)}
+
+GASTOS MES ANTERIOR (${formatMonth(mesAnterior)}):
+${fmtGastos(g2)}
+
+PRESUPUESTO POR CATEGORÍA (${formatMonth(mesActual)}):
+${fmtPresupuesto()}
+
+SALDO DE CAJITAS:
+${fmtCajitas()}
+
+=== PREGUNTA DEL USUARIO ===
+${pregunta}`;
+    }
+
+    // ── Llamada a la API de Gemini ──────────────────────────
+    async function consultarGemini(prompt) {
+      const controller = new AbortController();
+      const timeout    = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+
+      try {
+        const res = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          signal:  controller.signal,
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.6, maxOutputTokens: 2048 }
+          })
+        });
+
+        if (!res.ok) {
+          if (res.status === 429) throw new Error("rate_limit");
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error?.message || `Error ${res.status} del servidor`);
+        }
+
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("El asistente devolvió una respuesta vacía");
+        return text;
+
+      } catch (err) {
+        if (err.name === "AbortError") throw new Error("timeout");
+        throw err;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    // ── Render del chat ─────────────────────────────────────
+    function agregarMensajeUsuario(texto) {
+      chatEl.insertAdjacentHTML("beforeend", `
+        <div class="msg-user">
+          <div class="msg-bubble">${escapeHtml(texto)}</div>
+        </div>`);
+      scrollAbajo();
+    }
+
+    function agregarTyping() {
+      const id = "typing-" + Date.now();
+      chatEl.insertAdjacentHTML("beforeend", `
+        <div class="msg-ai" id="${id}">
+          <div class="msg-ai-ico">✨</div>
+          <div class="msg-bubble">
+            <div class="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+        </div>`);
+      scrollAbajo();
+      return id;
+    }
+
+    function quitarTyping(id) {
+      document.getElementById(id)?.remove();
+    }
+
+    function renderRespuesta(texto) {
+      chatEl.insertAdjacentHTML("beforeend", `
+        <div class="msg-ai">
+          <div class="msg-ai-ico">✨</div>
+          <div class="msg-bubble">${mdToHtml(texto)}</div>
+        </div>`);
+      scrollAbajo();
+    }
+
+    function renderError(msg) {
+      const texto = msg === "timeout"
+        ? "La consulta tardó demasiado. Intenta de nuevo."
+        : msg === "rate_limit"
+        ? "Demasiadas consultas seguidas. Espera un minuto e intenta de nuevo."
+        : "No pude conectarme al asistente. Intenta de nuevo.";
+      chatEl.insertAdjacentHTML("beforeend", `
+        <div class="msg-ai msg-error">
+          <div class="msg-ai-ico">⚠️</div>
+          <div class="msg-bubble">${escapeHtml(texto)}</div>
+        </div>`);
+      scrollAbajo();
+    }
+
+    function limpiarChat() {
+      chatEl.innerHTML = `
+        <div class="msg-ai">
+          <div class="msg-ai-ico">✨</div>
+          <div class="msg-bubble">Chat limpiado. ¿En qué más puedo ayudarte?</div>
+        </div>`;
+    }
+
+    function scrollAbajo() {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      });
+    }
+
+    // ── Utilidades ──────────────────────────────────────────
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function mdToHtml(text) {
+      // 1. Escapar HTML
+      let s = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // 2. Negritas e itálicas
+      s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      s = s.replace(/\*(.+?)\*/g,     "<em>$1</em>");
+
+      // 3. Headers → negrita
+      s = s.replace(/^#{1,3}\s+(.+)$/gm, "<strong>$1</strong>");
+
+      // 4. Listas — proceso línea a línea para generar <ul> correcto
+      const lines = s.split("\n");
+      const out   = [];
+      let inList  = false;
+      for (const line of lines) {
+        const m = line.match(/^[\*\-•]\s+(.+)$/);
+        if (m) {
+          if (!inList) { out.push("<ul>"); inList = true; }
+          out.push(`<li>${m[1]}</li>`);
+        } else {
+          if (inList) { out.push("</ul>"); inList = false; }
+          out.push(line);
+        }
+      }
+      if (inList) out.push("</ul>");
+
+      // 5. Saltos de línea
+      return out.join("\n")
+        .replace(/\n\n+/g, "<br><br>")
+        .replace(/\n/g,    "<br>")
+        .replace(/<ul><br>/g,   "<ul>")
+        .replace(/<br><\/ul>/g, "</ul>");
+    }
+  </script>
+</body>
+</html>
