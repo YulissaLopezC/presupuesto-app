@@ -257,10 +257,7 @@
     import { getExpenses, getBudget, getWallets }                   from "../modules/db.js";
     import { renderTopbar, renderBottomNav }                        from "../assets/ui.js";
     import { formatCOP, currentMonth, formatMonth, sumByCategory }  from "../assets/utils.js";
-
-    const GEMINI_API_KEY    = "AIzaSyBIckVSeKzB4H0L3SFcshunjUGeJjOg7EI";
-    const GEMINI_ENDPOINT   = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-    const GEMINI_TIMEOUT_MS = 15000;
+    import { GEMINI_API_KEY, GEMINI_ENDPOINT, GEMINI_TIMEOUT_MS }   from "../config/gemini.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
