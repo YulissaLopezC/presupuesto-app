@@ -413,6 +413,7 @@ ${pregunta}`;
       const timeout    = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
       try {
+        console.log("[Gemini] URL:", `${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY.slice(0, 6)}...`);
         const res = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
