@@ -384,7 +384,7 @@
         }).join("\n");
       };
 
-      return `Eres un asistente financiero personal amigable. Analizas los datos reales del usuario y respondes en español de forma clara y concisa. Usa listas cuando sea útil para mayor claridad. Sé directo y práctico.
+      return `Eres un asistente financiero personal amigable. Analizas los datos reales del usuario y respondes en español de forma clara y concisa. Sé directo y práctico. Usa listas solo cuando aporten claridad real. Responde siempre de forma completa pero sin extenderte innecesariamente — si la pregunta es simple, responde corto; si requiere detalle, desarróllalo sin cortarte.
 
 === DATOS FINANCIEROS DEL USUARIO ===
 
@@ -419,7 +419,7 @@ ${pregunta}`;
           signal:  controller.signal,
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.6, maxOutputTokens: 2048 }
+            generationConfig: { temperature: 0.6, maxOutputTokens: 8192 }
           })
         });
 
