@@ -413,7 +413,6 @@ ${pregunta}`;
       const timeout    = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
       try {
-        console.log("[Gemini] URL:", `${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY.slice(0, 6)}...`);
         const res = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
@@ -427,7 +426,6 @@ ${pregunta}`;
         if (!res.ok) {
           if (res.status === 429) throw new Error("rate_limit");
           const data = await res.json().catch(() => ({}));
-          console.log("[Gemini] Error response:", JSON.stringify(data));
           throw new Error(data?.error?.message || `Error ${res.status} del servidor`);
         }
 
