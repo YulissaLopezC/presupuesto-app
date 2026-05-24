@@ -559,6 +559,7 @@
 
       // Format number inputs with dots
       el.querySelectorAll(".val-pill-input").forEach(inp => {
+        inp.type = "text";
         if (inp.value) {
           inp.dataset.raw = inp.value;
           inp.value = Number(inp.value).toLocaleString("es-CO");
