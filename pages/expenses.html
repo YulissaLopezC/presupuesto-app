@@ -56,7 +56,7 @@
       padding: 3px 10px; font-size: 11px; color: #7ab8e8;
     }
 
-    /* ── Filtros ─────────────────────────────────────────── */
+    /* ── Filtros (chips — ingresos) ──────────────────────── */
     .filters {
       display: flex; gap: 7px; overflow-x: auto;
       padding: 0 14px 12px; scrollbar-width: none;
@@ -72,6 +72,53 @@
     }
     body.dark .chip { background: #1a1a1a; border-color: #333; color: #888; }
     .chip.active { background: #0f3460; border-color: #0f3460; color: #fff; }
+
+    /* ── Filter panel (gastos) ────────────────────────── */
+    .filter-bar { max-width: 680px; margin: 0 auto; padding: 0 14px 8px; }
+    .filter-toggle-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff; border: 0.5px solid #ddd; border-radius: 99px;
+      padding: 7px 14px; font-size: 13px; font-weight: 500; color: var(--text);
+      cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.15s;
+    }
+    body.dark .filter-toggle-btn { background: #1a1a1a; border-color: #333; }
+    .filter-toggle-btn.has-filters { background: #0f3460; border-color: #0f3460; color: #fff; }
+    .filter-panel {
+      background: #fff; border-radius: 14px; padding: 14px 14px 10px;
+      margin-top: 8px; border: 0.5px solid #e8edf2;
+    }
+    body.dark .filter-panel { background: #1a1a1a; border-color: #2a2a2a; }
+    .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .filter-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .filter-select, .filter-date-input {
+      width: 100%; padding: 8px 10px; border: 1.5px solid #e2e8f0; border-radius: 9px;
+      font-size: 12px; font-family: "DM Sans", sans-serif; color: var(--text);
+      background: #fff; outline: none; -webkit-appearance: none; appearance: none;
+      box-sizing: border-box;
+    }
+    body.dark .filter-select, body.dark .filter-date-input { background: #222; border-color: #333; }
+    .filter-select:focus, .filter-date-input:focus { border-color: #0f3460; }
+    .filter-date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+    .filter-date-sub { font-size: 10px; color: #aaa; margin-bottom: 4px; }
+    .quick-dates { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .quick-date-btn {
+      padding: 4px 11px; border-radius: 99px; border: 0.5px solid #ddd;
+      font-size: 11px; color: #555; cursor: pointer; background: #f8fafc;
+      font-family: "DM Sans", sans-serif; white-space: nowrap;
+    }
+    body.dark .quick-date-btn { background: #222; border-color: #333; color: #aaa; }
+    .quick-date-btn:hover { border-color: #0f3460; color: #0f3460; }
+    .quick-date-btn.active-range { border-color: #0f3460; color: #0f3460; background: #e6f1fb; }
+    body.dark .quick-date-btn.active-range { background: #0a1f3d; }
+    .filter-footer { display: flex; justify-content: space-between; align-items: center; border-top: 0.5px solid #f0f4f8; padding-top: 10px; }
+    body.dark .filter-footer { border-top-color: #2a2a2a; }
+    .filter-results { font-size: 12px; color: #888; }
+    .clear-filters-btn {
+      font-size: 12px; color: #888; background: none; border: none;
+      cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .clear-filters-btn:hover { color: #c0392b; }
 
     /* ── Listas ──────────────────────────────────────────── */
     .mov-body { padding: 0 14px 90px; max-width: 680px; margin: 0 auto; }
@@ -255,8 +302,52 @@
   </div>
   </div>
 
-  <!-- Filtros -->
-  <div class="filters" id="item-filters" style="max-width:680px;margin:0 auto;">
+  <!-- Filter bar (gastos) -->
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-toggle-btn" id="filter-toggle-btn">Filtros 🔽</button>
+    <div class="filter-panel" id="filter-panel" style="display:none;">
+      <div class="filter-row">
+        <div>
+          <div class="filter-lbl">Categoría</div>
+          <select class="filter-select" id="filter-cat">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+        <div id="filter-wallet-group">
+          <div class="filter-lbl">Cajita</div>
+          <select class="filter-select" id="filter-wal">
+            <option value="">Todas las cajitas</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="filter-lbl">Rango de fechas</div>
+        <div class="filter-date-row">
+          <div>
+            <div class="filter-date-sub">Desde</div>
+            <input type="date" class="filter-date-input" id="filter-from"/>
+          </div>
+          <div>
+            <div class="filter-date-sub">Hasta</div>
+            <input type="date" class="filter-date-input" id="filter-to"/>
+          </div>
+        </div>
+        <div class="quick-dates" id="quick-dates">
+          <button class="quick-date-btn" data-range="month">Este mes</button>
+          <button class="quick-date-btn" data-range="prev">Mes anterior</button>
+          <button class="quick-date-btn" data-range="3m">Últimos 3 meses</button>
+          <button class="quick-date-btn" data-range="year">Este año</button>
+        </div>
+      </div>
+      <div class="filter-footer">
+        <span class="filter-results" id="filter-results"></span>
+        <button class="clear-filters-btn" id="clear-filters-btn">Limpiar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros chips (ingresos) -->
+  <div class="filters" id="item-filters" style="display:none;">
     <div class="chip active" data-cat="">Todos</div>
   </div>
 
@@ -370,6 +461,9 @@
     let allExpenses=[], allIncomes=[], categories=[], wallets=[], budget=null;
     let propSummary=[], propExpenses=[];
     let editingId=null, activeFilter="", activeTab="gastos";
+    let allExpensesAll=null;
+    let filters={ category:"", wallet:"", dateFrom:"", dateTo:"" };
+    let filterPanelOpen=false;
 
     // Utilidad: rechaza si la promesa tarda más de `ms` milisegundos
     const withTimeout = (promise, ms = 15000, msg = "La operación tardó demasiado. Verifica tu conexión.") =>
@@ -433,7 +527,7 @@
         selectedMonth = `${py}-${String(pm).padStart(2,"0")}`;
         document.getElementById("mp-lbl").textContent = formatMonth(selectedMonth);
         document.getElementById("mp-next").style.opacity = "1";
-        activeFilter=""; loadAll();
+        activeFilter=""; resetFilters(); loadAll();
       });
       document.getElementById("mp-next").addEventListener("click", () => {
         const [y,m] = selectedMonth.split("-").map(Number);
@@ -441,7 +535,7 @@
         const nm = m===12?1:m+1, ny = m===12?y+1:y;
         selectedMonth = `${ny}-${String(nm).padStart(2,"0")}`;
         document.getElementById("mp-lbl").textContent = formatMonth(selectedMonth);
-        loadAll();
+        activeFilter=""; resetFilters(); loadAll();
       });
     }
 
@@ -465,6 +559,7 @@
     }
 
     async function loadAll() {
+      allExpensesAll = null;
       // Fire sync in background — don't block UI on it
       syncProportionalIncomes(uid, selectedMonth).catch(console.error);
 
@@ -487,13 +582,85 @@
       else { renderDevengado(); renderSources(); renderIncomes(); }
     }
 
+    // ── Helpers filtros ───────────────────────────────────
+    function filterActiveCount() {
+      return (filters.category?1:0) + (filters.wallet?1:0) + (filters.dateFrom||filters.dateTo?1:0);
+    }
+
+    function getFilteredExpenses() {
+      const hasDate = filters.dateFrom || filters.dateTo;
+      let src = hasDate && allExpensesAll ? allExpensesAll : allExpenses;
+      if (filters.category) src = src.filter(e => e.category === filters.category);
+      if (filters.wallet)   src = src.filter(e => e.walletId === filters.wallet || e.toWalletId === filters.wallet);
+      if (filters.dateFrom) src = src.filter(e => e.date >= filters.dateFrom);
+      if (filters.dateTo)   src = src.filter(e => e.date <= filters.dateTo);
+      return src;
+    }
+
+    async function ensureAllExpenses() {
+      if (!allExpensesAll) allExpensesAll = await getExpenses(uid, {});
+    }
+
+    function resetFilters() {
+      filters = { category:"", wallet:"", dateFrom:"", dateTo:"" };
+      filterPanelOpen = false;
+      const panel = document.getElementById("filter-panel");
+      if (panel) panel.style.display = "none";
+      const fromEl = document.getElementById("filter-from");
+      const toEl   = document.getElementById("filter-to");
+      if (fromEl) fromEl.value = "";
+      if (toEl)   toEl.value   = "";
+      document.querySelectorAll(".quick-date-btn").forEach(b => b.classList.remove("active-range"));
+      updateFilterToggleBtn();
+    }
+
+    function updateFilterToggleBtn() {
+      const btn   = document.getElementById("filter-toggle-btn");
+      if (!btn) return;
+      const count = filterActiveCount();
+      if (filterPanelOpen) {
+        btn.textContent = "Filtros 🔼";
+        btn.classList.remove("has-filters");
+      } else {
+        btn.textContent = count > 0 ? `Filtros (${count}) 🔽` : "Filtros 🔽";
+        btn.classList.toggle("has-filters", count > 0);
+      }
+    }
+
+    function populateFilterPanel() {
+      const catSel   = document.getElementById("filter-cat");
+      const catNames = [...new Set(allExpenses.map(e => e.category).filter(Boolean))].sort();
+      catSel.innerHTML = `<option value="">Todas las categorías</option>` +
+        catNames.map(n => `<option value="${n}"${filters.category===n?" selected":""}>${n}</option>`).join("");
+
+      const walSel   = document.getElementById("filter-wal");
+      const walGroup = document.getElementById("filter-wallet-group");
+      if (wallets.length) {
+        walGroup.style.display = "block";
+        walSel.innerHTML = `<option value="">Todas las cajitas</option>` +
+          wallets.map(w => `<option value="${w.id}"${filters.wallet===w.id?" selected":""}>${w.icon||"🏦"} ${w.name}</option>`).join("");
+      } else {
+        walGroup.style.display = "none";
+      }
+
+      document.getElementById("filter-from").value = filters.dateFrom;
+      document.getElementById("filter-to").value   = filters.dateTo;
+    }
+
     // ── Hero suma ─────────────────────────────────────────
     function renderHeroSum() {
       const isG = activeTab==="gastos";
-      const items = isG ? allExpenses : allIncomes.filter(i=>!i.isProportional);
-      const filtered = activeFilter ? items.filter(i=>(isG?i.category:i.source)===activeFilter) : items;
-      const total = filtered.reduce((s,i)=>s+Number(i.amount),0);
-      const count = filtered.length;
+      let items, count;
+      if (isG) {
+        items = getFilteredExpenses();
+        count = items.length;
+      } else {
+        const all = allIncomes.filter(i=>!i.isProportional);
+        items = activeFilter ? all.filter(i=>i.source===activeFilter) : all;
+        count = items.length;
+      }
+      const total    = items.reduce((s,i)=>s+Number(i.amount),0);
+      const hasRange = isG && (filters.dateFrom || filters.dateTo);
       document.getElementById("hero-sum").innerHTML = `
         <div class="sum-lbl">${isG?"Total gastado":"Total recibido"}</div>
         <div class="sum-amount">${formatCOP(total)}</div>
@@ -502,37 +669,47 @@
             ${isG ? '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>'
                   : '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'}
           </svg>
-          ${count} registro${count!==1?"s":""} este mes
+          ${count} registro${count!==1?"s":""} ${hasRange?"en el rango":"este mes"}
         </div>`;
     }
 
     // ── Filtros ───────────────────────────────────────────
     function renderFilters() {
-      const isG    = activeTab==="gastos";
-      const names  = isG
-        ? [...new Set(allExpenses.map(e=>e.category).filter(Boolean))]
-        : [...new Set(allIncomes.filter(i=>!i.isProportional).map(i=>i.source).filter(Boolean))];
-      const el = document.getElementById("item-filters");
-      el.innerHTML = `<div class="chip active" data-cat="">Todos</div>` +
-        names.map(n=>`<div class="chip" data-cat="${n}">${n}</div>`).join("");
-      el.onclick = e => {
-        const chip = e.target.closest(".chip");
-        if (!chip) return;
-        el.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
-        chip.classList.add("active");
-        activeFilter = chip.dataset.cat;
-        renderHeroSum();
-        if (activeTab==="gastos") renderExpenses();
-        else renderIncomes();
-      };
+      const isG = activeTab==="gastos";
+      document.getElementById("filter-bar").style.display   = isG ? "block" : "none";
+      document.getElementById("item-filters").style.display = isG ? "none"  : "block";
+
+      if (isG) {
+        populateFilterPanel();
+        document.getElementById("filter-panel").style.display = filterPanelOpen ? "block" : "none";
+        updateFilterToggleBtn();
+      } else {
+        const names = [...new Set(allIncomes.filter(i=>!i.isProportional).map(i=>i.source).filter(Boolean))];
+        const el = document.getElementById("item-filters");
+        el.innerHTML = `<div class="chip active" data-cat="">Todos</div>` +
+          names.map(n=>`<div class="chip" data-cat="${n}">${n}</div>`).join("");
+        el.onclick = e => {
+          const chip = e.target.closest(".chip");
+          if (!chip) return;
+          el.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+          chip.classList.add("active");
+          activeFilter = chip.dataset.cat;
+          renderHeroSum();
+          renderIncomes();
+        };
+      }
     }
 
     // ── Render gastos ─────────────────────────────────────
     function renderExpenses() {
-      const el = document.getElementById("expenses-list");
-      const filtered = activeFilter ? allExpenses.filter(e=>e.category===activeFilter) : allExpenses;
+      const el       = document.getElementById("expenses-list");
+      const filtered = getFilteredExpenses();
+      const countEl  = document.getElementById("filter-results");
+      if (countEl) countEl.textContent = `${filtered.length} resultado${filtered.length!==1?"s":""} encontrado${filtered.length!==1?"s":""}`;
+
       if (!filtered.length) {
-        el.innerHTML=`<div class="empty-state"><p>No hay gastos${activeFilter?" en esta categoría":""} este mes.</p></div>`; return;
+        el.innerHTML = `<div class="empty-state"><p>${filterActiveCount()>0?"No hay movimientos con estos filtros.":"No hay gastos este mes."}</p></div>`;
+        return;
       }
       const groups = filtered.reduce((acc,e)=>{(acc[e.date]=acc[e.date]||[]).push(e);return acc;},{});
       el.innerHTML = Object.keys(groups).sort().reverse().map(date=>`
@@ -817,6 +994,87 @@
       try{const i=allIncomes.find(x=>x.id===id);await deleteIncome(uid,id,i);showToast("Eliminado.","success");wallets=await getWallets(uid);populateWalletSelect();await loadAll();}
       catch(err){showToast("Error.","error");}
     }
+
+    // ── Filter panel event listeners ──────────────────────
+    document.getElementById("filter-toggle-btn").addEventListener("click", () => {
+      filterPanelOpen = !filterPanelOpen;
+      document.getElementById("filter-panel").style.display = filterPanelOpen ? "block" : "none";
+      if (filterPanelOpen) populateFilterPanel();
+      updateFilterToggleBtn();
+    });
+
+    document.getElementById("filter-cat").addEventListener("change", e => {
+      filters.category = e.target.value;
+      activeFilter = filters.category;
+      updateFilterToggleBtn();
+      renderHeroSum();
+      renderExpenses();
+    });
+
+    document.getElementById("filter-wal").addEventListener("change", e => {
+      filters.wallet = e.target.value;
+      updateFilterToggleBtn();
+      renderHeroSum();
+      renderExpenses();
+    });
+
+    document.getElementById("filter-from").addEventListener("change", async e => {
+      filters.dateFrom = e.target.value;
+      if (filters.dateFrom) await ensureAllExpenses();
+      updateFilterToggleBtn();
+      renderHeroSum();
+      renderExpenses();
+    });
+
+    document.getElementById("filter-to").addEventListener("change", async e => {
+      filters.dateTo = e.target.value;
+      if (filters.dateTo) await ensureAllExpenses();
+      updateFilterToggleBtn();
+      renderHeroSum();
+      renderExpenses();
+    });
+
+    document.getElementById("quick-dates").addEventListener("click", async e => {
+      const btn = e.target.closest(".quick-date-btn");
+      if (!btn) return;
+      document.querySelectorAll(".quick-date-btn").forEach(b => b.classList.remove("active-range"));
+      btn.classList.add("active-range");
+      const range = btn.dataset.range;
+      const now = new Date();
+      const y = now.getFullYear(), m = now.getMonth();
+      let from, to;
+      if (range === "month") {
+        from = `${y}-${String(m+1).padStart(2,"0")}-01`;
+        to   = `${y}-${String(m+1).padStart(2,"0")}-31`;
+      } else if (range === "prev") {
+        const pm = m===0?12:m, py = m===0?y-1:y;
+        from = `${py}-${String(pm).padStart(2,"0")}-01`;
+        to   = `${py}-${String(pm).padStart(2,"0")}-31`;
+      } else if (range === "3m") {
+        const start = new Date(y, m-2, 1);
+        from = `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,"0")}-01`;
+        to   = `${y}-${String(m+1).padStart(2,"0")}-31`;
+      } else if (range === "year") {
+        from = `${y}-01-01`;
+        to   = `${y}-12-31`;
+      }
+      filters.dateFrom = from;
+      filters.dateTo   = to;
+      document.getElementById("filter-from").value = from;
+      document.getElementById("filter-to").value   = to;
+      await ensureAllExpenses();
+      updateFilterToggleBtn();
+      renderHeroSum();
+      renderExpenses();
+    });
+
+    document.getElementById("clear-filters-btn").addEventListener("click", () => {
+      resetFilters();
+      activeFilter = "";
+      populateFilterPanel();
+      renderHeroSum();
+      renderExpenses();
+    });
 
     function populateCategorySelect() {
       const sel=document.getElementById("field-category");
