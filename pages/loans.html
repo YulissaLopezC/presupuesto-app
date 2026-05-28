@@ -84,6 +84,27 @@
     body.dark .loan-del-btn { background: #222; }
     .loan-del-btn:hover { background: #fbeaea; color: #c0392b; }
 
+    /* Monto prominente (saldo pendiente) */
+    .loan-amt-val.prominent { font-size: 18px; }
+
+    /* Botón ver préstamos pagados */
+    .paid-loans-link {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 12px; margin-top: 4px;
+      background: none; border: 1.5px dashed #d0d8e0; border-radius: 12px;
+      font-size: 13px; color: #888; cursor: pointer; font-family: "DM Sans", sans-serif;
+    }
+    .paid-loans-link:hover { border-color: #b0bec5; color: #555; }
+    body.dark .paid-loans-link { border-color: #333; color: #666; }
+
+    /* Items del modal de préstamos pagados */
+    .paid-loan-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 0.5px solid #f0f4f8;
+    }
+    body.dark .paid-loan-item { border-bottom-color: #222; }
+    .paid-loan-item:last-child { border-bottom: none; }
+
     /* Detalle expandido */
     .debtor-detail { border-top: 0.5px solid #f0f0f0; padding-top: 12px; margin-top: 8px; }
     body.dark .debtor-detail { border-top-color: #2a2a2a; }
@@ -322,6 +343,18 @@
     </div>
   </div>
 
+  <!-- Modal: Préstamos pagados -->
+  <div class="modal-overlay" id="paid-overlay">
+    <div class="modal">
+      <div class="modal-hdr">
+        <div class="modal-title">Préstamos pagados</div>
+        <button class="modal-close" id="paid-close">×</button>
+      </div>
+      <div class="modal-subtitle">Deudas ya saldadas al 100%.</div>
+      <div id="paid-loans-list"></div>
+    </div>
+  </div>
+
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
     import {
@@ -388,13 +421,27 @@
       const el     = document.getElementById("debtors-list");
       const active = debtors.filter(d => d.status !== "pagado");
       const paid   = debtors.filter(d => d.status === "pagado");
-      const all    = [...active, ...paid];
-      if (!all.length) {
+
+      if (!active.length && !paid.length) {
         el.innerHTML = `<div class="empty-state"><p>No tienes préstamos registrados.</p>
           <p style="margin-top:6px;font-size:12px;color:#888;">Toca <strong style="color:#0f3460;">+</strong> para registrar uno.</p></div>`;
         return;
       }
-      el.innerHTML = all.map(renderDebtorCard).join("");
+
+      let html = active.length
+        ? active.map(renderDebtorCard).join("")
+        : `<div class="empty-state"><p>No hay préstamos pendientes.</p>
+            <p style="margin-top:6px;font-size:12px;color:#888;">Todos los deudores han saldado su deuda.</p></div>`;
+
+      if (paid.length) {
+        const c = paid.length;
+        html += `<button class="paid-loans-link" onclick="openPaidModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Ver ${c} préstamo${c > 1 ? "s" : ""} pagado${c > 1 ? "s" : ""}
+        </button>`;
+      }
+
+      el.innerHTML = html;
     }
 
     function renderDebtorCard(d) {
@@ -417,16 +464,16 @@
           </div>
           <div class="loan-amounts">
             <div>
-              <div class="loan-amt-lbl">Total prestado</div>
-              <div class="loan-amt-val total">${formatCOP(totalAmt)}</div>
+              <div class="loan-amt-lbl">Lo que debe</div>
+              <div class="loan-amt-val pend-v prominent">${formatCOP(pending)}</div>
             </div>
             <div>
               <div class="loan-amt-lbl">Abonado</div>
               <div class="loan-amt-val paid-v">${formatCOP(totalPaid)}</div>
             </div>
             <div>
-              <div class="loan-amt-lbl">Pendiente</div>
-              <div class="loan-amt-val pend-v">${isPaid ? "$0" : formatCOP(pending)}</div>
+              <div class="loan-amt-lbl">Total prestado</div>
+              <div class="loan-amt-val total">${formatCOP(totalAmt)}</div>
             </div>
           </div>
           <div class="loan-prog-row">
@@ -678,6 +725,35 @@
       } catch(e) { showToast("Error.", "error"); console.error(e); }
       finally { btn.disabled = false; btn.childNodes[0].textContent = "Registrar abono"; }
     });
+
+    // ── Modal: Préstamos pagados ──────────────────────────────
+    window.openPaidModal = () => {
+      document.getElementById("paid-loans-list").innerHTML = renderPaidLoans();
+      document.getElementById("paid-overlay").classList.add("open");
+    };
+    function closePaidModal() { document.getElementById("paid-overlay").classList.remove("open"); }
+    document.getElementById("paid-close").addEventListener("click", closePaidModal);
+    document.getElementById("paid-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("paid-overlay")) closePaidModal();
+    });
+
+    function renderPaidLoans() {
+      const paid = debtors.filter(d => d.status === "pagado");
+      return paid.map(d => {
+        const totalAmt  = Number(d.totalAmount || 0);
+        const totalPaid = Number(d.totalPaid   || 0);
+        const initials  = (d.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+        return `
+          <div class="paid-loan-item">
+            <div class="loan-avatar paid" style="width:36px;height:36px;font-size:13px;flex-shrink:0;">${initials}</div>
+            <div style="flex:1;min-width:0;opacity:0.75;">
+              <div style="font-size:13px;font-weight:500;color:var(--text);">${d.name}</div>
+              <div style="font-size:11px;color:#888;margin-top:2px;">${formatCOP(totalPaid)} de ${formatCOP(totalAmt)}</div>
+            </div>
+            <span class="loan-badge pagado">✓ Pagado</span>
+          </div>`;
+      }).join("");
+    }
 
     // ── Wallets ───────────────────────────────────────────────
     function populateWalletSelects() {
