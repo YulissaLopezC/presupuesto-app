@@ -378,7 +378,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getWallets, addWallet, updateWallet, deleteWallet, archiveWallet, restoreWallet, addTransfer } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
+    import { formatCOP, applyNumericFormat, getNumericValue, today } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -613,7 +613,7 @@
       const btn    = document.getElementById("btn-do-transfer");
       btn.disabled = true; btn.textContent = "Procesando...";
       try {
-        await addTransfer(uid, { fromWalletId: fromId, fromWalletName: fromW?.name, toWalletId: toId, toWalletName: toW?.name, amount });
+        await addTransfer(uid, { date: today(), fromWalletId: fromId, fromWalletName: fromW?.name, toWalletId: toId, toWalletName: toW?.name, amount });
         showToast("Transferencia realizada.", "success");
         closeTransfer(); await loadWallets();
       } catch(e) { showToast("Error.", "error"); }

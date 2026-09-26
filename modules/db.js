@@ -19,10 +19,11 @@ import {
   addDoc, setDoc, updateDoc, deleteDoc,
   getDocs, getDoc,
   query, where, orderBy,
-  serverTimestamp, increment, runTransaction, writeBatch
+  serverTimestamp, increment, runTransaction, writeBatch, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { db } from "../firebase-config.js";
+import { today as localToday } from "../assets/utils.js";
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -34,26 +35,46 @@ function userDoc(uid, colName, docId) {
   return doc(db, "users", uid, colName, docId);
 }
 
+// Variación de saldo cuando ENTRA dinero a una cajita (usar -amount cuando sale).
+// En tarjetas de crédito el saldo es deuda: entrar dinero la reduce, salir la aumenta.
+function walletDelta(type, amount) {
+  return type === "credito" ? -amount : amount;
+}
+
+// Lee dentro de una transacción el tipo de cada cajita (null si no existe).
+// Firestore exige hacer todas las lecturas antes de cualquier escritura.
+async function readWalletTypes(tx, uid, walletIds) {
+  const ids   = [...new Set(walletIds.filter(Boolean))];
+  const snaps = await Promise.all(ids.map(id => tx.get(userDoc(uid, "wallets", id))));
+  const types = {};
+  ids.forEach((id, i) => { types[id] = snaps[i].exists() ? (snaps[i].data().type || "ahorro") : null; });
+  return types;
+}
+
+// Aplica un movimiento de dinero a una cajita si existe (ignora cajitas borradas)
+function applyWallet(tx, uid, types, walletId, inflowAmount) {
+  if (!walletId || types[walletId] === null || types[walletId] === undefined) return;
+  tx.update(userDoc(uid, "wallets", walletId), {
+    balance: increment(walletDelta(types[walletId], inflowAmount))
+  });
+}
+
 // ── GASTOS (expenses) ─────────────────────────────────────
 // data: { date, category, amount, description, walletId, walletName }
 // Al agregar un gasto, descuenta el monto de la cajita en una transacción atómica
 
 export async function addExpense(uid, data) {
-  const expenseRef  = doc(userCol(uid, "expenses"));
-  const walletRef   = data.walletId   ? userDoc(uid, "wallets", data.walletId)   : null;
-  const savingsRef  = data.toWalletId ? userDoc(uid, "wallets", data.toWalletId) : null;
-  const amount      = Number(data.amount);
-  const isCredit    = data.walletType === "credito";
-  const delta       = isCredit ? amount : -amount;
+  const expenseRef = doc(userCol(uid, "expenses"));
+  const amount     = Number(data.amount);
 
   await runTransaction(db, async (tx) => {
-    // Reads primero
-    const toWalletSnap = savingsRef ? await tx.get(savingsRef) : null;
-    const toIsCredit   = toWalletSnap?.exists() && toWalletSnap.data().type === "credito";
+    // Reads primero: tipo real de las cajitas origen y destino
+    const types = await readWalletTypes(tx, uid, [data.walletId, data.toWalletId]);
+    const walletType = data.walletId ? (types[data.walletId] || data.walletType || "ahorro") : "";
     // Writes después
-    tx.set(expenseRef, { ...data, amount, createdAt: serverTimestamp() });
-    if (walletRef)   tx.update(walletRef,  { balance: increment(delta) });
-    if (savingsRef)  tx.update(savingsRef, { balance: increment(toIsCredit ? -amount : amount) });
+    tx.set(expenseRef, { ...data, walletType, amount, createdAt: serverTimestamp() });
+    applyWallet(tx, uid, types, data.walletId,   -amount);
+    applyWallet(tx, uid, types, data.toWalletId,  amount);
   });
   return expenseRef;
 }
@@ -74,39 +95,34 @@ export async function getExpenses(uid, filters = {}) {
 }
 
 export async function updateExpense(uid, expenseId, oldData, newData) {
+  const oldAmount = Number(oldData.amount);
+  const newAmount = Number(newData.amount);
   await runTransaction(db, async (tx) => {
     const expRef = userDoc(uid, "expenses", expenseId);
-    // Revertir cajita anterior (operación inversa)
-    if (oldData.walletId) {
-      const oldIsCredit = oldData.walletType === "credito";
-      tx.update(userDoc(uid, "wallets", oldData.walletId),
-        { balance: increment(oldIsCredit ? -Number(oldData.amount) : Number(oldData.amount)) });
-    }
-    // Aplicar cajita nueva
-    if (newData.walletId) {
-      const newIsCredit = newData.walletType === "credito";
-      tx.update(userDoc(uid, "wallets", newData.walletId),
-        { balance: increment(newIsCredit ? Number(newData.amount) : -Number(newData.amount)) });
-    }
-    tx.update(expRef, { ...newData, amount: Number(newData.amount) });
+    // Reads primero: tipos de las cajitas origen y destino (vieja y nueva)
+    const types = await readWalletTypes(tx, uid, [
+      oldData.walletId, newData.walletId, oldData.toWalletId, newData.toWalletId
+    ]);
+    // Revertir el gasto anterior: el dinero vuelve a la cajita origen y sale de la destino
+    applyWallet(tx, uid, types, oldData.walletId,    oldAmount);
+    applyWallet(tx, uid, types, oldData.toWalletId, -oldAmount);
+    // Aplicar el gasto nuevo
+    applyWallet(tx, uid, types, newData.walletId,   -newAmount);
+    applyWallet(tx, uid, types, newData.toWalletId,  newAmount);
+    const walletType = newData.walletId ? (types[newData.walletId] || newData.walletType || "ahorro") : "";
+    tx.update(expRef, { ...newData, walletType, amount: newAmount });
   });
 }
 
 export async function deleteExpense(uid, expenseId, expenseData) {
   await runTransaction(db, async (tx) => {
-    const expRef  = userDoc(uid, "expenses", expenseId);
-    const amount  = Number(expenseData.amount);
-    const toRef   = expenseData?.toWalletId ? userDoc(uid, "wallets", expenseData.toWalletId) : null;
+    const expRef = userDoc(uid, "expenses", expenseId);
+    const amount = Number(expenseData.amount);
     // Reads primero
-    const toSnap  = toRef ? await tx.get(toRef) : null;
-    const toIsCredit = toSnap?.exists() && toSnap.data().type === "credito";
-    // Writes después
-    if (expenseData?.walletId) {
-      const isCredit = expenseData.walletType === "credito";
-      tx.update(userDoc(uid, "wallets", expenseData.walletId),
-        { balance: increment(isCredit ? -amount : amount) });
-    }
-    if (toRef) tx.update(toRef, { balance: increment(toIsCredit ? amount : -amount) });
+    const types = await readWalletTypes(tx, uid, [expenseData?.walletId, expenseData?.toWalletId]);
+    // Writes después: el dinero vuelve a la cajita origen y sale de la destino
+    applyWallet(tx, uid, types, expenseData?.walletId,    amount);
+    applyWallet(tx, uid, types, expenseData?.toWalletId, -amount);
     tx.delete(expRef);
   });
 }
@@ -117,17 +133,15 @@ export async function deleteExpense(uid, expenseId, expenseData) {
 
 export async function addIncome(uid, data) {
   const incomeRef = doc(userCol(uid, "incomes"));
-  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
 
   await runTransaction(db, async (tx) => {
+    const types = await readWalletTypes(tx, uid, [data.walletId]);
     tx.set(incomeRef, {
       ...data,
       amount: Number(data.amount),
       createdAt: serverTimestamp()
     });
-    if (walletRef) {
-      tx.update(walletRef, { balance: increment(Number(data.amount)) });
-    }
+    applyWallet(tx, uid, types, data.walletId, Number(data.amount));
   });
   return incomeRef;
 }
@@ -150,12 +164,9 @@ export async function getIncomes(uid, filters = {}) {
 export async function updateIncome(uid, incomeId, oldData, newData) {
   await runTransaction(db, async (tx) => {
     const incRef = userDoc(uid, "incomes", incomeId);
-    if (oldData.walletId) {
-      tx.update(userDoc(uid, "wallets", oldData.walletId), { balance: increment(-Number(oldData.amount)) });
-    }
-    if (newData.walletId) {
-      tx.update(userDoc(uid, "wallets", newData.walletId), { balance: increment(Number(newData.amount)) });
-    }
+    const types  = await readWalletTypes(tx, uid, [oldData.walletId, newData.walletId]);
+    applyWallet(tx, uid, types, oldData.walletId, -Number(oldData.amount));
+    applyWallet(tx, uid, types, newData.walletId,  Number(newData.amount));
     tx.update(incRef, { ...newData, amount: Number(newData.amount) });
   });
 }
@@ -163,9 +174,8 @@ export async function updateIncome(uid, incomeId, oldData, newData) {
 export async function deleteIncome(uid, incomeId, incomeData) {
   await runTransaction(db, async (tx) => {
     const incRef = userDoc(uid, "incomes", incomeId);
-    if (incomeData?.walletId) {
-      tx.update(userDoc(uid, "wallets", incomeData.walletId), { balance: increment(-Number(incomeData.amount)) });
-    }
+    const types  = await readWalletTypes(tx, uid, [incomeData?.walletId]);
+    applyWallet(tx, uid, types, incomeData?.walletId, -Number(incomeData?.amount || 0));
     tx.delete(incRef);
   });
 }
@@ -271,6 +281,7 @@ export async function addTransfer(uid, data) {
     tx.update(toRef,   { balance: increment(toDelta) });
     tx.set(transferRef, {
       ...data,
+      date: data.date || localToday(),
       amount,
       createdAt: serverTimestamp()
     });
@@ -294,11 +305,11 @@ export async function getTransfers(uid, filters = {}) {
 
 export async function deleteTransfer(uid, transferId, transferData) {
   await runTransaction(db, async (tx) => {
-    const amount  = Number(transferData.amount);
-    const fromRef = userDoc(uid, "wallets", transferData.fromWalletId);
-    const toRef   = userDoc(uid, "wallets", transferData.toWalletId);
-    tx.update(fromRef, { balance: increment(amount) });
-    tx.update(toRef,   { balance: increment(-amount) });
+    const amount = Number(transferData.amount);
+    const types  = await readWalletTypes(tx, uid, [transferData.fromWalletId, transferData.toWalletId]);
+    // Inverso de addTransfer: el dinero vuelve al origen y sale del destino
+    applyWallet(tx, uid, types, transferData.fromWalletId,  amount);
+    applyWallet(tx, uid, types, transferData.toWalletId,   -amount);
     tx.delete(userDoc(uid, "transfers", transferId));
   });
 }
@@ -345,8 +356,8 @@ export async function deleteCategory(uid, categoryId) {
 export async function addGoal(uid, data) {
   return addDoc(userCol(uid, "goals"), {
     ...data,
-    goalAmount:  Number(data.goalAmount),
-    savedAmount: Number(data.savedAmount || 0),
+    targetAmount: Number(data.targetAmount || 0),
+    savedAmount:  Number(data.savedAmount || 0),
     createdAt: serverTimestamp()
   });
 }
@@ -359,8 +370,9 @@ export async function getGoals(uid) {
 export async function updateGoal(uid, goalId, data) {
   return updateDoc(userDoc(uid, "goals", goalId), {
     ...data,
-    goalAmount:  Number(data.goalAmount),
-    savedAmount: Number(data.savedAmount || 0)
+    targetAmount: Number(data.targetAmount || 0),
+    savedAmount:  Number(data.savedAmount || 0),
+    goalAmount:   deleteField() // limpia el campo NaN que guardaban versiones anteriores
   });
 }
 
@@ -430,7 +442,7 @@ export async function syncProportionalIncomes(uid, month) {
     const snap = await getDocs(q);
 
     const incomeData = {
-      date:           today.toISOString().slice(0, 10),
+      date:           localToday(),
       source:         inc.name,
       amount:         accruedAmount,
       description:    `Proporcional: ${daysPassed} de ${daysInMonth} días`,
@@ -596,16 +608,16 @@ function paymentDoc(uid, did, pid)             { return doc(db, "users", uid, "d
 export async function addDebtor(uid, name, loanData) {
   const dRef      = doc(debtorCol(uid));
   const lRef      = doc(loanCol(uid, dRef.id));
-  const walletRef = loanData.walletId ? userDoc(uid, "wallets", loanData.walletId) : null;
   const amount    = Number(loanData.amount);
 
   await runTransaction(db, async (tx) => {
+    const types = await readWalletTypes(tx, uid, [loanData.walletId]);
     tx.set(dRef, { name, totalAmount: amount, totalPaid: 0, status: "pendiente", createdAt: serverTimestamp() });
     tx.set(lRef, {
       amount, date: loanData.date || "", walletId: loanData.walletId || "",
       walletName: loanData.walletName || "", notes: loanData.notes || "", createdAt: serverTimestamp()
     });
-    if (walletRef) tx.update(walletRef, { balance: increment(-amount) });
+    applyWallet(tx, uid, types, loanData.walletId, -amount);
   });
   return dRef;
 }
@@ -621,15 +633,25 @@ export async function deleteDebtor(uid, debtorId) {
     getDocs(loanCol(uid, debtorId)),
     getDocs(paymentCol(uid, debtorId))
   ]);
+  // Tipos de las cajitas involucradas (las borradas se omiten para no romper el batch)
+  const walletIds = [...new Set([...loansSnap.docs, ...paymentsSnap.docs].map(d => d.data().walletId).filter(Boolean))];
+  const wSnaps    = await Promise.all(walletIds.map(id => getDoc(userDoc(uid, "wallets", id))));
+  const types     = {};
+  walletIds.forEach((id, i) => { types[id] = wSnaps[i].exists() ? (wSnaps[i].data().type || "ahorro") : null; });
+  const revert = (batch, walletId, inflow) => {
+    if (!walletId || !types[walletId]) return;
+    batch.update(userDoc(uid, "wallets", walletId), { balance: increment(walletDelta(types[walletId], inflow)) });
+  };
+
   const batch = writeBatch(db);
   for (const d of loansSnap.docs) {
     const l = d.data();
-    if (l.walletId) batch.update(userDoc(uid, "wallets", l.walletId), { balance: increment(Number(l.amount || 0)) });
+    revert(batch, l.walletId, Number(l.amount || 0));   // el préstamo había sacado dinero
     batch.delete(d.ref);
   }
   for (const d of paymentsSnap.docs) {
     const p = d.data();
-    if (p.walletId) batch.update(userDoc(uid, "wallets", p.walletId), { balance: increment(-Number(p.amount || 0)) });
+    revert(batch, p.walletId, -Number(p.amount || 0));  // el abono había entrado dinero
     batch.delete(d.ref);
   }
   batch.delete(debtorDoc(uid, debtorId));
@@ -640,16 +662,16 @@ export async function deleteDebtor(uid, debtorId) {
 export async function addLoan(uid, debtorId, loanData) {
   const lRef      = doc(loanCol(uid, debtorId));
   const dRef      = debtorDoc(uid, debtorId);
-  const walletRef = loanData.walletId ? userDoc(uid, "wallets", loanData.walletId) : null;
   const amount    = Number(loanData.amount);
 
   await runTransaction(db, async (tx) => {
+    const types = await readWalletTypes(tx, uid, [loanData.walletId]);
     tx.set(lRef, {
       amount, date: loanData.date || "", walletId: loanData.walletId || "",
       walletName: loanData.walletName || "", notes: loanData.notes || "", createdAt: serverTimestamp()
     });
     tx.update(dRef, { totalAmount: increment(amount), status: "pendiente" });
-    if (walletRef) tx.update(walletRef, { balance: increment(-amount) });
+    applyWallet(tx, uid, types, loanData.walletId, -amount);
   });
   return lRef;
 }
@@ -665,17 +687,17 @@ export async function deleteLoan(uid, debtorId, loanId, loanData) {
   const dRef      = debtorDoc(uid, debtorId);
   const lRef      = loanDoc(uid, debtorId, loanId);
   const amount    = Number(loanData.amount);
-  const walletRef = loanData.walletId ? userDoc(uid, "wallets", loanData.walletId) : null;
 
   await runTransaction(db, async (tx) => {
     const dSnap = await tx.get(dRef);
     if (!dSnap.exists()) throw new Error("Deudor no encontrado");
+    const types = await readWalletTypes(tx, uid, [loanData.walletId]);
     const d         = dSnap.data();
     const newTotal  = Math.max(Number(d.totalAmount || 0) - amount, 0);
     const newStatus = Number(d.totalPaid || 0) >= newTotal ? "pagado" : "pendiente";
     tx.delete(lRef);
     tx.update(dRef, { totalAmount: newTotal, status: newStatus });
-    if (walletRef) tx.update(walletRef, { balance: increment(amount) });
+    applyWallet(tx, uid, types, loanData.walletId, amount);
   });
 }
 
@@ -683,18 +705,18 @@ export async function deleteLoan(uid, debtorId, loanId, loanData) {
 export async function addLoanPayment(uid, debtorId, data) {
   const pRef      = doc(paymentCol(uid, debtorId));
   const dRef      = debtorDoc(uid, debtorId);
-  const walletRef = data.walletId ? userDoc(uid, "wallets", data.walletId) : null;
   const amount    = Number(data.amount);
 
   await runTransaction(db, async (tx) => {
     const dSnap = await tx.get(dRef);
     if (!dSnap.exists()) throw new Error("Deudor no encontrado");
+    const types = await readWalletTypes(tx, uid, [data.walletId]);
     const d         = dSnap.data();
     const newPaid   = Number(d.totalPaid || 0) + amount;
     const newStatus = newPaid >= Number(d.totalAmount || 0) ? "pagado" : "pendiente";
     tx.set(pRef, { ...data, amount, createdAt: serverTimestamp() });
     tx.update(dRef, { totalPaid: newPaid, status: newStatus });
-    if (walletRef) tx.update(walletRef, { balance: increment(amount) });
+    applyWallet(tx, uid, types, data.walletId, amount);
   });
   return pRef;
 }
@@ -713,12 +735,13 @@ export async function deleteLoanPayment(uid, debtorId, paymentId, paymentData) {
   await runTransaction(db, async (tx) => {
     const dSnap = await tx.get(dRef);
     if (!dSnap.exists()) throw new Error("Deudor no encontrado");
+    const types = await readWalletTypes(tx, uid, [paymentData.walletId]);
     const d         = dSnap.data();
     const newPaid   = Math.max(Number(d.totalPaid || 0) - amount, 0);
     const newStatus = newPaid >= Number(d.totalAmount || 0) ? "pagado" : "pendiente";
     tx.delete(pRef);
     tx.update(dRef, { totalPaid: newPaid, status: newStatus });
-    if (paymentData.walletId) tx.update(userDoc(uid, "wallets", paymentData.walletId), { balance: increment(-amount) });
+    applyWallet(tx, uid, types, paymentData.walletId, -amount);
   });
 }
 

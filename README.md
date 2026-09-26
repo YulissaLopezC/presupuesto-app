@@ -13,24 +13,27 @@ Aplicación de control financiero personal. Frontend estático en GitHub Pages +
 
 ```
 presupuesto-app/
-├── firebase-config.js       # Configuración Firebase (editar con tus credenciales)
+├── firebase-config.js       # Configuración Firebase
 ├── firestore.rules          # Reglas de seguridad Firestore
 ├── index.html               # Redirige al login o dashboard según sesión
+├── config/gemini.js         # Endpoint del asistente (la key se inyecta al desplegar)
 │
 ├── pages/
 │   ├── login.html           # Login + Registro
 │   ├── dashboard.html       # Resumen del mes actual
-│   ├── expenses.html        # Registro diario de gastos
-│   ├── budget.html          # Configurar presupuesto mensual
+│   ├── expenses.html        # Movimientos: gastos e ingresos
+│   ├── budget.html          # Presupuesto mensual (gastos e ingresos)
 │   ├── comparison.html      # Presupuestado vs real
-│   ├── envelopes.html       # Cajitas / sobres (hoja NU)
-│   └── categories.html      # Gestión de categorías
+│   ├── wallets.html         # Cajitas / cuentas y transferencias
+│   ├── goals.html           # Metas de ahorro
+│   ├── loans.html           # Préstamos a terceros
+│   ├── categories.html      # Gestión de categorías
+│   ├── inventario.html      # Inventario del hogar (opcional)
+│   └── asistente.html       # Asistente con Gemini
 │
 ├── modules/
 │   ├── auth.js              # Login, registro, logout, guardia de sesión
-│   ├── db.js                # Todas las operaciones con Firestore
-│   ├── budget.js            # Lógica de presupuesto mensual
-│   └── expenses.js          # Lógica de gastos
+│   └── db.js                # Todas las operaciones con Firestore
 │
 └── assets/
     ├── style.css            # Estilos globales + variables CSS
@@ -61,19 +64,6 @@ presupuesto-app/
 2. Subir todos los archivos
 3. Settings → Pages → Branch: main → Save
 4. Tu app estará en `https://tu-usuario.github.io/presupuesto-app/`
-
-## Módulos disponibles
-
-| Módulo | Estado | Descripción |
-|--------|--------|-------------|
-| Login / Registro | ✅ Listo | Autenticación completa |
-| Dashboard | 🔜 Próximo | Resumen del mes |
-| Registro diario | 🔜 Próximo | Ingresar gastos |
-| Presupuesto | 🔜 Próximo | Configurar por mes |
-| Comparativo | 🔜 Próximo | Real vs presupuestado |
-| Cajitas | 🔜 Próximo | Hoja NU |
-| Categorías | 🔜 Próximo | Gestión propia |
-| Metas de ahorro | ✅ Listo | Calculadora de metas |
 
 ## Convenciones del código
 

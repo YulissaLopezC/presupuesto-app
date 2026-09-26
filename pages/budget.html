@@ -760,7 +760,7 @@
           const unit = Number(form.querySelector("[data-field='unitValue']")?.value) || 0;
           const tot  = qty * unit;
           totalEl.textContent = formatCOP(tot);
-          if (tot > 0 && amountInp) amountInp.value = tot;
+          if (tot > 0 && amountInp) { amountInp.value = tot.toLocaleString("es-CO"); amountInp.dataset.raw = String(tot); }
         };
         form.querySelectorAll(".cat-adv-input").forEach(inp => inp.addEventListener("input", recalc));
       });

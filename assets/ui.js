@@ -103,7 +103,7 @@ export function renderTopbar(user) {
 }
 
 // ── Nav inferior con ítem activo ──────────────────────────
-// activeItem: "dashboard" | "expenses" | "budget" | "envelopes" | "categories"
+// activeItem: "dashboard" | "expenses" | "budget" | "wallets" | "goals" | "loans" | "inventario" | "asistente" | "categories"
 export function renderBottomNav(activeItem) {
   const el = document.getElementById("bottom-nav");
   if (!el) return;

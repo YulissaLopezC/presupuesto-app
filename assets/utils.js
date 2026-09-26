@@ -22,9 +22,16 @@ export function parseCOP(str) {
 
 // ── Fechas ────────────────────────────────────────────────
 
+// Fecha local como "YYYY-MM-DD" (no UTC: en Colombia UTC adelanta el día después de las 7 pm)
+export function localDateStr(d = new Date()) {
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
 // Hoy como "YYYY-MM-DD"
 export function today() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateStr();
 }
 
 // Mes actual como "YYYY-MM"
@@ -138,20 +145,20 @@ export function applyNumericFormat(inputs) {
     ? document.querySelectorAll(inputs)
     : (inputs instanceof NodeList || Array.isArray(inputs)) ? inputs : [inputs];
 
+  const format = raw => raw ? Number(raw).toLocaleString("es-CO") : "";
+
   els.forEach(inp => {
-    if (!inp || inp._numFmt) return; // avoid double-attach
+    if (!inp) return;
+
+    // Normaliza el valor actual (puede haberse asignado por código sin formato)
+    const initRaw = inp.value.replace(/[^0-9]/g, "");
+    inp.dataset.raw = initRaw;
+    inp.value = format(initRaw);
+
+    if (inp._numFmt) return; // listeners ya adjuntos
     inp._numFmt = true;
     inp.setAttribute("inputmode", "numeric");
     inp.type = "text";
-
-    const format = raw => raw ? Number(raw).toLocaleString("es-CO") : "";
-
-    // Set initial value if already has one
-    if (inp.value) {
-      const raw = inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
-      inp.dataset.raw = raw;
-      inp.value = format(raw);
-    }
 
     inp.addEventListener("input", () => {
       const raw = inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
@@ -163,10 +170,13 @@ export function applyNumericFormat(inputs) {
   });
 }
 
-// Get raw numeric value from a formatted input
+// Get raw numeric value from a formatted input.
+// Se lee siempre lo que está visible en el campo: dataset.raw puede quedar
+// desactualizado cuando el valor se asigna por código (editar, calculadoras).
 export function getNumericValue(inp) {
   if (typeof inp === "string") inp = document.querySelector(inp);
   if (!inp) return 0;
-  const raw = inp.dataset.raw || inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+  const raw = inp.value.replace(/[^0-9]/g, "");
+  inp.dataset.raw = raw;
   return Number(raw) || 0;
 }
