@@ -3,273 +3,364 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Presupuesto · Budget</title>
+  <title>Presupuesto</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    body { background: #f0f4f8; }
-    body.dark { background: #111; }
-
-    /* ── Stats 3 cards ───────────────────────────────────── */
-    .stats-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 14px; }
-    .s3-card { background: #fff; border-radius: 14px; padding: 12px 12px 10px; }
-    body.dark .s3-card { background: #1a1a1a; }
-    .s3-card.active { background: #0f3460; }
-    .s3-lbl { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: #888; margin-bottom: 6px; }
-    .s3-card.active .s3-lbl { color: #7ab8e8; }
-    .s3-val { font-size: 14px; font-weight: 500; }
-    .s3-val.inc { color: #185fa5; }
-    .s3-val.exp { color: #c0392b; }
-    .s3-val.bal { color: #fff; }
-    .s3-bar { height: 3px; border-radius: 99px; margin-top: 8px; }
-
-    /* ── Tabs ────────────────────────────────────────────── */
-    .budget-tabs { display: flex; background: #e8edf2; border-radius: 10px; padding: 3px; margin: 0 14px 14px; }
-    body.dark .budget-tabs { background: #222; }
-    .budget-tab { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; color: #888; user-select: none; transition: all 0.15s; }
-    .budget-tab.active { background: #fff; color: #1a1a2e; }
-    body.dark .budget-tab.active { background: #1a1a1a; color: #e8e8e8; }
-
-    /* ── Banner copiar mes ───────────────────────────────── */
-    .copy-banner {
-      margin: 0 14px 12px; background: #e6f1fb; border-radius: 12px;
-      padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;
+    /* ── Página ─────────────────────────────────────────── */
+    .bud-page {
+      max-width: 680px; margin: 0 auto;
+      padding: 20px 20px 0;
+      display: flex; flex-direction: column; gap: 14px;
     }
-    .copy-banner-txt { font-size: 12px; color: #185fa5; }
-    .copy-banner-btn { font-size: 12px; color: #185fa5; font-weight: 500; background: none; border: none; cursor: pointer; font-family: "DM Sans", sans-serif; }
 
-    /* ── Sección por tipo ────────────────────────────────── */
-    .type-section { margin: 0 14px 14px; }
-    .type-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 0 2px; }
-    .type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .type-dot.basico    { background: #185fa5; }
-    .type-dot.noesencial { background: #c0392b; }
-    .type-dot.ahorro    { background: #3b6d11; }
-    .type-lbl { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.06em; flex: 1; }
-    .type-total { font-size: 12px; font-weight: 500; color: var(--text); }
+    /* ── Encabezado ─────────────────────────────────────── */
+    .bud-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .bud-title {
+      font-family: "Sora", sans-serif; font-size: 26px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text); margin: 0;
+    }
+    .bud-header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
-    /* ── Fila de categoría ───────────────────────────────── */
-    .cat-row-card {
-      background: #fff; border-radius: 12px; padding: 11px 12px;
-      margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+    /* ── Resumen ────────────────────────────────────────── */
+    .bud-summary {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 12px;
     }
-    body.dark .cat-row-card { background: #1a1a1a; }
-    .cat-ico-box { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .cat-name-input {
-      flex: 1; background: transparent; border: none; outline: none;
-      font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 500;
-      color: var(--text); min-width: 0;
+    .bud-summary-vals {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
     }
-    .cat-right-wrap { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
-    .val-pill { display: flex; align-items: center; gap: 3px; background: #f0f4f8; border-radius: 8px; padding: 5px 8px; }
-    body.dark .val-pill { background: #222; }
-    .val-pill-sym { font-size: 11px; color: #888; }
+    .bud-summary-lbl { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }
+    .bud-summary-val {
+      font-family: "Sora", sans-serif; font-size: 16px; font-weight: 700; color: var(--text);
+    }
+    .bud-summary-val.inc { color: var(--income); }
+    .bud-summary-val.acc { color: var(--accent); }
+    .bud-seg-bar {
+      height: 8px; border-radius: 999px; overflow: hidden;
+      display: flex; gap: 2px; background: var(--surface2);
+    }
+    .bud-seg-fill { border-radius: 999px; transition: width 0.4s ease; min-width: 2px; }
+    .bud-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+    .bud-legend-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--muted);
+    }
+    .bud-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+    /* ── Banner copiar ──────────────────────────────────── */
+    .bud-copy-banner {
+      background: var(--surface2); border-radius: 14px;
+      padding: 10px 10px 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .bud-copy-txt { flex-grow: 1; font-size: 14px; font-weight: 500; color: var(--accent); }
+    .bud-copy-btn {
+      height: 36px; padding: 0 14px; border-radius: 10px; border: none;
+      background: var(--accent); color: #fff; font-family: "Public Sans", sans-serif;
+      font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .bud-copy-btn:hover { background: var(--accent-strong); }
+
+    /* ── Pestañas ───────────────────────────────────────── */
+    .bud-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border); }
+    .bud-tab {
+      height: 40px; border: none; background: transparent; padding: 0;
+      font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      border-bottom: 3px solid transparent; transition: color 0.15s, border-color 0.15s;
+    }
+    .bud-tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 700; }
+
+    /* ── Grupos ─────────────────────────────────────────── */
+    .bud-groups-wrap { display: flex; flex-direction: column; gap: 20px; }
+    .bud-group { display: flex; flex-direction: column; gap: 10px; }
+    .bud-group-hdr { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
+    .bud-group-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .bud-group-lbl {
+      font-family: "Sora", sans-serif; font-size: 15px; font-weight: 700; color: var(--text); flex-grow: 1;
+    }
+    .bud-group-total { font-family: "Sora", sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+    .bud-group-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 2px 14px;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Fila de categoría ──────────────────────────────── */
+    .bud-cat-row {
+      border-bottom: 1px solid var(--border-soft);
+      padding: 2px 0; display: flex; flex-direction: column;
+    }
+    .bud-cat-row:last-child { border-bottom: none; }
+    .bud-cat-main {
+      display: flex; align-items: center; gap: 10px; min-height: 52px;
+    }
+    .bud-cat-info { flex-grow: 1; min-width: 0; }
+    .bud-cat-name-disp { font-size: 15px; font-weight: 600; color: var(--text); }
+    .bud-cat-name-inp {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      border: none; border-bottom: 1.5px solid var(--accent);
+      background: transparent; outline: none;
+      font-family: "Public Sans", sans-serif; width: 100%; padding: 2px 0;
+    }
+    .bud-cat-hint { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    /* ── Píldora valor ──────────────────────────────────── */
+    .bud-val-pill {
+      height: 40px; min-width: 120px; max-width: 144px; border-radius: 12px;
+      background: var(--bg); display: flex; align-items: center; gap: 4px;
+      padding: 0 10px; flex-shrink: 0; cursor: text;
+    }
+    .bud-val-sym { font-size: 14px; color: var(--muted); }
     .val-pill-input {
-      font-size: 13px; font-weight: 500; color: #1a1a2e; border: none;
-      background: transparent; outline: none; width: 72px; text-align: right;
-      font-family: "DM Sans", sans-serif;
+      border: none; outline: none; background: transparent;
+      font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 600;
+      color: var(--text); width: 100%; min-width: 0; text-align: right;
+      -moz-appearance: textfield;
     }
-    body.dark .val-pill-input { color: #e8e8e8; }
-    .day-lbl { font-size: 10px; color: #aaa; white-space: nowrap; }
-    .prop-toggle-btn {
-      width: 28px; height: 16px; background: #ddd; border-radius: 99px;
-      position: relative; cursor: pointer; border: none; padding: 0; flex-shrink: 0;
-      transition: background 0.2s;
-    }
-    .prop-toggle-btn.on { background: #0f3460; }
-    .prop-toggle-btn::after {
-      content: ""; position: absolute; width: 12px; height: 12px;
-      background: #fff; border-radius: 50%; top: 2px; left: 2px;
-      transition: transform 0.2s;
-    }
-    .prop-toggle-btn.on::after { transform: translateX(12px); }
-    .cat-del-btn { background: none; border: none; color: #cdd5e0; font-size: 14px; cursor: pointer; padding: 0 2px; transition: color 0.15s; }
-    .cat-del-btn:hover { color: #c0392b; }
-
-    /* ── Agregar categoría ───────────────────────────────── */
-    .add-cat-btn {
-      width: 100%; border: 1.5px dashed #cdd5e0; border-radius: 12px;
-      padding: 11px; display: flex; align-items: center; justify-content: center;
-      gap: 7px; background: none; cursor: pointer; font-family: "DM Sans", sans-serif;
-      margin-bottom: 6px; transition: border-color 0.15s;
-    }
-    .add-cat-btn:hover { border-color: #0f3460; }
-    .add-cat-btn span { font-size: 12px; color: #888; }
-
-    /* ── Ingresos form ───────────────────────────────────── */
-    .income-card {
-      background: #fff; border-radius: 12px; padding: 12px 14px;
-      margin-bottom: 8px;
-    }
-    body.dark .income-card { background: #1a1a1a; }
-    .income-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .income-name-input {
-      flex: 1; border: none; outline: none; font-family: "DM Sans", sans-serif;
-      font-size: 13px; font-weight: 500; color: var(--text); background: transparent; min-width: 0;
-    }
-    .income-amount-input {
-      border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 10px;
-      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: #fff; outline: none; width: 110px; text-align: right;
-    }
-    body.dark .income-amount-input { background: #222; border-color: #333; }
-    .income-meta { display: flex; align-items: center; gap: 8px; }
-    .income-type-select {
-      flex: 1; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 5px 8px;
-      font-size: 11px; font-family: "DM Sans", sans-serif; color: #888;
-      background: #fff; outline: none;
-    }
-    body.dark .income-type-select { background: #222; border-color: #333; }
-    .toggle-switch {
-      width: 28px; height: 16px; background: #ddd; border-radius: 99px;
-      position: relative; cursor: pointer; flex-shrink: 0;
-      transition: background 0.2s;
-    }
-    .toggle-switch.on { background: #3b6d11; }
-    .toggle-switch::after {
-      content: ""; position: absolute; width: 12px; height: 12px;
-      background: #fff; border-radius: 50%; top: 2px; left: 2px;
-      transition: transform 0.2s;
-    }
-    .toggle-switch.on::after { transform: translateX(12px); }
-    .toggle-prop-lbl { font-size: 10px; color: #888; white-space: nowrap; }
-    .income-del-btn { background: none; border: none; color: #cdd5e0; font-size: 14px; cursor: pointer; transition: color 0.15s; }
-    .income-del-btn:hover { color: #c0392b; }
-    .add-income-btn {
-      width: 100%; border: 1.5px dashed #cdd5e0; border-radius: 12px;
-      padding: 11px; display: flex; align-items: center; justify-content: center;
-      gap: 7px; background: none; cursor: pointer; font-family: "DM Sans", sans-serif;
-      margin-bottom: 6px;
-    }
-    .add-income-btn span { font-size: 12px; color: #888; }
-
-    /* ── Cálculo avanzado gastos ─────────────────────────── */
-    .cat-calc-btn {
-      background: none; border: none; font-size: 10px; color: #aaa;
-      cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0;
-      text-decoration: underline; text-underline-offset: 2px;
-    }
-    .cat-calc-form { display: flex; flex-wrap: wrap; justify-content: flex-end; }
-    .cat-adv-input {
-      padding: 5px 7px; border: 1.5px solid #e2e8f0; border-radius: 7px;
-      font-size: 12px; font-family: "DM Sans", sans-serif; color: #1a1a2e;
-      background: #fff; outline: none;
-    }
-    body.dark .cat-adv-input { background: #222; border-color: #333; color: #e8e8e8; }
-
-    /* ── Form avanzado ingresos ──────────────────────────── */
-    .adv-toggle-btn {
-      background: none; border: none; font-size: 11px; color: #888;
-      cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0;
-      text-decoration: underline; text-underline-offset: 2px;
-    }
-    .field-lbl2 { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-    .income-adv-input {
-      width: 100%; padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px;
-      font-size: 12px; font-family: "DM Sans", sans-serif; color: #1a1a2e;
-      background: #fff; outline: none;
-    }
-    body.dark .income-adv-input { background: #222; border-color: #333; color: #e8e8e8; }
-
-    /* ── Save button ─────────────────────────────────────── */
-    .save-budget-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: calc(100% - 28px); margin: 4px 14px 90px; padding: 14px;
-      background: #0f3460; color: #fff; border: none; border-radius: 12px;
-      font-size: 14px; font-weight: 500; cursor: pointer; font-family: "DM Sans", sans-serif;
-    }
-    .save-budget-btn:hover { background: #1a4a7a; }
-
-    /* ── Inline add form ─────────────────────────────────── */
-    .inline-add-form {
-      background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 6px;
-      display: none;
-    }
-    body.dark .inline-add-form { background: #1a1a1a; }
-    .inline-add-form.open { display: block; }
-    .inline-add-input {
-      width: 100%; border: none; border-bottom: 1.5px solid #e2e8f0; padding: 6px 0;
-      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: transparent; outline: none; margin-bottom: 10px;
-    }
-    .inline-add-actions { display: flex; gap: 8px; }
-    .inline-add-confirm { flex: 1; padding: 8px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
-    .inline-add-cancel { padding: 8px 14px; background: #f0f4f8; color: #888; border: none; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
-    /* ── Categorías ocultas ─────────────────────────────── */
-    .cat-hidden-row {
-      background: #f8fafc; border-radius: 10px; padding: 9px 12px;
-      margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;
-    }
-    body.dark .cat-hidden-row { background: #1a1a1a; }
-    .cat-hidden-name { font-size: 13px; color: #888; }
-    .btn-restore-cat {
-      font-size: 11px; color: #185fa5; background: #e6f1fb;
-      border: none; border-radius: 6px; padding: 4px 10px;
-      cursor: pointer; font-family: "DM Sans", sans-serif; font-weight: 500;
-    }
-    .btn-restore-cat:hover { background: #cce3f7; }
-    .btn-hide-cat {
-      background: none; border: none; color: #cdd5e0; font-size: 15px;
-      cursor: pointer; padding: 0 2px; transition: color 0.15s;
-    }
-    .btn-hide-cat:hover { color: #888; }
-
-    /* ── Number input formatting ─────────────────────────── */
-    .val-pill-input { -moz-appearance: textfield; }
     .val-pill-input::-webkit-outer-spin-button,
     .val-pill-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-    /* ── Toggle módulo inventario ────────────────────────── */
+    /* ── Botón ⋮ ────────────────────────────────────────── */
+    .bud-more-btn {
+      width: 32px; height: 40px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; display: flex; align-items: center;
+      justify-content: center; border-radius: 8px; transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .bud-more-btn:hover { background: var(--surface2); color: var(--text); }
+
+    /* ── Menú contextual ────────────────────────────────── */
+    .bud-more-menu {
+      border-radius: 12px; background: var(--surface); border: 1px solid var(--border);
+      padding: 4px; margin-bottom: 6px;
+      display: flex; flex-direction: column; gap: 1px;
+      box-shadow: 0 4px 16px rgba(14,23,38,0.1);
+    }
+    .bud-menu-item {
+      height: 40px; border: none; background: transparent;
+      padding: 0 12px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-family: "Public Sans", sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text); cursor: pointer; text-align: left; transition: background 0.1s;
+    }
+    .bud-menu-item:hover { background: var(--bg); }
+    .bud-menu-item.active { color: var(--accent); }
+    .bud-menu-item.danger { color: var(--danger); }
+
+    /* ── Calcular inline ────────────────────────────────── */
+    .bud-calc-row {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      background: var(--bg); border-radius: 12px;
+      padding: 8px 10px; margin-bottom: 6px;
+      font-size: 13px; color: var(--muted);
+    }
+    .bud-calc-inp {
+      padding: 4px 8px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; font-family: "Public Sans", sans-serif; color: var(--text);
+      background: var(--surface); outline: none; text-align: right; min-width: 0;
+    }
+    .bud-calc-inp:focus { border-color: var(--accent); }
+    .bud-calc-qty  { width: 60px; }
+    .bud-calc-unit { width: 90px; }
+    .bud-calc-op { flex-shrink: 0; }
+    .bud-calc-total { font-size: 14px; font-weight: 700; color: var(--accent); min-width: 60px; text-align: right; }
+
+    /* ── Ocultas ────────────────────────────────────────── */
+    .bud-hidden-section { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .bud-hidden-row {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .bud-hidden-name { font-size: 14px; color: var(--muted); }
+    .btn-restore-cat {
+      font-size: 12px; color: var(--accent); background: var(--surface2);
+      border: none; border-radius: 8px; padding: 5px 12px;
+      cursor: pointer; font-family: "Public Sans", sans-serif; font-weight: 600;
+      transition: background 0.15s;
+    }
+    .btn-restore-cat:hover { background: var(--border); }
+
+    /* ── Agregar categoría ──────────────────────────────── */
+    .bud-add-btn {
+      height: 44px; border-radius: 14px; border: 1.5px dashed var(--border2);
+      background: transparent; color: var(--accent);
+      font-family: "Public Sans", sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: border-color 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;
+    }
+    .bud-add-btn:hover { border-color: var(--accent); }
+
+    /* ── Formulario inline ──────────────────────────────── */
+    .inline-add-form {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 14px; display: none;
+    }
+    .inline-add-form.open { display: block; }
+    .inline-add-input {
+      width: 100%; border: none; border-bottom: 1.5px solid var(--border);
+      padding: 6px 0; font-size: 14px; font-family: "Public Sans", sans-serif;
+      color: var(--text); background: transparent; outline: none; margin-bottom: 10px;
+    }
+    .inline-add-input:focus { border-bottom-color: var(--accent); }
+    .inline-add-actions { display: flex; gap: 8px; }
+    .inline-add-confirm {
+      flex: 1; height: 40px; background: var(--accent); color: #fff;
+      border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
+      font-family: "Public Sans", sans-serif; cursor: pointer; transition: background 0.15s;
+    }
+    .inline-add-confirm:hover { background: var(--accent-strong); }
+    .inline-add-cancel {
+      height: 40px; padding: 0 16px; background: var(--surface2); color: var(--muted);
+      border: none; border-radius: 10px; font-size: 14px;
+      font-family: "Public Sans", sans-serif; cursor: pointer;
+    }
+
+    /* ── Ingresos ───────────────────────────────────────── */
+    .income-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+    }
+    .income-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .income-name-input {
+      flex: 1; border: none; outline: none;
+      font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 600;
+      color: var(--text); background: transparent; min-width: 0;
+    }
+    .income-name-input::placeholder { color: var(--muted); font-weight: 400; }
+    .inc-val-pill {
+      height: 40px; width: 130px; border-radius: 12px; background: var(--bg);
+      display: flex; align-items: center; gap: 4px; padding: 0 10px;
+      flex-shrink: 0; cursor: text;
+    }
+    .income-amount-input {
+      border: none; outline: none; background: transparent;
+      font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 600;
+      color: var(--text); width: 100%; text-align: right;
+    }
+    .income-del-btn {
+      width: 32px; height: 32px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, background 0.15s; flex-shrink: 0;
+    }
+    .income-del-btn:hover { color: var(--danger); background: var(--surface2); }
+    .income-meta { display: flex; align-items: center; gap: 8px; }
+    .income-type-select {
+      flex: 1; height: 36px; border: 1px solid var(--border); border-radius: 10px;
+      padding: 0 10px; font-size: 13px; font-family: "Public Sans", sans-serif;
+      color: var(--text); background: var(--surface); outline: none;
+      appearance: none; cursor: pointer;
+    }
+    .toggle-prop-lbl { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .toggle-switch {
+      width: 32px; height: 18px; background: var(--border); border-radius: 999px;
+      position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s;
+    }
+    .toggle-switch.on { background: var(--income); }
+    .toggle-switch::after {
+      content: ""; position: absolute; width: 14px; height: 14px;
+      background: #fff; border-radius: 50%; top: 2px; left: 2px;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch.on::after { transform: translateX(14px); }
+    .add-income-btn {
+      height: 44px; width: 100%; border-radius: 14px; border: 1.5px dashed var(--border2);
+      background: transparent; color: var(--income);
+      font-family: "Public Sans", sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: border-color 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px;
+    }
+    .add-income-btn:hover { border-color: var(--income); }
+
+    /* ── Botón guardar ──────────────────────────────────── */
+    .bud-save-btn {
+      height: 54px; border-radius: 16px; border: none;
+      background: var(--accent); color: #fff;
+      font-family: "Public Sans", sans-serif; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: background 0.15s; width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .bud-save-btn:hover { background: var(--accent-strong); }
+    .bud-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .bud-save-desk {
+      display: none; height: 44px; padding: 0 18px;
+      border-radius: 12px; border: none; background: var(--accent); color: #fff;
+      font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; align-items: center; gap: 6px; transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .bud-save-desk:hover { background: var(--accent-strong); }
+    .bud-save-desk:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Toggle Inventario ──────────────────────────────── */
     .inv-module-card {
       display: flex; align-items: center; justify-content: space-between;
-      margin: 0 14px 90px; background: #fff; border-radius: 12px;
-      padding: 12px 14px; border: 1.5px solid #e2e8f0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 100px;
     }
-    body.dark .inv-module-card { background: #1a1a1a; border-color: #2a2a2a; }
-    .inv-module-title { font-size: 13px; font-weight: 500; color: var(--text); }
-    .inv-module-sub { font-size: 11px; color: #888; margin-top: 2px; }
+    .inv-module-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .inv-module-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .inv-toggle-btn {
-      width: 40px; height: 22px; background: #ddd; border-radius: 99px;
+      width: 40px; height: 22px; background: var(--border); border-radius: 999px;
       position: relative; cursor: pointer; border: none; padding: 0; flex-shrink: 0;
       transition: background 0.2s;
     }
-    .inv-toggle-btn.on { background: #0f3460; }
+    .inv-toggle-btn.on { background: var(--accent); }
     .inv-toggle-btn::after {
       content: ""; position: absolute; width: 16px; height: 16px;
       background: #fff; border-radius: 50%; top: 3px; left: 3px;
       transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
     .inv-toggle-btn.on::after { transform: translateX(18px); }
+
+    /* ── Desktop ────────────────────────────────────────── */
+    @media (min-width: 900px) {
+      .bud-page { padding: 28px 32px 0; max-width: none; }
+      .bud-title { font-size: 28px; }
+      .bud-groups-wrap { flex-direction: row; align-items: flex-start; }
+      .bud-group { flex: 1 1 260px; min-width: 0; }
+      .bud-save-btn { display: none; }
+      .bud-save-desk { display: flex; }
+    }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
-
-  <div style="max-width:680px;margin:0 auto;">
-    <div id="month-selector-container" style="display:flex;justify-content:center;padding:12px 0 0;"></div>
-
-    <div class="stats-3" id="stats-3">
-      <div class="skeleton" style="height:68px;border-radius:14px;"></div>
-      <div class="skeleton" style="height:68px;border-radius:14px;"></div>
-      <div class="skeleton" style="height:68px;border-radius:14px;"></div>
+  <div class="bud-page" id="bud-page">
+    <div class="bud-header">
+      <h1 class="bud-title">Presupuesto</h1>
+      <div class="bud-header-right">
+        <div id="month-selector-container"></div>
+        <button class="bud-save-desk" id="btn-save-desk">Guardar cambios</button>
+      </div>
     </div>
 
-    <div class="budget-tabs">
-      <div class="budget-tab active" id="tab-gastos">Gastos</div>
-      <div class="budget-tab" id="tab-ingresos">Ingresos</div>
+    <div id="stats-3">
+      <div class="skeleton" style="height:110px;border-radius:20px;"></div>
     </div>
 
-    <div id="copy-banner" class="copy-banner" style="display:none;">
-      <span class="copy-banner-txt">¿Copiar presupuesto del mes anterior?</span>
-      <button class="copy-banner-btn" id="btn-copy-prev">Copiar</button>
+    <div id="copy-banner" class="bud-copy-banner" style="display:none;">
+      <span class="bud-copy-txt" id="copy-banner-txt">¿Copiar el presupuesto del mes anterior?</span>
+      <button class="bud-copy-btn" id="btn-copy-prev">Copiar</button>
+    </div>
+
+    <div class="bud-tabs" role="tablist">
+      <button class="bud-tab active" id="tab-gastos" role="tab" aria-selected="true">Gastos</button>
+      <button class="bud-tab" id="tab-ingresos" role="tab" aria-selected="false">Ingresos</button>
     </div>
 
     <div id="expenses-form"></div>
     <div id="income-form" style="display:none;"></div>
 
-    <button class="save-budget-btn" id="btn-save" style="margin-bottom:14px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <button class="bud-save-btn" id="btn-save">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Guardar presupuesto
     </button>
 
@@ -287,7 +378,7 @@
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
     import { getBudget, setBudget, getCategories, addCategory, updateCategory, syncProportionalIncomes, getAppConfig, updateAppConfig } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
+    import { renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
     import { currentMonth, formatMonth, formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
@@ -300,18 +391,17 @@
     uid = user.uid;
     selectedMonth = currentMonth();
 
-    renderTopbar(user);
     renderBottomNav("budget");
     renderMonthSelector("month-selector-container", selectedMonth, async m => {
       selectedMonth = m;
       await loadBudget();
     });
 
-    // ── TIPOS de categoría ────────────────────────────────
+    // ── Tipos de categoría ────────────────────────────────
     const TYPES = [
-      { key: "GASTO BÁSICO",       label: "Gasto básico",       dot: "basico",    bg: "#e6f1fb", stroke: "#185fa5" },
-      { key: "GASTO NO ESENCIAL",  label: "Gasto no esencial",  dot: "noesencial",bg: "#fbeaf0", stroke: "#993556" },
-      { key: "AHORRO O INVERSIÓN", label: "Ahorro o inversión", dot: "ahorro",    bg: "#eaf3de", stroke: "#3b6d11" },
+      { key: "GASTO BÁSICO",       label: "Gasto básico",       color: "#1B6FC2" },
+      { key: "GASTO NO ESENCIAL",  label: "Gasto no esencial",  color: "#B5487A" },
+      { key: "AHORRO O INVERSIÓN", label: "Ahorro o inversión", color: "#3F7D1E" },
     ];
 
     categories = await getCategories(uid);
@@ -332,10 +422,7 @@
         await updateAppConfig(uid, { inventarioActivo });
         localStorage.setItem("inventarioActivo", inventarioActivo);
         actualizarNavInventario(inventarioActivo);
-        showToast(
-          inventarioActivo ? "Módulo de inventario activado." : "Inventario desactivado.",
-          "success"
-        );
+        showToast(inventarioActivo ? "Módulo de inventario activado." : "Inventario desactivado.", "success");
       } catch(err) {
         inventarioActivo = !inventarioActivo;
         btn.classList.toggle("on", inventarioActivo);
@@ -350,34 +437,34 @@
       if (isActive && !existing) {
         const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>`;
         sidebarNav.insertAdjacentHTML("beforeend",
-          `<a href="../pages/inventario.html" class="sidebar-item" data-inv-nav>${icon}<span>Inventario</span></a>`
-        );
+          `<a href="../pages/inventario.html" class="sidebar-item" data-inv-nav>${icon}<span>Inventario</span></a>`);
       } else if (!isActive && existing) {
         existing.remove();
       }
     }
 
-    // Tabs
-    document.getElementById("tab-gastos").addEventListener("click", () => switchTab("gastos"));
+    // ── Pestañas ──────────────────────────────────────────
+    document.getElementById("tab-gastos").addEventListener("click",   () => switchTab("gastos"));
     document.getElementById("tab-ingresos").addEventListener("click", () => switchTab("ingresos"));
 
     function switchTab(tab) {
       activeTab = tab;
-      document.getElementById("tab-gastos").classList.toggle("active", tab === "gastos");
+      document.getElementById("tab-gastos").classList.toggle("active",   tab === "gastos");
       document.getElementById("tab-ingresos").classList.toggle("active", tab === "ingresos");
-      document.getElementById("expenses-form").style.display = tab === "gastos" ? "block" : "none";
+      document.getElementById("tab-gastos").setAttribute("aria-selected",   String(tab === "gastos"));
+      document.getElementById("tab-ingresos").setAttribute("aria-selected", String(tab === "ingresos"));
+      document.getElementById("expenses-form").style.display = tab === "gastos"   ? "block" : "none";
       document.getElementById("income-form").style.display  = tab === "ingresos" ? "block" : "none";
     }
 
+    // ── Cargar presupuesto ────────────────────────────────
     async function loadBudget() {
       currentBudget = await getBudget(uid, selectedMonth);
       hiddenCats = currentBudget?.hiddenCats || [];
-
       const hasCategories = currentBudget?.categories && Object.keys(currentBudget.categories).length > 0;
       if (!hasCategories && !currentBudget?.budgetInitialized) {
         await autoInitHiddenCats();
       }
-
       renderStats();
       renderExpensesForm();
       renderIncomeForm();
@@ -389,17 +476,13 @@
       const pm = m === 1 ? 12 : m - 1;
       const py = m === 1 ? y - 1 : y;
       const prevBudget = await getBudget(uid, `${py}-${String(pm).padStart(2, "0")}`);
-
       if (prevBudget) {
         const prevCats = prevBudget.categories || {};
         const validCats = categories.filter(c => !(c.visibleFromMonth && c.visibleFromMonth > selectedMonth));
-        hiddenCats = validCats
-          .filter(c => !prevCats[c.name] || Number(prevCats[c.name]) === 0)
-          .map(c => c.name);
+        hiddenCats = validCats.filter(c => !prevCats[c.name] || Number(prevCats[c.name]) === 0).map(c => c.name);
       } else {
         hiddenCats = [];
       }
-
       await setBudget(uid, selectedMonth, {
         categories: currentBudget?.categories || {},
         income: currentBudget?.income || {},
@@ -410,43 +493,59 @@
       currentBudget = { ...(currentBudget || {}), hiddenCats, budgetInitialized: true };
     }
 
-    // ── Stats 3 cards ─────────────────────────────────────
+    // ── Resumen ───────────────────────────────────────────
     function renderStats() {
       const cats     = currentBudget?.categories || {};
-      const totalExp = Object.values(cats).reduce((s,v) => s+Number(v), 0);
+      const totalExp = Object.values(cats).reduce((s,v) => s + Number(v), 0);
       const inc      = currentBudget?.income || {};
       const totalInc = typeof inc === "object" && !Array.isArray(inc)
-        ? Object.values(inc).reduce((s,v) => s+Number(v?.amount||v||0), 0) : 0;
-      const bal      = totalInc - totalExp;
-      const balCls   = bal >= 0 ? "#3b6d11" : "#c0392b";
+        ? Object.values(inc).reduce((s,v) => s + Number(v?.amount||v||0), 0) : 0;
+      const unassigned = totalInc - totalExp;
+
+      const typeTotals = TYPES.map(t => {
+        const val = categories
+          .filter(c => c.type === t.key)
+          .reduce((s,c) => s + Number(cats[c.name]||0), 0);
+        return { color: t.color, val };
+      });
 
       document.getElementById("stats-3").innerHTML = `
-        <div class="s3-card">
-          <div class="s3-lbl">Ingresos</div>
-          <div class="s3-val inc">${fmtShort(totalInc)}</div>
-          <div class="s3-bar" style="background:#b5d4f4;"></div>
-        </div>
-        <div class="s3-card">
-          <div class="s3-lbl">Gastos</div>
-          <div class="s3-val exp">${fmtShort(totalExp)}</div>
-          <div class="s3-bar" style="background:#f5c6c6;"></div>
-        </div>
-        <div class="s3-card active">
-          <div class="s3-lbl">Balance</div>
-          <div class="s3-val bal" style="color:${bal>=0?'#7fddaa':'#ffaaaa'}">${bal>=0?"+":""}${fmtShort(bal)}</div>
-          <div class="s3-bar" style="background:rgba(255,255,255,0.2);"></div>
+        <div class="bud-summary">
+          <div class="bud-summary-vals">
+            <div>
+              <div class="bud-summary-lbl">Ingresos</div>
+              <div class="bud-summary-val inc">${formatCOP(totalInc)}</div>
+            </div>
+            <div>
+              <div class="bud-summary-lbl">Asignado</div>
+              <div class="bud-summary-val">${formatCOP(totalExp)}</div>
+            </div>
+            <div>
+              <div class="bud-summary-lbl">Sin asignar</div>
+              <div class="bud-summary-val acc">${formatCOP(unassigned)}</div>
+            </div>
+          </div>
+          <div class="bud-seg-bar">
+            ${totalInc > 0
+              ? typeTotals.map(t => `<div class="bud-seg-fill" style="width:${Math.max(0,Math.min(100,(t.val/totalInc)*100)).toFixed(1)}%;background:${t.color}"></div>`).join("")
+              : `<div class="bud-seg-fill" style="width:100%;background:var(--border)"></div>`}
+          </div>
+          <div class="bud-legend">
+            <span class="bud-legend-item"><span class="bud-legend-dot" style="background:#1B6FC2"></span>Básico</span>
+            <span class="bud-legend-item"><span class="bud-legend-dot" style="background:#B5487A"></span>No esencial</span>
+            <span class="bud-legend-item"><span class="bud-legend-dot" style="background:#3F7D1E"></span>Ahorro</span>
+          </div>
         </div>`;
     }
 
     function fmtShort(v) {
-      const abs = Math.abs(v);
-      const sign = v < 0 ? "-" : "";
+      const abs = Math.abs(v), sign = v < 0 ? "-" : "";
       if (abs >= 1000000) return sign + "$" + (abs/1000000).toFixed(1) + "M";
       if (abs >= 1000)    return sign + "$" + Math.round(abs/1000) + "k";
       return sign + "$" + Math.round(abs);
     }
 
-    // ── Copy banner ───────────────────────────────────────
+    // ── Banner copiar ─────────────────────────────────────
     async function checkCopyBanner() {
       const banner = document.getElementById("copy-banner");
       if (currentBudget?.categories && Object.keys(currentBudget.categories).length) {
@@ -458,7 +557,10 @@
       const prevMonth = `${py}-${String(pm).padStart(2,"0")}`;
       const prev = await getBudget(uid, prevMonth);
       banner.style.display = prev ? "flex" : "none";
-
+      if (prev) {
+        const txt = document.getElementById("copy-banner-txt");
+        if (txt) txt.textContent = `¿Copiar el presupuesto de ${formatMonth(prevMonth)}?`;
+      }
       document.getElementById("btn-copy-prev").onclick = async () => {
         if (!prev) return;
         await setBudget(uid, selectedMonth, {
@@ -472,121 +574,217 @@
       };
     }
 
-    // ── Expenses form ─────────────────────────────────────
+    // ── Formulario de gastos ──────────────────────────────
     function renderExpensesForm() {
       const savedCats = currentBudget?.categories || {};
       const meta      = currentBudget?.categoryMeta || {};
       const el        = document.getElementById("expenses-form");
       const hidden    = hiddenCats.filter(name => categories.some(c => c.name === name));
+      const daysInMonth = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
 
-      el.innerHTML = TYPES.map(type => {
+      const checkSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>`;
+      const dotsSvg  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>`;
+      const plusSvg  = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+
+      el.innerHTML = `<div class="bud-groups-wrap">` + TYPES.map(type => {
         const cats = categories.filter(c => {
           if (c.type !== type.key || hiddenCats.includes(c.name)) return false;
           if (c.visibleFromMonth && c.visibleFromMonth > selectedMonth) return false;
           return true;
         });
         const typeTotal = cats.reduce((s,c) => s + Number(savedCats[c.name]||0), 0);
+
+        const catsHtml = cats.map(cat => {
+          const isProp = meta[cat.name]?.proportional || false;
+          const amt    = Number(savedCats[cat.name]||0);
+          const hint   = isProp
+            ? (amt > 0 ? `Repartido: ~${fmtShort(Math.round(amt/daysInMonth))} por día` : "Repartido por día")
+            : "Fijo mensual";
+          return `
+            <div class="bud-cat-row">
+              <div class="bud-cat-main">
+                <div class="bud-cat-info">
+                  <div class="bud-cat-name-disp">${cat.name}</div>
+                  <input type="text" class="budget-name-input bud-cat-name-inp"
+                         data-cat-id="${cat.id}" data-original-name="${cat.name}"
+                         value="${cat.name}" placeholder="Nombre..." style="display:none;"/>
+                  <div class="bud-cat-hint">${hint}</div>
+                </div>
+                <label class="bud-val-pill">
+                  <span class="bud-val-sym">$</span>
+                  <input type="text" class="val-pill-input budget-input"
+                         data-cat="${cat.name}" inputmode="numeric"
+                         value="${savedCats[cat.name]||""}" placeholder="0"/>
+                </label>
+                <button type="button" class="bud-more-btn" data-cat-name="${cat.name}" aria-label="Opciones de ${cat.name}">${dotsSvg}</button>
+              </div>
+              <div class="bud-more-menu" style="display:none;">
+                <button type="button" class="bud-menu-item" data-action="calc" data-cat-name="${cat.name}">Calcular</button>
+                <button type="button" class="bud-menu-item${isProp?" active":""}" data-action="prop" data-cat-name="${cat.name}">
+                  <span>Repartir por día</span>${isProp?checkSvg:""}
+                </button>
+                <button type="button" class="bud-menu-item" data-action="hide" data-cat-name="${cat.name}">Ocultar este mes</button>
+                <button type="button" class="bud-menu-item" data-action="rename" data-cat-name="${cat.name}">Renombrar</button>
+              </div>
+              <div class="bud-calc-row" style="display:none;">
+                <input type="text" class="bud-calc-inp bud-calc-qty" placeholder="Cant." data-field="qty" inputmode="numeric"/>
+                <span class="bud-calc-op">×</span>
+                <input type="text" class="bud-calc-inp bud-calc-unit" placeholder="Valor" data-field="unitValue" inputmode="numeric"/>
+                <span class="bud-calc-op">=</span>
+                <span class="bud-calc-total">$0</span>
+              </div>
+              <button type="button" class="prop-toggle-btn ${isProp?"on":""}"
+                      data-cat-name="${cat.name}" data-field="prop-toggle"
+                      style="display:none;" aria-hidden="true" tabindex="-1"></button>
+            </div>`;
+        }).join("");
+
         return `
-          <div class="type-section">
-            <div class="type-hdr">
-              <div class="type-dot ${type.dot}"></div>
-              <span class="type-lbl">${type.label}</span>
-              <span class="type-total">${formatCOP(typeTotal)}</span>
+          <div class="bud-group">
+            <div class="bud-group-hdr">
+              <span class="bud-group-dot" style="background:${type.color}"></span>
+              <span class="bud-group-lbl">${type.label}</span>
+              <span class="bud-group-total">${formatCOP(typeTotal)}</span>
             </div>
-            ${cats.map(cat => {
-              const isProp = meta[cat.name]?.proportional || false;
-              return `
-                <div class="cat-row-card">
-                  <div class="cat-ico-box" style="background:${type.bg};">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${type.stroke}" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                  </div>
-                  <input type="text" class="cat-name-input budget-name-input"
-                    data-cat-id="${cat.id}" data-original-name="${cat.name}"
-                    value="${cat.name}" placeholder="Nombre..."/>
-                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                    <div class="cat-right-wrap">
-                      <div class="val-pill">
-                        <span class="val-pill-sym">$</span>
-                        <input type="number" min="0" class="val-pill-input budget-input"
-                          data-cat="${cat.name}" value="${savedCats[cat.name]||""}" placeholder="0" data-field="amount"/>
-                      </div>
-                      <span class="day-lbl">~/día</span>
-                      <button type="button" class="prop-toggle-btn ${isProp?"on":""}"
-                        data-cat-name="${cat.name}" data-field="prop-toggle"></button>
-                      <button class="btn-hide-cat"
-                        data-cat-name="${cat.name}" title="Ocultar este mes">🗃</button>
-                    </div>
-                    <button type="button" class="cat-calc-btn" data-open="false">
-                      ▼ Calcular
-                    </button>
-                    <div class="cat-calc-form" style="display:none;gap:6px;align-items:center;">
-                      <input type="number" class="cat-adv-input" placeholder="Cant." min="0" data-field="qty" style="width:64px;"/>
-                      <span style="font-size:12px;color:#aaa;">×</span>
-                      <input type="number" class="cat-adv-input" placeholder="Valor" min="0" data-field="unitValue" style="width:84px;"/>
-                      <span style="font-size:12px;color:#aaa;">=</span>
-                      <span class="cat-adv-total" style="font-size:12px;font-weight:500;color:#0f3460;min-width:60px;text-align:right;">$0</span>
-                    </div>
-                  </div>
-                </div>`;
-            }).join("")}
+            <div class="bud-group-card">${catsHtml}</div>
             <div class="inline-add-form" id="inline-add-${type.key.replace(/\s/g,"-")}">
               <input type="text" class="inline-add-input" placeholder="Nombre de la categoría..."/>
               <div class="inline-add-actions">
                 <button class="inline-add-confirm" data-type="${type.key}">Agregar</button>
-                <button class="inline-add-cancel" data-type="${type.key}">Cancelar</button>
+                <button class="inline-add-cancel"  data-type="${type.key}">Cancelar</button>
               </div>
             </div>
-            <button class="add-cat-btn" data-add-type="${type.key}">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>Agregar en ${type.label.toLowerCase()}</span>
+            <button class="bud-add-btn" data-add-type="${type.key}">
+              ${plusSvg} Agregar en ${type.label.toLowerCase()}
             </button>
           </div>`;
-      }).join("") + (hidden.length ? `
-        <div class="type-section" id="hidden-cats-section">
-          <div class="type-hdr">
-            <div class="type-dot" style="background:#ccc;"></div>
-            <span class="type-lbl">Ocultas este mes (${hidden.length})</span>
+      }).join("") + `</div>` + (hidden.length ? `
+        <div class="bud-hidden-section">
+          <div class="bud-group-hdr" style="margin-top:6px;">
+            <span class="bud-group-dot" style="background:var(--border)"></span>
+            <span class="bud-group-lbl" style="font-size:13px;font-family:'Public Sans',sans-serif;font-weight:600;color:var(--muted);">Ocultas este mes (${hidden.length})</span>
           </div>
           ${hidden.map(name => `
-            <div class="cat-hidden-row">
-              <span class="cat-hidden-name">${name}</span>
+            <div class="bud-hidden-row">
+              <span class="bud-hidden-name">${name}</span>
               <button class="btn-restore-cat" data-cat-name="${name}">Restaurar</button>
             </div>`).join("")}
         </div>` : "");
 
-      // Event delegation
       el.addEventListener("click", handleExpensesClick);
 
-      // Format number inputs with dots
+      // Format amount inputs
       el.querySelectorAll(".val-pill-input").forEach(inp => {
-        inp.type = "text";
         if (inp.value) {
           inp.dataset.raw = inp.value;
           inp.value = Number(inp.value).toLocaleString("es-CO");
         }
         inp.addEventListener("input", () => {
-          const raw = inp.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+          const raw = inp.value.replace(/\./g,"").replace(/[^0-9]/g,"");
           inp.dataset.raw = raw;
           inp.value = raw ? Number(raw).toLocaleString("es-CO") : "";
         });
         inp.addEventListener("focus", () => inp.select());
       });
+
+      // Calc form logic
+      el.querySelectorAll(".bud-calc-row").forEach(calcRow => {
+        const row       = calcRow.closest(".bud-cat-row");
+        const amountInp = row.querySelector(".val-pill-input");
+        const totalEl   = calcRow.querySelector(".bud-calc-total");
+        const recalc    = () => {
+          const qty  = Number(calcRow.querySelector("[data-field='qty']").value.replace(/\./g,"")) || 0;
+          const unit = Number(calcRow.querySelector("[data-field='unitValue']").value.replace(/\./g,"")) || 0;
+          const tot  = qty * unit;
+          totalEl.textContent = formatCOP(tot);
+          if (tot > 0 && amountInp) {
+            amountInp.dataset.raw = String(tot);
+            amountInp.value = tot.toLocaleString("es-CO");
+          }
+        };
+        calcRow.querySelectorAll(".bud-calc-inp").forEach(inp => inp.addEventListener("input", recalc));
+      });
+
+      // Rename input handlers
+      el.querySelectorAll(".bud-cat-name-inp").forEach(inp => {
+        inp.addEventListener("keydown", e => {
+          if (e.key === "Enter") inp.blur();
+          if (e.key === "Escape") {
+            inp.value = inp.dataset.originalName;
+            inp.style.display = "none";
+            inp.closest(".bud-cat-row").querySelector(".bud-cat-name-disp").style.display = "";
+          }
+        });
+        inp.addEventListener("blur", () => {
+          const name = inp.value.trim() || inp.dataset.originalName;
+          inp.value = name;
+          const disp = inp.closest(".bud-cat-row").querySelector(".bud-cat-name-disp");
+          disp.textContent = name;
+          disp.style.display = "";
+          inp.style.display = "none";
+        });
+      });
     }
 
     async function handleExpensesClick(e) {
-      // Prop toggle
-      const propBtn = e.target.closest("[data-field='prop-toggle']");
-      if (propBtn) { propBtn.classList.toggle("on"); return; }
+      const checkSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>`;
 
-      // Ocultar cat este mes
-      const hideBtn = e.target.closest(".btn-hide-cat");
-      if (hideBtn) { hideCategory(hideBtn.dataset.catName); return; }
+      // ⋮ button
+      const moreBtn = e.target.closest(".bud-more-btn");
+      if (moreBtn) {
+        const row    = moreBtn.closest(".bud-cat-row");
+        const menu   = row.querySelector(".bud-more-menu");
+        const isOpen = menu.style.display !== "none";
+        document.querySelectorAll(".bud-more-menu").forEach(m => m.style.display = "none");
+        if (!isOpen) menu.style.display = "flex";
+        return;
+      }
 
-      // Restaurar cat oculta
+      // Menu actions
+      const menuItem = e.target.closest(".bud-menu-item");
+      if (menuItem) {
+        const action  = menuItem.dataset.action;
+        const catName = menuItem.dataset.catName;
+        const row     = menuItem.closest(".bud-cat-row");
+        row.querySelector(".bud-more-menu").style.display = "none";
+
+        if (action === "calc") {
+          const calcRow = row.querySelector(".bud-calc-row");
+          calcRow.style.display = calcRow.style.display === "none" ? "flex" : "none";
+
+        } else if (action === "prop") {
+          const propBtn  = row.querySelector("[data-field='prop-toggle']");
+          propBtn.classList.toggle("on");
+          const isProp   = propBtn.classList.contains("on");
+          menuItem.className = `bud-menu-item${isProp?" active":""}`;
+          menuItem.innerHTML = `<span>Repartir por día</span>${isProp?checkSvg:""}`;
+          const hint   = row.querySelector(".bud-cat-hint");
+          const valInp = row.querySelector(".val-pill-input");
+          const amt    = Number(valInp?.dataset.raw||0);
+          const days   = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
+          hint.textContent = isProp
+            ? (amt > 0 ? `Repartido: ~${fmtShort(Math.round(amt/days))} por día` : "Repartido por día")
+            : "Fijo mensual";
+
+        } else if (action === "hide") {
+          await hideCategory(catName);
+
+        } else if (action === "rename") {
+          const disp = row.querySelector(".bud-cat-name-disp");
+          const inp  = row.querySelector(".bud-cat-name-inp");
+          disp.style.display = "none";
+          inp.style.display  = "";
+          inp.focus();
+          inp.select();
+        }
+        return;
+      }
+
+      // Restaurar categoría oculta
       const restoreBtn = e.target.closest(".btn-restore-cat");
       if (restoreBtn) { restoreCategory(restoreBtn.dataset.catName); return; }
 
-      // Add cat button
+      // Agregar categoría
       const addBtn = e.target.closest("[data-add-type]");
       if (addBtn) {
         const type   = addBtn.dataset.addType;
@@ -596,7 +794,7 @@
         return;
       }
 
-      // Confirm add
+      // Confirmar agregar
       const confirmBtn = e.target.closest(".inline-add-confirm");
       if (confirmBtn) {
         const type   = confirmBtn.dataset.type;
@@ -608,8 +806,7 @@
           if (hiddenCats.includes(existing.name)) {
             formEl.classList.remove("open");
             formEl.querySelector(".inline-add-input").value = "";
-            const addBtn2 = document.querySelector(`[data-add-type="${type}"]`);
-            if (addBtn2) addBtn2.style.display = "";
+            document.querySelector(`[data-add-type="${type}"]`)?.style.setProperty("display","");
             await restoreCategory(existing.name);
           } else {
             showToast(`"${existing.name}" ya existe.`, "error");
@@ -624,20 +821,26 @@
         return;
       }
 
-      // Cancel add
+      // Cancelar agregar
       const cancelBtn = e.target.closest(".inline-add-cancel");
       if (cancelBtn) {
         const type   = cancelBtn.dataset.type;
         const formEl = document.getElementById("inline-add-" + type.replace(/\s/g, "-"));
         formEl.classList.remove("open");
         formEl.querySelector(".inline-add-input").value = "";
-        const addBtn2 = document.querySelector(`[data-add-type="${type}"]`);
-        if (addBtn2) addBtn2.style.display = "";
+        document.querySelector(`[data-add-type="${type}"]`)?.style.setProperty("display","");
         return;
       }
     }
 
-    // ── Ocultar / restaurar categoría (solo este mes) ────
+    // Cerrar menú ⋮ al hacer clic fuera
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".bud-more-btn") && !e.target.closest(".bud-more-menu")) {
+        document.querySelectorAll(".bud-more-menu").forEach(m => m.style.display = "none");
+      }
+    });
+
+    // ── Ocultar / restaurar ───────────────────────────────
     async function hideCategory(catName) {
       if (hiddenCats.includes(catName)) return;
       hiddenCats = [...hiddenCats, catName];
@@ -669,7 +872,7 @@
       showToast(`"${catName}" restaurada.`, "success");
     }
 
-    // ── Income form ───────────────────────────────────────
+    // ── Formulario de ingresos ────────────────────────────
     function renderIncomeForm() {
       const incomeData = currentBudget?.income || {};
       function normalizeIncome(income) {
@@ -680,25 +883,23 @@
           .map(([name, val]) => typeof val === "object" ? { name, ...val } : { name, amount: val, type: "fijo", proportional: false })
           .filter(i => i.name);
       }
-      const incArr = normalizeIncome(incomeData);
+      const incArr      = normalizeIncome(incomeData);
       const daysInMonth = new Date(selectedMonth.split("-")[0], selectedMonth.split("-")[1], 0).getDate();
+      const el          = document.getElementById("income-form");
 
-      const el = document.getElementById("income-form");
       el.innerHTML = `
-        <div style="margin:0 14px;">
-          <div id="income-cards">
-            ${incArr.map((inc, idx) => renderIncomeCard(inc, idx, daysInMonth)).join("")}
-          </div>
-          <button class="add-income-btn" id="btn-add-income">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Agregar fuente de ingreso</span>
-          </button>
-        </div>`;
+        <div id="income-cards">
+          ${incArr.map((inc, idx) => renderIncomeCard(inc, idx, daysInMonth)).join("")}
+        </div>
+        <button class="add-income-btn" id="btn-add-income">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar fuente de ingreso
+        </button>`;
 
       document.getElementById("btn-add-income").addEventListener("click", () => {
         const newInc = { name: "", amount: 0, type: "fijo", proportional: false };
-        const idx = document.querySelectorAll(".income-card").length;
-        const tmp = document.createElement("div");
+        const idx    = document.querySelectorAll(".income-card").length;
+        const tmp    = document.createElement("div");
         tmp.innerHTML = renderIncomeCard(newInc, idx, daysInMonth);
         const newCard = tmp.firstElementChild;
         document.getElementById("income-cards").appendChild(newCard);
@@ -716,10 +917,15 @@
         <div class="income-card">
           <div class="income-row">
             <input type="text" class="income-name-input" placeholder="Fuente de ingreso..."
-              value="${inc.name||""}" maxlength="60" style="font-weight:500;"/>
-            <input type="number" class="income-amount-input" placeholder="0"
-              value="${inc.amount||""}" min="0"/>
-            <button class="income-del-btn" onclick="this.closest('.income-card').remove()">✕</button>
+              value="${inc.name||""}" maxlength="60"/>
+            <label class="inc-val-pill">
+              <span class="bud-val-sym">$</span>
+              <input type="text" class="income-amount-input" placeholder="0"
+                value="${inc.amount||""}" inputmode="numeric"/>
+            </label>
+            <button class="income-del-btn" type="button" onclick="this.closest('.income-card').remove()" aria-label="Eliminar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
           </div>
           <div class="income-meta">
             <select class="income-type-select">
@@ -737,40 +943,16 @@
       document.querySelectorAll("[data-toggle]").forEach(el => {
         el.onclick = () => el.classList.toggle("on");
       });
-
-      // Cat calc toggle
-      document.querySelectorAll(".cat-calc-btn").forEach(btn => {
-        btn.onclick = () => {
-          const wrap   = btn.closest("div");
-          const form   = wrap.querySelector(".cat-calc-form");
-          const isOpen = btn.dataset.open === "true";
-          btn.dataset.open     = isOpen ? "false" : "true";
-          btn.textContent      = isOpen ? "▼ Calcular" : "▲ Ocultar";
-          form.style.display   = isOpen ? "none" : "flex";
-        };
-      });
-
-      // Cat calc auto-total
-      document.querySelectorAll(".cat-calc-form").forEach(form => {
-        const card      = form.closest(".cat-row-card");
-        const amountInp = card ? card.querySelector(".val-pill-input") : null;
-        const totalEl   = form.querySelector(".cat-adv-total");
-        const recalc = () => {
-          const qty  = Number(form.querySelector("[data-field='qty']")?.value) || 0;
-          const unit = Number(form.querySelector("[data-field='unitValue']")?.value) || 0;
-          const tot  = qty * unit;
-          totalEl.textContent = formatCOP(tot);
-          if (tot > 0 && amountInp) amountInp.value = tot;
-        };
-        form.querySelectorAll(".cat-adv-input").forEach(inp => inp.addEventListener("input", recalc));
-      });
     }
 
     // ── Guardar ───────────────────────────────────────────
-    document.getElementById("btn-save").addEventListener("click", saveBudget);
+    [document.getElementById("btn-save"), document.getElementById("btn-save-desk")].forEach(btn => {
+      btn?.addEventListener("click", saveBudget);
+    });
 
     async function saveBudget() {
-      const btn = document.getElementById("btn-save");
+      const btns = [document.getElementById("btn-save"), document.getElementById("btn-save-desk")].filter(Boolean);
+      btns.forEach(b => { b.disabled = true; b.textContent = "Guardando..."; });
 
       // Categorías
       const categoriesData = {};
@@ -814,14 +996,15 @@
         }
       });
 
-      // Preservar valores de categorías ocultas
+      // Preservar valores de ocultas
       hiddenCats.forEach(name => {
         if (currentBudget?.categories?.[name] !== undefined && categoriesData[name] === undefined) {
           categoriesData[name] = currentBudget.categories[name];
         }
       });
 
-      btn.disabled = true; btn.textContent = "Guardando...";
+      const saveIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`;
+
       try {
         await Promise.all(renamePromises);
         await setBudget(uid, selectedMonth, { categories: categoriesData, income: incomeData, categoryMeta, hiddenCats, budgetInitialized: true });
@@ -836,8 +1019,10 @@
       } catch (err) {
         showToast("Error al guardar.", "error"); console.error(err);
       } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Guardar presupuesto`;
+        const mobileBtn = document.getElementById("btn-save");
+        const deskBtn   = document.getElementById("btn-save-desk");
+        if (mobileBtn) { mobileBtn.disabled = false; mobileBtn.innerHTML = `${saveIcon} Guardar presupuesto`; }
+        if (deskBtn)   { deskBtn.disabled   = false; deskBtn.textContent = "Guardar cambios"; }
       }
     }
   </script>
