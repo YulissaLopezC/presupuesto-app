@@ -403,7 +403,7 @@
     }
     .register-another-lbl input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
 
-    /* ── Bottom sheet categorías ─────────────────────────── */
+    /* ── Bottom sheet categorías (móvil) ────────────────── */
     .cat-sheet-overlay {
       position: fixed; inset: 0; background: rgba(14,23,38,0.5);
       z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.22s;
@@ -412,7 +412,7 @@
     .cat-sheet-overlay.open { opacity: 1; pointer-events: all; }
     .cat-sheet {
       background: var(--surface); border-radius: 24px 24px 0 0;
-      height: 640px; max-height: 85vh;
+      max-height: 75vh;
       display: flex; flex-direction: column; overflow: hidden;
       transform: translateY(100%); transition: transform 0.3s ease;
     }
@@ -439,26 +439,56 @@
       font-family: "Public Sans", sans-serif; font-size: 15px;
       color: var(--text); flex-grow: 1; min-width: 0;
     }
-    .cat-sheet-body { flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
-    .cat-sheet-item {
-      width: 100%; min-height: 52px; border: none; border-bottom: 1px solid var(--border-soft);
-      background: transparent; padding: 8px 0; display: flex; align-items: center; gap: 12px;
+    .cat-sheet-body { flex: 1; overflow-y: auto; padding: 0 20px 20px; }
+
+    /* ── Dropdown de categorías (escritorio, position: fixed) */
+    .cat-dropdown {
+      position: fixed; z-index: 300;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; max-height: 360px; overflow: hidden;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 32px rgba(14,23,38,0.14);
+    }
+    .cat-dropdown-hdr {
+      display: flex; align-items: center; gap: 8px; padding: 0 12px;
+      height: 46px; border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0; color: var(--muted); cursor: text;
+    }
+    .cat-dropdown-hdr input {
+      border: none; outline: none; background: transparent;
+      font-family: "Public Sans", sans-serif; font-size: 14px;
+      color: var(--text); flex-grow: 1; min-width: 0;
+    }
+    .cat-dropdown-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+    /* ── Filas compartidas (sheet + dropdown) ────────────── */
+    .cat-group-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); padding: 10px 14px 2px;
+    }
+    .cat-row {
+      width: 100%; height: 44px; border: none; background: transparent;
+      padding: 0 14px; display: flex; align-items: center; gap: 10px;
       font-family: "Public Sans", sans-serif; font-size: 15px; color: var(--text);
-      cursor: pointer; text-align: left;
+      cursor: pointer; text-align: left; transition: background 0.1s;
     }
-    .cat-sheet-item:last-of-type { border-bottom: none; }
-    .cat-sheet-ini {
-      width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
-      background: var(--surface2); color: var(--accent);
-      font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    .cat-row:hover { background: var(--bg); }
+    .cat-row.focused { background: var(--bg); outline: none; }
+    .cat-row.selected { background: var(--surface2); }
+    .cat-row-dot {
+      width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0;
     }
-    .cat-sheet-name { flex-grow: 1; font-weight: 500; }
-    .cat-sheet-type { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .cat-row-name { flex-grow: 1; font-weight: 500; }
+    .cat-row-check { flex-shrink: 0; color: var(--accent); }
+    .cat-no-results {
+      padding: 20px 14px 6px; font-size: 14px; color: var(--muted); text-align: center;
+    }
     .cat-sheet-create {
-      margin-top: 12px; width: 100%; height: 48px; border-radius: 14px;
+      margin: 8px 14px 14px; height: 48px; border-radius: 14px;
       border: 1.5px dashed var(--border2); background: transparent;
       color: var(--accent); font-family: "Public Sans", sans-serif;
       font-size: 14px; font-weight: 700; cursor: pointer; transition: border-color 0.15s;
+      width: calc(100% - 28px);
     }
     .cat-sheet-create:hover { border-color: var(--accent); }
 
@@ -713,6 +743,15 @@
         <button class="btn-save-new" id="btn-save">Guardar gasto</button>
       </div>
     </div>
+  </div>
+
+  <!-- Dropdown de categorías (escritorio ≥900px) -->
+  <div id="cat-dropdown" class="cat-dropdown" style="display:none;" role="listbox" aria-label="Elegir categoría">
+    <div class="cat-dropdown-hdr">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input type="search" id="cat-dropdown-search" placeholder="Buscar categoría" autocomplete="off"/>
+    </div>
+    <div class="cat-dropdown-list" id="cat-dropdown-list"></div>
   </div>
 
   <!-- Bottom sheet: elegir categoría -->
@@ -1014,7 +1053,7 @@
       grid.querySelectorAll(".cat-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>setCat(btn.dataset.cat));
       });
-      document.getElementById("btn-cat-all").addEventListener("click", openCatSheet);
+      document.getElementById("btn-cat-all").addEventListener("click", openCatPicker);
     }
 
     function renderRecentSources() {
@@ -1033,42 +1072,114 @@
       });
     }
 
-    function openCatSheet() {
-      document.getElementById("cat-search").value="";
-      renderCatList("");
-      document.getElementById("cat-sheet-overlay").classList.add("open");
-    }
-    function closeCatSheet() {
-      document.getElementById("cat-sheet-overlay").classList.remove("open");
-    }
-    function renderCatList(query) {
-      const el = document.getElementById("cat-sheet-body");
+    const CAT_GROUPS = [
+      { key: "GASTO BÁSICO",       label: "Gasto básico",       dot: "#1B6FC2" },
+      { key: "GASTO NO ESENCIAL",  label: "Gasto no esencial",  dot: "#B5487A" },
+      { key: "AHORRO O INVERSIÓN", label: "Ahorro o inversión", dot: "#3F7D1E" },
+    ];
+
+    function renderCatPickerList(containerEl, query) {
       const selectedCat = document.getElementById("field-category").value;
       const q = (query||"").toLowerCase().trim();
       const hiddenCats = budget?.hiddenCats||[];
       const visible = categories.filter(c=>{
         if (c.visibleFromMonth&&c.visibleFromMonth>selectedMonth) return false;
         if (hiddenCats.includes(c.name)) return false;
-        if (q&&!c.name.toLowerCase().includes(q)) return false;
         return true;
       });
-      const typeShort={"GASTO BÁSICO":"G. Básico","GASTO NO ESENCIAL":"G. No esencial","AHORRO O INVERSIÓN":"Ahorro"};
-      el.innerHTML=visible.map(c=>{
-        const isSel=c.name===selectedCat;
-        return `<button class="cat-sheet-item" data-cat="${c.name}" type="button">
-          <span class="cat-sheet-ini">${initials(c.name)}</span>
-          <span class="cat-sheet-name" style="font-weight:${isSel?700:500}">${c.name}</span>
-          <span class="cat-sheet-type">${typeShort[c.type]||c.type||""}</span>
-          ${isSel?`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>`:""}
-        </button>`;
-      }).join("")+
-      `<button class="cat-sheet-create" id="cat-create-btn" type="button">+ Crear categoría nueva</button>`;
-      el.querySelectorAll(".cat-sheet-item").forEach(btn=>{
-        btn.addEventListener("click", ()=>{ setCat(btn.dataset.cat); closeCatSheet(); });
+      const checkSvg = `<svg class="cat-row-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>`;
+      let html = "";
+      let hasAny = false;
+      CAT_GROUPS.forEach(group=>{
+        let cats = visible.filter(c=>c.type===group.key);
+        if (q) cats = cats.filter(c=>c.name.toLowerCase().includes(q));
+        cats.sort((a,b)=>a.name.localeCompare(b.name,"es"));
+        if (!cats.length) return;
+        hasAny = true;
+        html += `<div class="cat-group-title">${group.label}</div>`;
+        cats.forEach(c=>{
+          const isSel = c.name===selectedCat;
+          html += `<button class="cat-row${isSel?" selected":""}" data-cat="${c.name}" type="button">
+            <span class="cat-row-dot" style="background:${group.dot}"></span>
+            <span class="cat-row-name">${c.name}</span>
+            ${isSel?checkSvg:""}
+          </button>`;
+        });
       });
-      document.getElementById("cat-create-btn")?.addEventListener("click", ()=>{
-        closeCatSheet(); window.location.href="./categories.html";
+      const ungrouped = visible.filter(c=>!CAT_GROUPS.find(g=>g.key===c.type));
+      let ungroupedFiltered = q ? ungrouped.filter(c=>c.name.toLowerCase().includes(q)) : ungrouped;
+      ungroupedFiltered.sort((a,b)=>a.name.localeCompare(b.name,"es"));
+      if (ungroupedFiltered.length) {
+        hasAny = true;
+        ungroupedFiltered.forEach(c=>{
+          const isSel = c.name===selectedCat;
+          html += `<button class="cat-row${isSel?" selected":""}" data-cat="${c.name}" type="button">
+            <span class="cat-row-dot" style="background:var(--muted)"></span>
+            <span class="cat-row-name">${c.name}</span>
+            ${isSel?checkSvg:""}
+          </button>`;
+        });
+      }
+      if (!hasAny) html = `<p class="cat-no-results">No hay categorías con ese nombre</p>`;
+      html += `<button class="cat-sheet-create" id="cat-create-btn-picker" type="button">+ Crear categoría nueva</button>`;
+      containerEl.innerHTML = html;
+      containerEl.querySelectorAll(".cat-row").forEach(btn=>{
+        btn.addEventListener("click", ()=>{ setCat(btn.dataset.cat); closeCatDropdown(); closeCatSheet(); });
       });
+      document.getElementById("cat-create-btn-picker")?.addEventListener("click", ()=>{
+        closeCatDropdown(); closeCatSheet(); window.location.href="./categories.html";
+      });
+    }
+
+    function openCatPicker() {
+      if (window.innerWidth >= 900) openCatDropdown();
+      else openCatSheet();
+    }
+
+    let _dropdownFocusedIndex = -1;
+
+    function positionDropdown() {
+      const dropdown = document.getElementById("cat-dropdown");
+      const grid = document.getElementById("cat-grid");
+      if (!grid) return;
+      const rect = grid.getBoundingClientRect();
+      dropdown.style.top  = (rect.bottom + 6) + "px";
+      dropdown.style.left = rect.left + "px";
+      dropdown.style.width = rect.width + "px";
+    }
+
+    function openCatDropdown() {
+      const searchInput = document.getElementById("cat-dropdown-search");
+      searchInput.value = "";
+      renderCatPickerList(document.getElementById("cat-dropdown-list"), "");
+      positionDropdown();
+      document.getElementById("cat-dropdown").style.display = "flex";
+      searchInput.focus();
+      _dropdownFocusedIndex = -1;
+      setTimeout(()=>document.addEventListener("click", _catDropdownOutsideHandler), 0);
+    }
+
+    function closeCatDropdown() {
+      document.getElementById("cat-dropdown").style.display = "none";
+      document.removeEventListener("click", _catDropdownOutsideHandler);
+      _dropdownFocusedIndex = -1;
+    }
+
+    function _catDropdownOutsideHandler(e) {
+      const dropdown = document.getElementById("cat-dropdown");
+      const allBtn = document.getElementById("btn-cat-all");
+      if (!dropdown.contains(e.target) && e.target !== allBtn && !allBtn?.contains(e.target)) {
+        closeCatDropdown();
+      }
+    }
+
+    function openCatSheet() {
+      document.getElementById("cat-search").value="";
+      renderCatPickerList(document.getElementById("cat-sheet-body"), "");
+      document.getElementById("cat-sheet-overlay").classList.add("open");
+    }
+    function closeCatSheet() {
+      document.getElementById("cat-sheet-overlay").classList.remove("open");
     }
 
     // ── Resumen ───────────────────────────────────────────
@@ -1362,8 +1473,9 @@
     document.getElementById("btn-save").addEventListener("click", saveItem);
     document.addEventListener("keydown", e=>{
       if (e.key==="Escape") {
-        if (document.getElementById("cat-sheet-overlay").classList.contains("open")) closeCatSheet();
-        else closeDrawer();
+        if (document.getElementById("cat-dropdown").style.display!=="none") { closeCatDropdown(); return; }
+        if (document.getElementById("cat-sheet-overlay").classList.contains("open")) { closeCatSheet(); return; }
+        closeDrawer();
       }
     });
 
@@ -1383,7 +1495,32 @@
       if (e.target===document.getElementById("cat-sheet-overlay")) closeCatSheet();
     });
     document.getElementById("cat-search").addEventListener("input", e=>{
-      renderCatList(e.target.value.trim());
+      renderCatPickerList(document.getElementById("cat-sheet-body"), e.target.value.trim());
+    });
+
+    // Dropdown de categorías (escritorio) — búsqueda y teclado
+    document.getElementById("cat-dropdown-search").addEventListener("input", e=>{
+      _dropdownFocusedIndex = -1;
+      renderCatPickerList(document.getElementById("cat-dropdown-list"), e.target.value.trim());
+    });
+    document.getElementById("cat-dropdown-search").addEventListener("keydown", e=>{
+      const list = document.getElementById("cat-dropdown-list");
+      const rows = Array.from(list.querySelectorAll(".cat-row"));
+      if (!rows.length) return;
+      if (e.key==="ArrowDown") {
+        e.preventDefault();
+        _dropdownFocusedIndex = Math.min(_dropdownFocusedIndex+1, rows.length-1);
+        rows.forEach((r,i)=>r.classList.toggle("focused", i===_dropdownFocusedIndex));
+        rows[_dropdownFocusedIndex]?.scrollIntoView({block:"nearest"});
+      } else if (e.key==="ArrowUp") {
+        e.preventDefault();
+        _dropdownFocusedIndex = Math.max(_dropdownFocusedIndex-1, 0);
+        rows.forEach((r,i)=>r.classList.toggle("focused", i===_dropdownFocusedIndex));
+        rows[_dropdownFocusedIndex]?.scrollIntoView({block:"nearest"});
+      } else if (e.key==="Enter" && _dropdownFocusedIndex>=0) {
+        e.preventDefault();
+        rows[_dropdownFocusedIndex]?.click();
+      }
     });
 
     function openNewDrawer() {
