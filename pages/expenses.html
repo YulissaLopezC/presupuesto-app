@@ -125,19 +125,22 @@
     }
     .clear-filters-btn:hover { color: var(--danger); }
 
-    /* ── Chips de ingresos ───────────────────────────────── */
+    /* ── Chips de filtro rápido (fuentes / categorías) ────── */
     .filters {
-      display: flex; gap: 7px; overflow-x: auto;
+      display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto;
       scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px; /* evita recorte del borde */
     }
     .filters::-webkit-scrollbar { display: none; }
     .chip {
-      flex-shrink: 0; padding: 6px 14px; border-radius: 999px;
-      border: 1px solid var(--border); font-size: 13px; font-weight: 500;
-      color: var(--muted); cursor: pointer; background: var(--surface);
-      white-space: nowrap; font-family: "Public Sans", sans-serif; transition: all 0.15s;
+      flex-shrink: 0; height: 36px; padding: 0 14px; border-radius: 999px;
+      border: 1px solid var(--border); font-size: 13px; font-weight: 600;
+      color: var(--text); cursor: pointer; background: var(--surface);
+      white-space: nowrap; font-family: "Public Sans", sans-serif;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      display: inline-flex; align-items: center;
     }
-    .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .chip.active { background: var(--text); color: #fff; border-color: var(--text); }
 
     /* ── Fila de resumen ─────────────────────────────────── */
     .mov-summary {
@@ -550,10 +553,11 @@
       </div>
     </div>
 
-    <!-- Chips de fuentes (ingresos) -->
-    <div class="filters" id="item-filters" style="display:none;">
-      <div class="chip active" data-cat="">Todos</div>
-    </div>
+    <!-- Chips de categorías (gastos) — fila horizontal -->
+    <div class="filters" id="cat-filter-chips" style="display:none;"></div>
+
+    <!-- Chips de fuentes (ingresos) — fila horizontal -->
+    <div class="filters" id="item-filters" style="display:none;"></div>
 
     <!-- Fila de resumen -->
     <div class="mov-summary" id="hero-sum">
@@ -894,6 +898,7 @@
       if (toEl)   toEl.value="";
       document.querySelectorAll(".quick-date-btn").forEach(b=>b.classList.remove("active-range"));
       updateFilterToggleBtn();
+      renderCatChips(); // refleja "Todas las categorías" como activa
     }
     function updateFilterToggleBtn() {
       const btn   = document.getElementById("filter-toggle-btn");
@@ -1091,22 +1096,49 @@
 
     // ── Filtros visibles ──────────────────────────────────
     function renderFilters() {
-      const isG=activeTab==="gastos";
-      document.getElementById("filter-bar").style.display   = isG ? "block" : "none";
-      document.getElementById("item-filters").style.display = activeTab==="ingresos" ? "block" : "none";
-      if (isG) { populateFilterPanel(); updateFilterToggleBtn(); }
-      else if (activeTab==="ingresos") {
-        const names=[...new Set(allIncomes.filter(i=>!i.isProportional).map(i=>i.source).filter(Boolean))];
-        const el=document.getElementById("item-filters");
-        el.innerHTML=`<div class="chip active" data-cat="">Todos</div>`+
-          names.map(n=>`<div class="chip" data-cat="${n}">${n}</div>`).join("");
-        el.onclick=e=>{
-          const chip=e.target.closest(".chip"); if (!chip) return;
-          el.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
-          chip.classList.add("active"); activeFilter=chip.dataset.cat;
+      const isG=activeTab==="gastos", isI=activeTab==="ingresos";
+      document.getElementById("filter-bar").style.display       = isG ? "block" : "none";
+      document.getElementById("cat-filter-chips").style.display = "none"; // renderCatChips lo muestra si hace falta
+      document.getElementById("item-filters").style.display     = "none"; // renderSourceChips lo muestra si hace falta
+      if (isG) { populateFilterPanel(); updateFilterToggleBtn(); renderCatChips(); }
+      else if (isI) { renderSourceChips(); }
+    }
+
+    function renderCatChips() {
+      const el = document.getElementById("cat-filter-chips");
+      const cats = [...new Set(allExpenses.map(e=>e.category).filter(Boolean))].sort();
+      if (cats.length <= 1) { el.style.display="none"; return; }
+      el.style.display = "flex";
+      el.innerHTML = `<button class="chip${!filters.category?" active":""}" data-cat="" type="button">Todas las categorías</button>` +
+        cats.map(n=>`<button class="chip${filters.category===n?" active":""}" data-cat="${n}" type="button">${n}</button>`).join("");
+      el.querySelectorAll(".chip").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          filters.category = btn.dataset.cat;
+          activeFilter = btn.dataset.cat;
+          el.querySelectorAll(".chip").forEach(b=>b.classList.remove("active"));
+          btn.classList.add("active");
+          const catSel=document.getElementById("filter-cat");
+          if (catSel) catSel.value=btn.dataset.cat;
+          updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
+        });
+      });
+    }
+
+    function renderSourceChips() {
+      const el = document.getElementById("item-filters");
+      const names=[...new Set(allIncomes.filter(i=>!i.isProportional).map(i=>i.source).filter(Boolean))];
+      if (names.length <= 1) { el.style.display="none"; return; }
+      el.style.display = "flex";
+      el.innerHTML = `<button class="chip${!activeFilter?" active":""}" data-cat="" type="button">Todas las fuentes</button>` +
+        names.map(n=>`<button class="chip${activeFilter===n?" active":""}" data-cat="${n}" type="button">${n}</button>`).join("");
+      el.querySelectorAll(".chip").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          activeFilter = btn.dataset.cat;
+          el.querySelectorAll(".chip").forEach(b=>b.classList.remove("active"));
+          btn.classList.add("active");
           renderHeroSum(); renderIncomes();
-        };
-      }
+        });
+      });
     }
 
     // ── Gastos ────────────────────────────────────────────
@@ -1486,6 +1518,7 @@
     document.getElementById("filter-cat").addEventListener("change", e=>{
       filters.category=e.target.value; activeFilter=filters.category;
       updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
+      renderCatChips(); // sincroniza los chips con el select
     });
     document.getElementById("filter-wal").addEventListener("change", e=>{
       filters.wallet=e.target.value; updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
