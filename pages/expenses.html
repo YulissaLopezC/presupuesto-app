@@ -244,78 +244,236 @@
     .fab:active { transform: scale(0.95); }
     .fab.income { background: var(--income); box-shadow: 0 4px 16px rgba(15,122,92,0.3); }
 
-    /* ── Modal ───────────────────────────────────────────── */
+    /* ── Modal: pantalla completa mobile, centrado desktop ── */
     .drawer-overlay {
-      position: fixed; inset: 0; background: rgba(14,23,38,0.5);
-      z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.2s;
-      display: flex; align-items: center; justify-content: center; padding: 16px;
+      position: fixed; inset: 0; z-index: 150;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none; transition: opacity 0.22s;
     }
     .drawer-overlay.open { opacity: 1; pointer-events: all; }
-    .drawer {
-      background: var(--surface); border-radius: 20px;
-      padding: 24px 20px 20px; width: 100%; max-width: 400px;
-      z-index: 160; transform: scale(0.96); opacity: 0;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-      max-height: 90vh; overflow-y: auto;
+    .drawer { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+
+    .drawer-topbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px 20px 8px; flex-shrink: 0;
     }
-    .drawer-overlay.open .drawer { transform: scale(1); opacity: 1; }
-    .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .drawer-close-btn {
+      width: 44px; height: 44px; border-radius: 999px; flex-shrink: 0;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .drawer-close-btn:hover { border-color: var(--accent); color: var(--accent); }
     .drawer-title {
-      font-family: "Sora", sans-serif; font-size: 20px; font-weight: 700;
-      color: var(--text); letter-spacing: -0.02em;
+      font-family: "Sora", sans-serif; font-size: 18px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.02em; margin: 0;
+      flex-grow: 1; text-align: center;
     }
-    .modal-close-btn {
-      width: 32px; height: 32px; border-radius: 999px;
-      background: var(--surface2); border: none; cursor: pointer;
-      color: var(--muted); font-size: 18px; line-height: 1;
+    .drawer-title-spacer { width: 44px; flex-shrink: 0; }
+    .drawer-scroll {
+      flex: 1; overflow-y: auto; padding: 8px 20px 16px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .drawer-footer {
+      padding: 10px 20px 20px; background: var(--bg);
+      border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+
+    /* ── Selector de tipo ────────────────────────────────── */
+    .type-toggle {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;
+      background: var(--surface2); padding: 4px; border-radius: 14px;
+    }
+    .type-btn {
+      height: 42px; border: none; border-radius: 11px;
+      font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: transparent; color: var(--muted); transition: all 0.15s;
+    }
+    .type-btn.active.gasto      { background: var(--surface); color: var(--accent); }
+    .type-btn.active.income-type { background: var(--surface); color: var(--income); }
+
+    /* ── Tarjeta de valor ────────────────────────────────── */
+    .valor-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; cursor: text;
+    }
+    .valor-card-lbl { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .valor-card-row { display: flex; align-items: baseline; gap: 4px; }
+    .valor-sym-new {
+      font-family: "Sora", sans-serif; font-size: 28px; font-weight: 700;
+      color: var(--accent); transition: color 0.2s; flex-shrink: 0;
+    }
+    .valor-sym-new.income-type { color: var(--income); }
+    .valor-input-new {
+      border: none; outline: none; background: transparent;
+      font-family: "Sora", sans-serif; font-size: 38px; font-weight: 700;
+      color: var(--text); width: 100%; min-width: 0;
+    }
+    .valor-input-new::placeholder { color: var(--muted); opacity: 0.35; }
+
+    /* ── Encabezados de sección ──────────────────────────── */
+    .field-section-hdr { display: flex; justify-content: space-between; align-items: baseline; }
+    .field-section-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .field-section-sub   { font-size: 12px; color: var(--muted); }
+
+    /* ── Grilla de categorías ────────────────────────────── */
+    .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .cat-btn {
+      height: 48px; padding: 0 6px; border-radius: 14px;
+      border: 1.5px solid var(--border); background: var(--surface);
+      color: var(--text); font-family: "Public Sans", sans-serif; font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: all 0.15s;
+    }
+    .cat-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .cat-btn-all {
+      height: 48px; border-radius: 14px;
+      border: 1.5px dashed var(--border2); background: transparent;
+      color: var(--accent); font-family: "Public Sans", sans-serif; font-size: 12px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: border-color 0.15s;
+    }
+    .cat-btn-all:hover { border-color: var(--accent); }
+
+    /* ── Inputs nuevos ───────────────────────────────────── */
+    .f-input-new, .f-select-new {
+      width: 100%; height: 48px; border-radius: 14px; border: 1px solid var(--border);
+      background: var(--surface); padding: 0 14px;
+      font-family: "Public Sans", sans-serif; font-size: 15px; color: var(--text);
+      outline: none; appearance: none; transition: border-color 0.2s; box-sizing: border-box;
+    }
+    .f-input-new:focus, .f-select-new:focus { border-color: var(--accent); }
+    .f-select-new {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23556274' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer;
+    }
+    .f-select-new option { background: var(--surface); }
+    .f-input-new::placeholder { color: var(--muted); opacity: 0.5; }
+    .f-desc-new {
+      width: 100%; border-radius: 14px; border: 1px solid var(--border);
+      background: var(--surface); padding: 12px 14px;
+      font-family: "Public Sans", sans-serif; font-size: 15px; color: var(--text);
+      resize: none; outline: none; transition: border-color 0.2s; box-sizing: border-box;
+    }
+    .f-desc-new:focus { border-color: var(--accent); }
+    .f-desc-new::placeholder { color: var(--muted); opacity: 0.5; }
+
+    /* ── Chips de fecha ──────────────────────────────────── */
+    .date-chips { display: flex; gap: 8px; }
+    .date-chip {
+      flex: 1; height: 44px; border-radius: 12px;
+      border: 1.5px solid var(--border); background: var(--surface);
+      color: var(--muted); font-family: "Public Sans", sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .date-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Recientes (ingresos) ────────────────────────────── */
+    .recent-lbl { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+    .recent-chip {
+      height: 34px; padding: 0 14px; border-radius: 999px;
+      border: 1.5px solid var(--border); background: var(--surface);
+      color: var(--text); font-family: "Public Sans", sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .recent-chip.active { background: var(--income); border-color: var(--income); color: #fff; }
+
+    /* ── Botón guardar ───────────────────────────────────── */
+    .btn-save-new {
+      width: 100%; height: 54px; border-radius: 16px; border: none;
+      background: var(--accent); color: #fff;
+      font-family: "Public Sans", sans-serif; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-save-new:hover { background: var(--accent-strong); }
+    .btn-save-new.income-type { background: var(--income); }
+    .btn-save-new.income-type:hover { filter: brightness(0.92); }
+    .btn-save-new:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Checkbox "Registrar otro" ───────────────────────── */
+    .register-another-lbl {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; color: var(--muted); cursor: pointer;
+      font-family: "Public Sans", sans-serif; font-weight: 500;
+    }
+    .register-another-lbl input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+
+    /* ── Bottom sheet categorías ─────────────────────────── */
+    .cat-sheet-overlay {
+      position: fixed; inset: 0; background: rgba(14,23,38,0.5);
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.22s;
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .cat-sheet-overlay.open { opacity: 1; pointer-events: all; }
+    .cat-sheet {
+      background: var(--surface); border-radius: 24px 24px 0 0;
+      height: 640px; max-height: 85vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      transform: translateY(100%); transition: transform 0.3s ease;
+    }
+    .cat-sheet-overlay.open .cat-sheet { transform: translateY(0); }
+    .cat-sheet-hdr { padding: 10px 20px 0; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+    .cat-sheet-handle {
+      width: 40px; height: 5px; border-radius: 999px; background: var(--border); align-self: center;
+    }
+    .cat-sheet-titlerow { display: flex; justify-content: space-between; align-items: center; }
+    .cat-sheet-title { font-family: "Sora", sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin: 0; }
+    .cat-sheet-close {
+      width: 36px; height: 36px; border-radius: 999px; background: var(--surface2);
+      border: none; cursor: pointer; color: var(--muted);
       display: flex; align-items: center; justify-content: center; transition: background 0.15s;
     }
-    .modal-close-btn:hover { background: var(--border); }
-    .valor-block {
-      background: var(--surface2); border-radius: 14px;
-      padding: 14px 16px; margin-bottom: 16px;
-      display: flex; align-items: center; gap: 8px;
+    .cat-sheet-close:hover { background: var(--border); }
+    .cat-search-wrap {
+      height: 46px; border-radius: 14px; background: var(--bg);
+      display: flex; align-items: center; gap: 10px; padding: 0 14px;
+      color: var(--muted); cursor: text; margin-bottom: 4px;
     }
-    .valor-sym {
-      font-family: "Sora", sans-serif; font-size: 22px; font-weight: 700; color: var(--accent);
+    .cat-search-wrap input {
+      border: none; outline: none; background: transparent;
+      font-family: "Public Sans", sans-serif; font-size: 15px;
+      color: var(--text); flex-grow: 1; min-width: 0;
     }
-    .valor-input {
-      font-family: "Sora", sans-serif; font-size: 32px; font-weight: 700;
-      color: var(--text); border: none; background: none; outline: none;
-      flex: 1; min-width: 0; width: 100%;
+    .cat-sheet-body { flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
+    .cat-sheet-item {
+      width: 100%; min-height: 52px; border: none; border-bottom: 1px solid var(--border-soft);
+      background: transparent; padding: 8px 0; display: flex; align-items: center; gap: 12px;
+      font-family: "Public Sans", sans-serif; font-size: 15px; color: var(--text);
+      cursor: pointer; text-align: left;
     }
-    .valor-input::placeholder { color: var(--muted); opacity: 0.4; }
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .field-block { margin-bottom: 14px; }
-    .field-lbl {
-      font-size: 11px; font-weight: 700; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px; display: block;
+    .cat-sheet-item:last-of-type { border-bottom: none; }
+    .cat-sheet-ini {
+      width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+      background: var(--surface2); color: var(--accent);
+      font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
     }
-    .f-input, .f-select {
-      width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px;
-      font-size: 14px; font-family: "Public Sans", sans-serif; color: var(--text);
-      background: var(--surface); outline: none; appearance: none;
-      transition: border-color 0.15s; box-sizing: border-box;
+    .cat-sheet-name { flex-grow: 1; font-weight: 500; }
+    .cat-sheet-type { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .cat-sheet-create {
+      margin-top: 12px; width: 100%; height: 48px; border-radius: 14px;
+      border: 1.5px dashed var(--border2); background: transparent;
+      color: var(--accent); font-family: "Public Sans", sans-serif;
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: border-color 0.15s;
     }
-    .f-input:focus, .f-select:focus { border-color: var(--accent); }
-    .f-desc {
-      width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px;
-      font-size: 14px; font-family: "Public Sans", sans-serif; color: var(--text);
-      background: var(--surface); outline: none; resize: none; height: 70px;
-      box-sizing: border-box; transition: border-color 0.15s;
+    .cat-sheet-create:hover { border-color: var(--accent); }
+
+    /* ── Desktop: modal centrado ─────────────────────────── */
+    @media (min-width: 900px) {
+      .drawer-overlay {
+        background: rgba(14,23,38,0.5);
+        flex-direction: row; align-items: center; justify-content: center; padding: 16px;
+      }
+      .drawer {
+        background: var(--surface); border-radius: 20px;
+        max-width: 520px; width: 100%; max-height: 90vh;
+        flex: none; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden;
+      }
+      .drawer-scroll { max-height: calc(90vh - 160px); }
+      .drawer-footer { background: var(--surface); border-radius: 0 0 20px 20px; }
+      #register-another-section { display: flex !important; }
     }
-    .f-desc::placeholder { color: var(--muted); opacity: 0.5; }
-    .f-desc:focus { border-color: var(--accent); }
-    .modal-save-btn {
-      width: 100%; padding: 14px; background: var(--accent); color: #fff;
-      border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
-      cursor: pointer; font-family: "Public Sans", sans-serif;
-      margin-top: 4px; transition: background 0.2s;
-    }
-    .modal-save-btn:hover { background: var(--accent-strong); }
-    .modal-save-btn.income { background: var(--income); }
-    .modal-save-btn.income:hover { opacity: 0.9; }
-    .modal-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* ── Espaciado fondo ─────────────────────────────────── */
     .mov-body { padding-bottom: 20px; }
@@ -442,59 +600,134 @@
   <button class="fab" id="fab" aria-label="Nuevo movimiento">+</button>
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Modal -->
+  <!-- Modal: pantalla completa en móvil, centrado en escritorio -->
   <div class="drawer-overlay" id="drawer-overlay">
     <div class="drawer" id="drawer">
-      <div class="modal-hdr">
-        <div class="drawer-title" id="drawer-title">Nuevo gasto</div>
-        <button class="modal-close-btn" id="btn-modal-close" aria-label="Cerrar">×</button>
+
+      <!-- Barra superior -->
+      <div class="drawer-topbar">
+        <button id="btn-modal-close" class="drawer-close-btn" aria-label="Cerrar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <h2 class="drawer-title" id="drawer-title">Nuevo movimiento</h2>
+        <div class="drawer-title-spacer"></div>
       </div>
 
-      <div class="field-lbl">Valor</div>
-      <div class="valor-block">
-        <span class="valor-sym">$</span>
-        <input type="text" class="valor-input" id="field-amount" placeholder="0" inputmode="numeric"/>
-      </div>
+      <!-- Contenido con scroll -->
+      <div class="drawer-scroll">
 
-      <div class="field-row">
-        <div>
-          <span class="field-lbl">Fecha</span>
-          <input type="date" class="f-input" id="field-date"/>
+        <!-- Selector Gasto / Ingreso -->
+        <div class="type-toggle" role="tablist">
+          <button class="type-btn active gasto" id="type-gasto-btn" role="tab" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+            Gasto
+          </button>
+          <button class="type-btn" id="type-ingreso-btn" role="tab" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+            Ingreso
+          </button>
         </div>
-        <div id="expense-category-group">
-          <span class="field-lbl">Categoría</span>
-          <select class="f-select" id="field-category">
-            <option value="">Seleccionar...</option>
+
+        <!-- Valor -->
+        <label class="valor-card" for="field-amount">
+          <span class="valor-card-lbl">Valor</span>
+          <span class="valor-card-row">
+            <span class="valor-sym-new" id="valor-sym-display">$</span>
+            <input type="text" class="valor-input-new" id="field-amount" placeholder="0" inputmode="numeric" autocomplete="off"/>
+          </span>
+        </label>
+
+        <!-- Categoría (gastos) -->
+        <div id="expense-category-group" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="field-section-hdr">
+            <span class="field-section-title">Categoría</span>
+            <span class="field-section-sub">Tus más usadas</span>
+          </div>
+          <div class="cat-grid" id="cat-grid"></div>
+          <!-- Select oculto: retrocompatibilidad con saveItem() -->
+          <select id="field-category" hidden aria-hidden="true">
+            <option value="">Selecciona una categoría</option>
           </select>
         </div>
-      </div>
 
-      <div id="income-source-group" style="display:none;" class="field-block">
-        <span class="field-lbl">Fuente de ingreso</span>
-        <input type="text" class="f-input" id="field-source" placeholder="Ej: Guillo, Sociedad..." maxlength="60" list="sources-datalist"/>
-        <datalist id="sources-datalist"></datalist>
-      </div>
+        <!-- Fuente de ingreso (ingresos) -->
+        <div id="income-source-group" style="display:none;flex-direction:column;gap:8px;">
+          <label class="field-section-title" for="field-source">Fuente de ingreso</label>
+          <input type="text" class="f-input-new" id="field-source" placeholder="Ej: Guillo, Sociedad..." maxlength="60" list="sources-datalist" autocomplete="off"/>
+          <datalist id="sources-datalist"></datalist>
+          <div id="recent-sources" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="recent-lbl">Recientes:</span>
+            <div id="recent-sources-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+          </div>
+        </div>
 
-      <div class="field-block">
-        <span class="field-lbl" id="wallet-label">¿De cuál cajita salió?</span>
-        <select class="f-select" id="field-wallet">
-          <option value="">Sin cajita asignada</option>
-        </select>
-      </div>
+        <!-- Fecha -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <span class="field-section-title">Fecha</span>
+          <div class="date-chips" id="date-chips-container">
+            <button class="date-chip active" data-date="hoy" type="button">Hoy</button>
+            <button class="date-chip" data-date="ayer" type="button">Ayer</button>
+            <button class="date-chip" data-date="otra" type="button">Otra fecha</button>
+          </div>
+          <input type="date" class="f-input-new" id="field-date" style="display:none;"/>
+        </div>
 
-      <div class="field-block" id="savings-wallet-group" style="display:none;">
-        <span class="field-lbl" id="savings-wallet-label">¿A cuál cajita va?</span>
-        <select class="f-select" id="field-savings-wallet">
-          <option value="">Sin cajita destino</option>
-        </select>
-      </div>
+        <!-- Cajita -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label class="field-section-title" id="wallet-label" for="field-wallet">¿De cuál cajita salió?</label>
+          <select class="f-select-new" id="field-wallet">
+            <option value="">Sin cajita asignada</option>
+          </select>
+        </div>
 
-      <div class="field-block">
-        <span class="field-lbl">Descripción (opcional)</span>
-        <textarea class="f-desc" id="field-description" placeholder="Ej. Almuerzo con el equipo..."></textarea>
-      </div>
+        <!-- Destino (ahorro/deuda) -->
+        <div id="savings-wallet-group" style="display:none;flex-direction:column;gap:8px;">
+          <label class="field-section-title" id="savings-wallet-label" for="field-savings-wallet">¿A cuál cajita va?</label>
+          <select class="f-select-new" id="field-savings-wallet">
+            <option value="">Sin cajita destino</option>
+          </select>
+        </div>
 
-      <button class="modal-save-btn" id="btn-save">Guardar movimiento</button>
+        <!-- Descripción -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label class="field-section-title" for="field-description">
+            Descripción <span style="font-weight:400;color:var(--muted);">(opcional)</span>
+          </label>
+          <textarea class="f-desc-new" id="field-description" rows="2" placeholder="Ej. Almuerzo con el equipo..."></textarea>
+        </div>
+
+        <!-- Registrar otro (solo escritorio, ≥900px) -->
+        <label class="register-another-lbl" id="register-another-section" style="display:none;">
+          <input type="checkbox" id="register-another"/>
+          Registrar otro después de guardar
+        </label>
+
+      </div><!-- /drawer-scroll -->
+
+      <!-- Botón guardar fijo -->
+      <div class="drawer-footer">
+        <button class="btn-save-new" id="btn-save">Guardar gasto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom sheet: elegir categoría -->
+  <div class="cat-sheet-overlay" id="cat-sheet-overlay">
+    <div class="cat-sheet">
+      <div class="cat-sheet-hdr">
+        <div class="cat-sheet-handle"></div>
+        <div class="cat-sheet-titlerow">
+          <h2 class="cat-sheet-title">Elegir categoría</h2>
+          <button class="cat-sheet-close" id="cat-sheet-close" aria-label="Cerrar" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <label class="cat-search-wrap" for="cat-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="search" id="cat-search" placeholder="Buscar categoría" aria-label="Buscar categoría" autocomplete="off"/>
+        </label>
+      </div>
+      <div class="cat-sheet-body" id="cat-sheet-body"></div>
     </div>
   </div>
 
@@ -520,6 +753,7 @@
     let filters={ category:"", wallet:"", dateFrom:"", dateTo:"" };
     let filterPanelOpen=false;
     let searchQuery="";
+    let formType="gasto", dateMode="hoy", topCats=[];
 
     const withTimeout = (promise, ms=15000, msg="La operación tardó demasiado. Verifica tu conexión.") =>
       Promise.race([promise, new Promise((_,reject)=>setTimeout(()=>reject(new Error(msg)),ms))]);
@@ -599,8 +833,6 @@
         btn.setAttribute("aria-selected", String(t===tab));
       });
       const isG=tab==="gastos", isI=tab==="ingresos";
-      const savBtn = document.getElementById("btn-save");
-      if (savBtn) savBtn.className = isI ? "modal-save-btn income" : "modal-save-btn";
       document.getElementById("panel-gastos").style.display   = isG  ? "block" : "none";
       document.getElementById("panel-ingresos").style.display = isI  ? "block" : "none";
       document.getElementById("panel-todos").style.display    = !isG&&!isI ? "block" : "none";
@@ -693,6 +925,145 @@
       const w = (str||"").trim().split(/\s+/);
       if (w.length>=2) return (w[0][0]+(w[1][0]||"")).toUpperCase();
       return (str||"").slice(0,2).toUpperCase()||"?";
+    }
+
+    // ── Funciones del formulario de registro ──────────────
+
+    function calcTopCategories() {
+      const src = allExpensesAll || allExpenses;
+      const counts = src.reduce((acc,e)=>{if(e.category)acc[e.category]=(acc[e.category]||0)+1;return acc;},{});
+      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([cat])=>cat);
+      const hiddenCats = budget?.hiddenCats||[];
+      const visible = categories.filter(c=>{
+        if (c.visibleFromMonth&&c.visibleFromMonth>selectedMonth) return false;
+        if (hiddenCats.includes(c.name)) return false;
+        return true;
+      }).map(c=>c.name);
+      const extras = visible.filter(n=>!sorted.includes(n));
+      return [...sorted.filter(n=>visible.includes(n)),...extras].slice(0,5);
+    }
+
+    function updateFormType(type) {
+      formType = type;
+      const isG = type==="gasto";
+      document.getElementById("type-gasto-btn").className   = `type-btn${isG?" active gasto":""}`;
+      document.getElementById("type-ingreso-btn").className = `type-btn${!isG?" active income-type":""}`;
+      document.getElementById("expense-category-group").style.display = isG?"flex":"none";
+      document.getElementById("income-source-group").style.display    = isG?"none":"flex";
+      document.getElementById("valor-sym-display").className = `valor-sym-new${isG?"":" income-type"}`;
+      const savBtn = document.getElementById("btn-save");
+      savBtn.className = `btn-save-new${isG?"":" income-type"}`;
+      document.getElementById("wallet-label").textContent = isG?"¿De cuál cajita salió?":"¿A cuál cajita entró?";
+      if (!isG) document.getElementById("savings-wallet-group").style.display="none";
+      if (!editingId) {
+        document.getElementById("drawer-title").textContent = "Nuevo movimiento";
+        savBtn.textContent = isG?"Guardar gasto":"Guardar ingreso";
+      }
+    }
+
+    function setDateMode(mode) {
+      dateMode = mode;
+      document.querySelectorAll("#date-chips-container .date-chip").forEach(c=>{
+        c.classList.toggle("active", c.dataset.date===mode);
+      });
+      const dateInput = document.getElementById("field-date");
+      if (mode==="otra") {
+        dateInput.style.display="block";
+        if (!dateInput.value) dateInput.value=today();
+      } else {
+        dateInput.style.display="none";
+        if (mode==="hoy") {
+          dateInput.value=today();
+        } else {
+          const d=new Date(); d.setDate(d.getDate()-1);
+          dateInput.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        }
+      }
+    }
+
+    function setCat(name) {
+      document.getElementById("field-category").value = name;
+      renderCatButtons();
+      const cat = categories.find(c=>c.name===name);
+      const isAhorro = cat?.type==="AHORRO O INVERSIÓN";
+      const isDeuda  = name.toLowerCase().includes("deuda")||name.toLowerCase().includes("tarjeta")||
+                       name.toLowerCase().includes("pago")||name.toLowerCase().includes("credito");
+      const show = isAhorro||isDeuda;
+      document.getElementById("savings-wallet-group").style.display = show?"flex":"none";
+      if (!show) document.getElementById("field-savings-wallet").value="";
+      else populateSavingsWalletSelect(cat?.type||"");
+    }
+
+    function renderCatButtons() {
+      const grid = document.getElementById("cat-grid"); if (!grid) return;
+      const selectedCat = document.getElementById("field-category").value;
+      let shown = topCats.slice(0,5);
+      if (selectedCat && !shown.includes(selectedCat)) shown=[selectedCat,...shown.slice(0,4)];
+      grid.innerHTML = shown.map(name=>{
+        const active = name===selectedCat;
+        return `<button class="cat-btn${active?" active":""}" data-cat="${name}" type="button">${name}</button>`;
+      }).join("")+
+      `<button class="cat-btn-all" id="btn-cat-all" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Todas
+      </button>`;
+      grid.querySelectorAll(".cat-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=>setCat(btn.dataset.cat));
+      });
+      document.getElementById("btn-cat-all").addEventListener("click", openCatSheet);
+    }
+
+    function renderRecentSources() {
+      const sources=[...new Set(allIncomes.filter(i=>!i.isProportional&&i.source).map(i=>i.source))].slice(0,3);
+      const wrapper=document.getElementById("recent-sources");
+      const chipsEl=document.getElementById("recent-sources-chips");
+      if (!sources.length){wrapper.style.display="none";return;}
+      wrapper.style.display="flex";
+      chipsEl.innerHTML=sources.map(s=>`<button class="recent-chip" data-src="${s}" type="button">${s}</button>`).join("");
+      chipsEl.querySelectorAll(".recent-chip").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          document.getElementById("field-source").value=btn.dataset.src;
+          chipsEl.querySelectorAll(".recent-chip").forEach(b=>b.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      });
+    }
+
+    function openCatSheet() {
+      document.getElementById("cat-search").value="";
+      renderCatList("");
+      document.getElementById("cat-sheet-overlay").classList.add("open");
+    }
+    function closeCatSheet() {
+      document.getElementById("cat-sheet-overlay").classList.remove("open");
+    }
+    function renderCatList(query) {
+      const el = document.getElementById("cat-sheet-body");
+      const selectedCat = document.getElementById("field-category").value;
+      const q = (query||"").toLowerCase().trim();
+      const hiddenCats = budget?.hiddenCats||[];
+      const visible = categories.filter(c=>{
+        if (c.visibleFromMonth&&c.visibleFromMonth>selectedMonth) return false;
+        if (hiddenCats.includes(c.name)) return false;
+        if (q&&!c.name.toLowerCase().includes(q)) return false;
+        return true;
+      });
+      const typeShort={"GASTO BÁSICO":"G. Básico","GASTO NO ESENCIAL":"G. No esencial","AHORRO O INVERSIÓN":"Ahorro"};
+      el.innerHTML=visible.map(c=>{
+        const isSel=c.name===selectedCat;
+        return `<button class="cat-sheet-item" data-cat="${c.name}" type="button">
+          <span class="cat-sheet-ini">${initials(c.name)}</span>
+          <span class="cat-sheet-name" style="font-weight:${isSel?700:500}">${c.name}</span>
+          <span class="cat-sheet-type">${typeShort[c.type]||c.type||""}</span>
+          ${isSel?`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>`:""}
+        </button>`;
+      }).join("")+
+      `<button class="cat-sheet-create" id="cat-create-btn" type="button">+ Crear categoría nueva</button>`;
+      el.querySelectorAll(".cat-sheet-item").forEach(btn=>{
+        btn.addEventListener("click", ()=>{ setCat(btn.dataset.cat); closeCatSheet(); });
+      });
+      document.getElementById("cat-create-btn")?.addEventListener("click", ()=>{
+        closeCatSheet(); window.location.href="./categories.html";
+      });
     }
 
     // ── Resumen ───────────────────────────────────────────
@@ -802,18 +1173,19 @@
       list.onclick=e=>{
         const btn=e.target.closest(".dev-reg-btn"); if (!btn) return;
         editingId=null;
+        updateFormType("gasto");
         document.getElementById("drawer-title").textContent="Registrar gasto";
         document.getElementById("btn-save").textContent="Guardar gasto";
-        document.getElementById("field-date").value=today();
-        document.getElementById("field-category").value=btn.dataset.cat;
-        document.getElementById("field-amount").value=btn.dataset.amount;
+        setDateMode("hoy");
+        const amtInp=document.getElementById("field-amount");
+        amtInp.dataset.raw=btn.dataset.amount;
+        amtInp.value=Number(btn.dataset.amount).toLocaleString("es-CO");
         document.getElementById("field-wallet").value="";
         document.getElementById("field-description").value=`${btn.dataset.cat} - proporcional ${selectedMonth}`;
-        document.getElementById("expense-category-group").style.display="block";
-        document.getElementById("income-source-group").style.display="none";
-        const cat=categories.find(c=>c.name===btn.dataset.cat);
-        document.getElementById("savings-wallet-group").style.display=cat?.type==="AHORRO O INVERSIÓN"?"block":"none";
         document.getElementById("field-savings-wallet").value="";
+        topCats=calcTopCategories();
+        setCat(btn.dataset.cat);
+        renderRecentSources();
         openDrawer();
       };
     }
@@ -956,91 +1328,102 @@
     });
     document.getElementById("btn-modal-close").addEventListener("click", closeDrawer);
     document.getElementById("btn-save").addEventListener("click", saveItem);
-    document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeDrawer(); });
+    document.addEventListener("keydown", e=>{
+      if (e.key==="Escape") {
+        if (document.getElementById("cat-sheet-overlay").classList.contains("open")) closeCatSheet();
+        else closeDrawer();
+      }
+    });
+
+    // Selector de tipo
+    document.getElementById("type-gasto-btn").addEventListener("click",   ()=>updateFormType("gasto"));
+    document.getElementById("type-ingreso-btn").addEventListener("click",  ()=>updateFormType("ingreso"));
+
+    // Chips de fecha
+    document.getElementById("date-chips-container").addEventListener("click", e=>{
+      const chip=e.target.closest(".date-chip"); if(!chip) return;
+      setDateMode(chip.dataset.date);
+    });
+
+    // Bottom sheet de categorías
+    document.getElementById("cat-sheet-close").addEventListener("click", closeCatSheet);
+    document.getElementById("cat-sheet-overlay").addEventListener("click", e=>{
+      if (e.target===document.getElementById("cat-sheet-overlay")) closeCatSheet();
+    });
+    document.getElementById("cat-search").addEventListener("input", e=>{
+      renderCatList(e.target.value.trim());
+    });
 
     function openNewDrawer() {
       editingId=null;
-      const isG=activeTab==="gastos"||activeTab==="todos";
-      document.getElementById("drawer-title").textContent=isG?"Nuevo gasto":"Nuevo ingreso";
-      document.getElementById("btn-save").textContent=isG?"Guardar gasto":"Registrar ingreso";
-      document.getElementById("btn-save").className=isG?"modal-save-btn":"modal-save-btn income";
-      document.getElementById("field-date").value=today();
-      document.getElementById("field-category").value="";
-      document.getElementById("field-source").value="";
+      const isG=activeTab!=="ingresos";
+      updateFormType(isG?"gasto":"ingreso");
       const amtInp=document.getElementById("field-amount");
       amtInp.dataset.raw=""; amtInp.value="";
+      setCat("");
+      setDateMode("hoy");
+      document.getElementById("field-source").value="";
       document.getElementById("field-wallet").value="";
       document.getElementById("field-savings-wallet").value="";
       document.getElementById("field-description").value="";
-      document.getElementById("expense-category-group").style.display=isG?"block":"none";
-      document.getElementById("income-source-group").style.display=isG?"none":"block";
       document.getElementById("savings-wallet-group").style.display="none";
-      document.getElementById("wallet-label").textContent=isG?"¿De cuál cajita salió?":"¿A cuál cajita entró?";
       populateSourcesSuggestions();
+      renderRecentSources();
+      topCats=calcTopCategories();
+      renderCatButtons();
       openDrawer();
     }
 
     function openEditExpenseDrawer(id) {
       const e=allExpenses.find(x=>x.id===id); if (!e) return;
       editingId=id;
-      const cat=categories.find(c=>c.name===e.category);
-      const isSav=cat?.type==="AHORRO O INVERSIÓN"||!!e.toWalletId;
+      updateFormType("gasto");
       document.getElementById("drawer-title").textContent="Editar gasto";
       document.getElementById("btn-save").textContent="Actualizar gasto";
-      document.getElementById("btn-save").className="modal-save-btn";
-      document.getElementById("field-date").value=e.date;
-      document.getElementById("field-category").value=e.category;
       const amtInp=document.getElementById("field-amount");
       const rawAmt=String(e.amount||"").replace(/[^0-9]/g,"");
       amtInp.dataset.raw=rawAmt;
       amtInp.value=rawAmt?Number(rawAmt).toLocaleString("es-CO"):"";
+      setDateMode("otra");
+      document.getElementById("field-date").value=e.date;
       document.getElementById("field-wallet").value=e.walletId||"";
-      document.getElementById("field-savings-wallet").value=e.toWalletId||"";
       document.getElementById("field-description").value=e.description||"";
-      document.getElementById("expense-category-group").style.display="block";
-      document.getElementById("income-source-group").style.display="none";
-      document.getElementById("savings-wallet-group").style.display=isSav?"block":"none";
-      document.getElementById("wallet-label").textContent="¿De cuál cajita salió?";
+      const cat=categories.find(c=>c.name===e.category);
+      const isSav=cat?.type==="AHORRO O INVERSIÓN"||!!e.toWalletId;
+      document.getElementById("savings-wallet-group").style.display=isSav?"flex":"none";
       if (isSav) populateSavingsWalletSelect(cat?.type||"");
+      document.getElementById("field-savings-wallet").value=e.toWalletId||"";
+      topCats=calcTopCategories();
+      setCat(e.category);
       openDrawer();
     }
 
     function openEditIncomeDrawer(id) {
       const i=allIncomes.find(x=>x.id===id); if (!i) return;
       editingId=id;
+      updateFormType("ingreso");
       document.getElementById("drawer-title").textContent="Editar ingreso";
       document.getElementById("btn-save").textContent="Actualizar ingreso";
-      document.getElementById("btn-save").className="modal-save-btn income";
-      document.getElementById("field-date").value=i.date;
-      document.getElementById("field-source").value=i.source||"";
       const amtInp=document.getElementById("field-amount");
       const rawAmt=String(i.amount||"").replace(/[^0-9]/g,"");
       amtInp.dataset.raw=rawAmt;
       amtInp.value=rawAmt?Number(rawAmt).toLocaleString("es-CO"):"";
+      setDateMode("otra");
+      document.getElementById("field-date").value=i.date;
+      document.getElementById("field-source").value=i.source||"";
       document.getElementById("field-wallet").value=i.walletId||"";
       document.getElementById("field-description").value=i.description||"";
-      document.getElementById("expense-category-group").style.display="none";
-      document.getElementById("income-source-group").style.display="block";
       document.getElementById("savings-wallet-group").style.display="none";
-      document.getElementById("wallet-label").textContent="¿A cuál cajita entró?";
       populateSourcesSuggestions();
+      renderRecentSources();
       openDrawer();
     }
 
-    document.getElementById("field-category").addEventListener("change", e=>{
-      const catName=e.target.value;
-      const cat=categories.find(c=>c.name===catName);
-      const isAhorro=cat?.type==="AHORRO O INVERSIÓN";
-      const isDeuda=catName.toLowerCase().includes("deuda")||catName.toLowerCase().includes("tarjeta")||catName.toLowerCase().includes("pago")||catName.toLowerCase().includes("credito");
-      const show=isAhorro||isDeuda;
-      document.getElementById("savings-wallet-group").style.display=show?"block":"none";
-      if (!show) document.getElementById("field-savings-wallet").value="";
-      else populateSavingsWalletSelect(cat?.type||"");
-    });
-
     function openDrawer(){
       document.getElementById("drawer-overlay").classList.add("open");
-      applyNumericFormat(document.getElementById("field-amount"));
+      const amtInp=document.getElementById("field-amount");
+      applyNumericFormat(amtInp);
+      setTimeout(()=>amtInp.focus(), 150);
     }
     function closeDrawer(){
       document.getElementById("drawer-overlay").classList.remove("open");
@@ -1076,7 +1459,8 @@
           else{await withTimeout(addIncome(uid,incData));showToast("Ingreso registrado.","success");}
         }
         wallets=await getWallets(uid); populateWalletSelect(); populateSavingsWalletSelect("");
-        closeDrawer(); await loadAll();
+        const again=document.getElementById("register-another")?.checked;
+        if (again) { await loadAll(); openNewDrawer(); } else { closeDrawer(); await loadAll(); }
       } catch(err){showToast("Error al guardar.","error");console.error(err);}
       finally{btn.disabled=false;btn.textContent=isG?(editingId?"Actualizar gasto":"Guardar gasto"):(editingId?"Actualizar ingreso":"Registrar ingreso");}
     }
