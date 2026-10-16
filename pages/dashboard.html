@@ -3,249 +3,290 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Presupuesto · Inicio</title><!-- v4 -->
+  <title>Mi Presupuesto · Inicio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    body { background: #f0f4f8; padding-bottom: 0; }
-    body.dark { background: #111; }
-
-    /* ── Topbar fuera del hero ───────────────────────────── */
-    .dash-topbar {
-      background: #f0f4f8; padding: 12px 16px 0;
+    /* ── Layout ─────────────────────────────────────────── */
+    .dash-page {
       max-width: 680px; margin: 0 auto;
-    }
-    body.dark .dash-topbar { background: #111; }
-    .dash-topbar .topbar { padding: 0; }
-
-    /* ── Hero card azul ──────────────────────────────────── */
-    .hero-card {
-      background: #0f3460; border-radius: 20px;
-      padding: 16px 18px 20px; margin: 12px 14px 0;
-      max-width: calc(680px - 28px);
-    }
-    body.dark .hero-card { background: #0a1f3d; }
-
-    .hero-month-pill {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.12); border-radius: 99px;
-      padding: 5px 12px; margin-bottom: 12px;
-    }
-    .hero-month-pill .ms-arrow { color: #7aa3cc !important; }
-    .hero-month-pill .ms-label { color: #fff !important; font-size: 12px !important; min-width: 100px !important; }
-
-    .hero-label {
-      font-size: 9px; font-weight: 500; color: #7aa3cc;
-      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px;
-    }
-    .hero-amount {
-      font-size: 36px; font-weight: 500; color: #fff;
-      letter-spacing: -1.5px; margin-bottom: 4px; line-height: 1.1;
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: rgba(255,255,255,0.12); border-radius: 99px;
-      padding: 3px 10px; font-size: 11px; color: #7ab8e8; margin-bottom: 12px;
-    }
-    .hero-prog-labels {
-      display: flex; justify-content: space-between;
-      font-size: 10px; color: #7aa3cc; margin-bottom: 4px;
-    }
-    .hero-prog-track {
-      height: 4px; background: rgba(255,255,255,0.15);
-      border-radius: 99px; overflow: hidden; margin-bottom: 14px;
-    }
-    .hero-prog-fill { height: 100%; background: #fff; border-radius: 99px; }
-    .hero-prog-fill.warn { background: #e0a050; }
-    .hero-prog-fill.over { background: #e07070; }
-    .hero-btns { display: flex; gap: 8px; align-items: center; }
-    .hero-btn-main {
-      background: #fff; color: #0f3460; border: none;
-      border-radius: 99px; padding: 8px 16px;
-      font-size: 12px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif;
-      text-decoration: none; display: inline-block;
-    }
-    .hero-btn-sm {
-      background: rgba(255,255,255,0.15); color: #fff; border: none;
-      border-radius: 50%; width: 34px; height: 34px; font-size: 14px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      text-decoration: none;
+      padding: 20px 20px 0;
+      display: flex; flex-direction: column; gap: 14px;
     }
 
-    /* ── Body ────────────────────────────────────────────── */
-    .dash-body {
-      padding: 12px 14px 90px;
-      display: flex; flex-direction: column; gap: 12px;
-      max-width: 680px; margin: 0 auto;
+    /* ── Toprow (mes + asistente) ────────────────────────── */
+    .dash-toprow {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .dash-asst-btn {
+      width: 44px; height: 44px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--accent); display: flex; align-items: center; justify-content: center;
+      text-decoration: none; flex-shrink: 0;
+      transition: border-color 0.2s;
+    }
+    .dash-asst-btn:hover { border-color: var(--accent); }
+
+    /* ── Tarjeta anillo ──────────────────────────────────── */
+    .dash-ring-card {
+      display: flex; align-items: center; gap: 18px;
+      border-radius: 24px;
+    }
+    .ring-text {
+      display: flex; flex-direction: column; gap: 4px;
+      flex: 1; min-width: 0;
+    }
+    .ring-lbl  { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .ring-amt  {
+      font-family: "Sora", sans-serif; font-size: 28px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text); line-height: 1.1;
+    }
+    .ring-sub  { font-size: 13px; color: var(--muted); }
+    .health-badge {
+      display: inline-block; margin-top: 6px;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 10px; border-radius: 999px;
+    }
+    .health-badge.ok   { background: var(--income-soft); color: var(--income); }
+    .health-badge.warn { background: rgba(199,106,18,0.12); color: var(--warning-text); }
+
+    /* ── Mini tarjetas (ingresos + gastos) ───────────────── */
+    .dash-mini-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .dash-mini-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 14px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .dash-mini-ico {
+      width: 32px; height: 32px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .dash-mini-lbl { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .dash-mini-val {
+      font-family: "Sora", sans-serif; font-size: 19px; font-weight: 700;
+      color: var(--text);
     }
 
-    /* ── Stats row ───────────────────────────────────────── */
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-card { background: #fff; border-radius: 14px; padding: 12px 14px; }
-    body.dark .stat-card { background: #1a1a1a; }
-    .stat-lbl { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-    .stat-val { font-size: 17px; font-weight: 500; }
-    .stat-val.blue { color: #185fa5; }
-    .stat-val.green { color: #3b6d11; }
-    .mini-bar { height: 3px; border-radius: 99px; overflow: hidden; margin-top: 6px; }
-    .mini-fill { height: 100%; border-radius: 99px; }
-    .stat-sub { font-size: 10px; color: #888; margin-top: 3px; }
-
-    /* ── Dash cards ──────────────────────────────────────── */
-    .dash-card { background: #fff; border-radius: 16px; padding: 14px; }
-    body.dark .dash-card { background: #1a1a1a; }
-    .card-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .card-title { font-size: 13px; font-weight: 500; color: var(--text); }
-    .card-sub { font-size: 10px; color: #888; margin-top: 1px; }
-    .card-link { font-size: 11px; color: #185fa5; text-decoration: none; cursor: pointer; }
-
-    /* ── Barras semanales ────────────────────────────────── */
-    .bars-wrap { display: flex; gap: 6px; align-items: flex-end; height: 120px; }
-    .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
-    .bar-pair { display: flex; gap: 2px; align-items: flex-end; width: 100%; flex: 1; position: relative; }
-    .bar { border-radius: 3px 3px 0 0; flex: 1; min-height: 3px; position: relative; }
-    .bar-b { background: #b5d4f4; }
-    .bar-r { background: #0f3460; }
-    .bar-over { background: #c0392b; border-radius: 3px 3px 0 0; flex: 1; min-height: 3px; }
-    body.dark .bar-b { background: #1a3a6a; }
-    body.dark .bar-r { background: #5a8abc; }
-    .bar-val-top {
-      position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
-      font-size: 9px; color: #888; white-space: nowrap;
+    /* ── Encabezado de sección ───────────────────────────── */
+    .dash-sect-hdr {
+      display: flex; justify-content: space-between; align-items: baseline;
     }
-    .bar-lbl { font-size: 9px; color: #888; margin-top: 4px; }
-    .chart-legend { display: flex; gap: 10px; margin-top: 8px; }
-    .leg-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 3px; }
-    .leg-item { font-size: 10px; color: #666; display: flex; align-items: center; }
+    .dash-sect-title {
+      font-family: "Sora", sans-serif; font-size: 18px; font-weight: 600;
+      color: var(--text); letter-spacing: -0.02em;
+    }
+    .dash-link {
+      font-size: 14px; font-weight: 600;
+      color: var(--accent); text-decoration: none;
+    }
+    .dash-link:hover { color: var(--accent-strong); }
 
-    /* ── Two col ─────────────────────────────────────────── */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .donut-wrap { position: relative; width: 68px; height: 68px; margin: 0 auto 10px; }
-    .donut-ctr { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .donut-pct { font-size: 14px; font-weight: 500; color: var(--text); }
-    .donut-sub2 { font-size: 9px; color: #888; }
-    .d-stat { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 3px; }
-    .d-lbl { color: #888; }
-    .d-val { font-weight: 500; color: var(--text); }
-    .d-val.g { color: #3b6d11; }
-    .wall-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
-    .wall-name { font-size: 11px; color: var(--text); }
-    .wall-sub { font-size: 9px; color: #888; }
-    .wall-val { font-size: 12px; font-weight: 500; }
-    .wall-val.b { color: #185fa5; }
-    .wall-val.r { color: #a32d2d; }
+    /* ── Cuadrícula de categorías ────────────────────────── */
+    .cats-grid-2 {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-top: 10px;
+    }
+    .cat-card-new {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 14px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .cat-card-hdr {
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .cat-card-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .cat-card-pct  { font-size: 14px; font-weight: 700; color: var(--muted); }
+    .cat-card-pct.over { color: var(--warning-text); }
+    .cat-card-sub  { font-size: 13px; color: var(--muted); }
+    .cat-bar-track {
+      height: 6px; background: var(--surface2);
+      border-radius: 999px; overflow: hidden; margin-top: 2px;
+    }
+    .cat-bar-fill {
+      height: 100%; border-radius: 999px; background: var(--accent);
+      transition: width 0.6s ease;
+    }
+    .cat-bar-fill.over { background: var(--warning); }
 
-    /* ── Cat progress nueva versión ─────────────────────── */
-    .cat-prog-row-v2 { padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
-    body.dark .cat-prog-row-v2 { border-bottom-color: #2a2a2a; }
-    .cat-prog-row-v2:last-child { border-bottom: none; }
-    .cat-prog-hdr-v2 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
-    .cat-prog-left { display: flex; align-items: center; gap: 8px; }
-    .cat-prog-ico { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .cat-prog-name { font-size: 13px; font-weight: 500; color: var(--text); }
-    .cat-prog-spent-sub { font-size: 10px; color: #888; margin-top: 1px; }
-    .cat-prog-right { text-align: right; flex-shrink: 0; }
-    .cat-prog-vals { font-size: 12px; font-weight: 500; color: var(--text); }
-    .cat-prog-pct { font-size: 10px; color: #888; margin-top: 2px; }
-    .cat-prog-bar-v2 { height: 5px; background: #f0f0f0; border-radius: 99px; overflow: hidden; margin-top: 6px; }
-    body.dark .cat-prog-bar-v2 { background: #2a2a2a; }
-    .cat-prog-fill-v2 { height: 100%; border-radius: 99px; }
+    /* ── Solo escritorio (ocultos en móvil) ──────────────── */
+    .dash-desktop-hdr,
+    .dash-kpis,
+    .dash-recent-sect { display: none; }
 
-    /* ── Categorías top ──────────────────────────────────── */
-    .cats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .cat-top-card { border-radius: 12px; padding: 10px; border: 0.5px solid #e8e8e8; }
-    body.dark .cat-top-card { border-color: #2a2a2a; }
-    .cat-ico { width: 28px; height: 28px; border-radius: 7px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; }
-    .cat-top-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 3px; }
-    .cat-top-val { font-size: 13px; font-weight: 500; color: var(--text); }
+    /* ── Escritorio ≥ 900px ──────────────────────────────── */
+    @media (min-width: 900px) {
+      .dash-page       { max-width: 100%; padding: 28px 32px; gap: 20px; }
+      .dash-toprow,
+      .dash-ring-card,
+      .dash-mini-row   { display: none !important; }
 
-    /* ── Progreso por categoría ──────────────────────────── */
-    .cat-prog-row { padding: 9px 0; border-bottom: 0.5px solid #f0f0f0; }
-    body.dark .cat-prog-row { border-bottom-color: #2a2a2a; }
-    .cat-prog-row:last-child { border-bottom: none; }
-    .cat-prog-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-    .cat-prog-name { font-size: 12px; color: var(--text); }
-    .cat-prog-amounts { font-size: 10px; color: #888; }
-    .cat-prog-amounts b { color: var(--text); font-weight: 500; }
-    .prog-bar { height: 4px; background: #f0f0f0; border-radius: 99px; overflow: hidden; }
-    body.dark .prog-bar { background: #2a2a2a; }
-    .prog-fill { height: 100%; border-radius: 99px; background: #0f3460; }
-    .prog-fill.warn { background: #e0a050; }
-    .prog-fill.over { background: #e07070; }
+      .dash-desktop-hdr {
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 12px;
+      }
+      .dash-desktop-title {
+        font-family: "Sora", sans-serif; font-size: 28px; font-weight: 700;
+        letter-spacing: -0.02em; color: var(--text); margin: 0;
+      }
+      .dash-desktop-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .dash-search-wrap {
+        height: 44px; width: 260px; max-width: 100%;
+        border-radius: 12px; background: var(--surface); border: 1px solid var(--border);
+        display: flex; align-items: center; gap: 8px;
+        padding: 0 12px; color: var(--muted); cursor: text;
+      }
+      .dash-search-wrap input {
+        border: none; outline: none; background: transparent;
+        font-family: "Public Sans", sans-serif; font-size: 14px;
+        flex-grow: 1; min-width: 0; color: var(--text);
+      }
+      .dash-new-btn {
+        height: 44px; padding: 0 18px; border-radius: 12px; border: none;
+        background: var(--accent); color: #FFFFFF;
+        font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 700;
+        cursor: pointer; text-decoration: none; white-space: nowrap;
+        display: flex; align-items: center; transition: background 0.2s;
+      }
+      .dash-new-btn:hover { background: var(--accent-strong); }
+
+      .dash-kpis { display: flex; flex-wrap: wrap; gap: 14px; }
+      .dash-kpi-card {
+        flex: 1 1 180px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 18px; padding: 16px 18px;
+      }
+      .dash-kpi-lbl { font-size: 13px; color: var(--muted); font-weight: 600; }
+      .dash-kpi-val {
+        font-family: "Sora", sans-serif; font-size: 24px; font-weight: 700;
+        margin-top: 4px;
+      }
+      .dash-kpi-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+      .dash-main-row {
+        display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;
+      }
+      .dash-cats-sect {
+        flex: 1 1 300px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 20px; padding: 20px;
+      }
+      .dash-cats-sect .cats-grid-2 { grid-template-columns: 1fr; gap: 0; margin-top: 12px; }
+      .dash-cats-sect .cat-card-new {
+        border-radius: 0; border: none;
+        border-bottom: 1px solid var(--border-soft);
+        padding: 12px 0;
+      }
+      .dash-cats-sect .cat-card-new:last-child { border-bottom: none; }
+
+      .dash-recent-sect {
+        display: flex; flex-direction: column;
+        flex: 2 1 420px; min-width: 0;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 20px; padding: 20px; gap: 10px;
+      }
+      .recent-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      .recent-table thead tr {
+        text-align: left; color: var(--muted);
+        font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;
+      }
+      .recent-table th { padding: 8px 8px 8px 0; font-weight: 700; }
+      .recent-table th:last-child { text-align: right; padding: 8px 0; }
+      .recent-table td {
+        padding: 11px 8px 11px 0;
+        border-top: 1px solid var(--border-soft);
+      }
+      .recent-table td:last-child { text-align: right; font-weight: 700; padding: 11px 0; }
+      .recent-cat-chip {
+        background: var(--surface2); color: var(--accent);
+        font-size: 12px; font-weight: 600;
+        padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- Topbar -->
-  <div class="dash-topbar">
-    <div id="topbar" class="topbar"></div>
-  </div>
+  <div class="dash-page">
 
-  <!-- Hero card azul -->
-  <div style="max-width:680px;margin:0 auto;">
-    <div class="hero-card" id="hero-card">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-        <div id="month-selector-container"></div>
-      </div>
-      <div id="hero-inner">
-        <div class="hero-label">Cargando...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Body -->
-  <div class="dash-body">
-    <div class="stats-row" id="stats-row">
-      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
-      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
+    <!-- Móvil: selector de mes + botón asistente -->
+    <div class="dash-toprow">
+      <div id="month-selector-container"></div>
+      <a href="./asistente.html" class="dash-asst-btn" aria-label="Asistente">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+      </a>
     </div>
 
-
-
-    <div class="two-col">
-      <div class="dash-card" id="donut-card">
-        <div class="skeleton" style="height:160px;border-radius:8px;"></div>
-      </div>
-      <div class="dash-card" id="wallets-card">
-        <div class="skeleton" style="height:160px;border-radius:8px;"></div>
+    <!-- Móvil: tarjeta principal con anillo -->
+    <div class="card dash-ring-card" id="main-card">
+      <div class="skeleton" style="width:110px;height:110px;border-radius:50%;flex-shrink:0;"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+        <div class="skeleton" style="height:13px;width:55%;border-radius:6px;"></div>
+        <div class="skeleton" style="height:28px;width:85%;border-radius:6px;"></div>
+        <div class="skeleton" style="height:13px;width:70%;border-radius:6px;"></div>
       </div>
     </div>
 
-    <div class="dash-card">
-      <div class="card-hdr">
-        <div class="card-title">Categorías top</div>
-        <a href="./comparison.html" class="card-link">Ver todo →</a>
-      </div>
-      <div class="cats-grid" id="cats-grid">
-        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:76px;border-radius:12px;"></div>
+    <!-- Móvil: tarjetas ingresos + gastos -->
+    <div class="dash-mini-row" id="dash-mini-row">
+      <div class="skeleton" style="height:90px;border-radius:18px;"></div>
+      <div class="skeleton" style="height:90px;border-radius:18px;"></div>
+    </div>
+
+    <!-- Escritorio: título + acciones -->
+    <div class="dash-desktop-hdr">
+      <h1 class="dash-desktop-title" id="dash-title">Cargando...</h1>
+      <div class="dash-desktop-actions">
+        <label class="dash-search-wrap" for="dash-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="search" id="dash-search" placeholder="Buscar movimientos" aria-label="Buscar movimientos"/>
+        </label>
+        <a href="./expenses.html" class="dash-new-btn">+ Nuevo movimiento</a>
       </div>
     </div>
 
-    <div class="dash-card">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Gastos por categoría</div>
-          <div class="card-sub" style="font-size:11px;color:#888;">Distribución del presupuesto mensual</div>
+    <!-- Escritorio: 4 indicadores KPI -->
+    <div class="dash-kpis" id="dash-kpis">
+      <div class="dash-kpi-card skeleton" style="height:80px;"></div>
+      <div class="dash-kpi-card skeleton" style="height:80px;"></div>
+      <div class="dash-kpi-card skeleton" style="height:80px;"></div>
+      <div class="dash-kpi-card skeleton" style="height:80px;"></div>
+    </div>
+
+    <!-- Compartido: categorías (+ movimientos recientes en escritorio) -->
+    <div class="dash-main-row">
+      <section class="dash-cats-sect">
+        <div class="dash-sect-hdr">
+          <span class="dash-sect-title">Categorías</span>
+          <a href="./comparison.html" class="dash-link">Comparativo</a>
         </div>
-        <a href="./comparison.html" class="card-link">Comparativo →</a>
-      </div>
-      <div id="cat-progress">
-        <div class="skeleton" style="height:160px;border-radius:8px;"></div>
-      </div>
+        <div class="cats-grid-2" id="cats-grid">
+          <div class="skeleton" style="height:100px;border-radius:18px;"></div>
+          <div class="skeleton" style="height:100px;border-radius:18px;"></div>
+          <div class="skeleton" style="height:100px;border-radius:18px;"></div>
+          <div class="skeleton" style="height:100px;border-radius:18px;"></div>
+        </div>
+      </section>
+
+      <section class="dash-recent-sect" id="dash-recent-sect">
+        <div class="dash-sect-hdr">
+          <span class="dash-sect-title">Movimientos recientes</span>
+          <a href="./expenses.html" class="dash-link">Ver todos</a>
+        </div>
+        <div id="recent-list">
+          <div class="skeleton" style="height:200px;border-radius:8px;margin-top:10px;"></div>
+        </div>
+      </section>
     </div>
+
   </div>
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js";
-    import { getExpenses, getBudget, getWallets, getIncomes, getProportionalSummary, getProportionalExpensesSummary } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, renderMonthSelector } from "../assets/ui.js?v=4";
-    import { formatCOP, currentMonth, formatDate, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
+    import { getExpenses, getBudget, getWallets, getIncomes } from "../modules/db.js";
+    import { renderBottomNav, renderMonthSelector } from "../assets/ui.js";
+    import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -254,250 +295,209 @@
     uid = user.uid;
     selectedMonth = currentMonth();
 
-    renderTopbar(user);
     renderBottomNav("dashboard");
 
-    // Render month selector inside hero with white style
     renderMonthSelector("month-selector-container", selectedMonth, m => {
       selectedMonth = m;
       loadDashboard();
     });
 
+    function updateTitle() {
+      const el = document.getElementById("dash-title");
+      if (el) el.textContent = "Resumen de " + formatMonth(selectedMonth);
+    }
+    updateTitle();
+
     await loadDashboard();
 
     async function loadDashboard() {
-      const [expenses, budget, wallets, incomes, propSummary] = await Promise.all([
+      updateTitle();
+      const [expenses, budget, incomes, wallets] = await Promise.all([
         getExpenses(uid, { month: selectedMonth }),
         getBudget(uid, selectedMonth),
-        getWallets(uid),
         getIncomes(uid, { month: selectedMonth }),
-        getProportionalSummary(uid, selectedMonth)
+        getWallets(uid)
       ]);
-      const propExpSummary = await getProportionalExpensesSummary(uid, selectedMonth, expenses);
 
-      renderHero(expenses, budget);
-      renderStats(expenses, budget, incomes);
-      renderDonut(expenses, budget);
-      renderWalletsCard(wallets);
-      renderCatsTop(expenses);
-      renderCatProgress(expenses, budget);
+      const totalBudgeted = budget
+        ? Object.values(budget.categories || {}).reduce((s, v) => s + Number(v), 0)
+        : 0;
+      const totalSpent  = expenses.reduce((s, e) => s + Number(e.amount), 0);
+      const totalIncome = incomes.filter(i => !i.isProportional).reduce((s, i) => s + Number(i.amount), 0);
+      const saldo = totalBudgeted - totalSpent;
+      const pct   = totalBudgeted > 0 ? totalSpent / totalBudgeted : 0;
+
+      const walletMap = Object.fromEntries(wallets.map(w => [w.id, w.name || w.id]));
+
+      renderMainCard(saldo, pct, totalBudgeted);
+      renderMiniStats(totalIncome, totalSpent);
+      renderDesktopKPIs(saldo, totalIncome, totalSpent, totalBudgeted, pct, expenses.length);
+      renderCatsGrid(expenses, budget);
+      renderRecentMovements(expenses, walletMap);
     }
 
-    // ── Hero ──────────────────────────────────────────────
-    function renderHero(expenses, budget) {
-      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
-      const totalSpent    = expenses.reduce((s,e)=>s+Number(e.amount),0);
-      const saldo         = totalBudgeted - totalSpent;
-      const pctUsed       = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted,1) : 0;
-      const pctN          = Math.round(pctUsed*100);
-      const barCls        = pctUsed >= 1 ? "over" : pctUsed >= 0.8 ? "warn" : "";
+    // ── Tarjeta anillo (móvil) ────────────────────────────
+    function renderMainCard(saldo, pct, totalBudgeted) {
+      const isDark        = document.body.classList.contains("dark");
+      const circumference = 2 * Math.PI * 54;
+      const dash          = Math.min(pct, 1) * circumference;
+      const pctN          = Math.round(pct * 100);
 
-      document.getElementById("hero-inner").innerHTML = `
-        <div class="hero-label">Disponible del presupuesto</div>
-        <div class="hero-amount">${formatCOP(Math.abs(saldo))}</div>
-        <div class="hero-badge">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#7ab8e8" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
-          ${pctN}% del presupuesto ${saldo < 0 ? "excedido" : "usado"}
+      const trackColor    = isDark ? "#1B2640" : "#E6EBF5";
+      const textFill      = isDark ? "#E9EEF6" : "#0E1726";
+      const subFill       = isDark ? "#9AA7BC" : "#556274";
+      const progressColor = pct >= 0.8
+        ? (isDark ? "#F0A35A" : "#C76A12")
+        : (isDark ? "#6F8BFF" : "#2346D1");
+
+      const healthText  = pct >= 1 ? "Presupuesto excedido" : pct >= 0.8 ? "Revisa el ritmo" : "Ritmo saludable";
+      const healthClass = pct >= 0.8 ? "warn" : "ok";
+
+      document.getElementById("main-card").innerHTML = `
+        <svg width="110" height="110" viewBox="0 0 128 128"
+             role="img" aria-label="${pctN}% del presupuesto usado"
+             style="flex-shrink:0;">
+          <circle cx="64" cy="64" r="54" fill="none"
+            stroke="${trackColor}" stroke-width="14"/>
+          <circle cx="64" cy="64" r="54" fill="none"
+            stroke="${progressColor}" stroke-width="14"
+            stroke-linecap="round"
+            stroke-dasharray="${dash.toFixed(1)} ${circumference.toFixed(1)}"
+            transform="rotate(-90 64 64)"/>
+          <text x="64" y="61" text-anchor="middle"
+            font-family="Sora,sans-serif" font-size="26" font-weight="700"
+            fill="${textFill}">${pctN}%</text>
+          <text x="64" y="79" text-anchor="middle"
+            font-family="Public Sans,sans-serif" font-size="12" font-weight="600"
+            fill="${subFill}">usado</text>
+        </svg>
+        <div class="ring-text">
+          <span class="ring-lbl">Te queda disponible</span>
+          <span class="ring-amt">${formatCOP(Math.abs(saldo))}</span>
+          ${totalBudgeted > 0
+            ? `<span class="ring-sub">de ${formatCOP(totalBudgeted)} presupuestados</span>`
+            : ""}
+          <span class="health-badge ${healthClass}">${healthText}</span>
         </div>
-        ${totalBudgeted > 0 ? `
-          <div class="hero-prog-labels">
-            <span>Gastado: ${formatCOP(totalSpent)}</span>
-            <span>${pctN}%</span>
-          </div>
-          <div class="hero-prog-track">
-            <div class="hero-prog-fill ${barCls}" style="width:${pctUsed*100}%;"></div>
-          </div>` : ""}
-        <div class="hero-btns">
-          <a href="./expenses.html" class="hero-btn-main">+ Registrar movimiento</a>
-          <a href="./expenses.html" class="hero-btn-sm">↗</a>
-        </div>`;
+      `;
     }
 
-    // ── Stats ─────────────────────────────────────────────
-    function renderStats(expenses, budget, incomes) {
-      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
-      const totalSpent    = expenses.reduce((s,e)=>s+Number(e.amount),0);
-      const totalIncome   = incomes.filter(i=>!i.isProportional).reduce((s,i)=>s+Number(i.amount),0);
-      const pctSpent      = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted,1) : 0;
-      const pctIncome     = totalBudgeted > 0 ? Math.min(totalIncome/totalBudgeted,1) : 0;
-
-      document.getElementById("stats-row").innerHTML = `
-        <div class="stat-card">
-          <div class="stat-lbl">Presupuesto</div>
-          <div class="stat-val blue">${formatCOP(totalBudgeted)}</div>
-          <div class="mini-bar" style="background:#e6f1fb;">
-            <div class="mini-fill" style="width:${pctSpent*100}%;background:#185fa5;"></div>
+    // ── Tarjetas mini ingresos / gastos (móvil) ───────────
+    function renderMiniStats(totalIncome, totalSpent) {
+      document.getElementById("dash-mini-row").innerHTML = `
+        <div class="dash-mini-card">
+          <div class="dash-mini-ico" style="background:var(--income-soft);color:var(--income);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
           </div>
-          <div class="stat-sub">${Math.round(pctSpent*100)}% gastado</div>
+          <span class="dash-mini-lbl">Ingresos</span>
+          <span class="dash-mini-val">${formatCOP(totalIncome)}</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-lbl">Ingresos reales</div>
-          <div class="stat-val green">${formatCOP(totalIncome)}</div>
-          <div class="mini-bar" style="background:#eaf3de;">
-            <div class="mini-fill" style="width:${pctIncome*100}%;background:#3b6d11;"></div>
+        <div class="dash-mini-card">
+          <div class="dash-mini-ico" style="background:var(--surface2);color:var(--accent);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
           </div>
-          <div class="stat-sub">${Math.round(pctIncome*100)}% del esperado</div>
-        </div>`;
-    }
-
-    // ── Barras semanales con valores ──────────────────────
-    function renderWeeklyBars(expenses, budget) {
-      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
-      const weekBudget    = totalBudgeted / 4;
-
-      const weeks = [0,0,0,0];
-      expenses.forEach(e => {
-        const day = parseInt((e.date||"").split("-")[2]||"1");
-        const w   = Math.min(Math.floor((day-1)/7), 3);
-        weeks[w] += Number(e.amount);
-      });
-
-      const maxVal = Math.max(...weeks, weekBudget, 1);
-
-      const fmt = v => {
-        if (v >= 1000000) return "$" + (v/1000000).toFixed(1) + "M";
-        if (v >= 1000)    return "$" + Math.round(v/1000) + "k";
-        return "$" + Math.round(v);
-      };
-
-      // Usar 90% fijo para presupuesto y escalar real relativo a él
-      document.getElementById("weekly-bars").innerHTML = weeks.map((w,i) => {
-        const hBudget = 85;
-        const hReal   = weekBudget > 0
-          ? Math.max(Math.round((w / weekBudget) * hBudget), w > 0 ? 8 : 2)
-          : 2;
-        const overBudget = w > weekBudget;
-        return `
-          <div class="bar-col">
-            <div class="bar-pair">
-              <div class="bar bar-b" style="height:${hBudget}%;">
-                <span class="bar-val-top">${fmt(weekBudget)}</span>
-              </div>
-              <div class="bar ${overBudget ? "bar-over" : "bar-r"}" style="height:${hReal}%;">
-                ${w > 0 ? `<span class="bar-val-top" style="color:${overBudget?"#c0392b":"#0f3460"};">${fmt(w)}</span>` : ""}
-              </div>
-            </div>
-            <div class="bar-lbl">Sem ${i+1}</div>
-          </div>`;
-      }).join("");
-      document.getElementById("chart-legend").style.display = "flex";
-    }
-
-    // ── Donut ─────────────────────────────────────────────
-    function renderDonut(expenses, budget) {
-      const totalBudgeted = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
-      const totalSpent    = expenses.reduce((s,e)=>s+Number(e.amount),0);
-      const pct           = totalBudgeted > 0 ? Math.min(totalSpent/totalBudgeted,1) : 0;
-      const pctN          = Math.round(pct*100);
-      const saldo         = Math.max(totalBudgeted - totalSpent, 0);
-      const circumference = 2 * Math.PI * 26;
-      const dash          = pct * circumference;
-      const strokeColor   = pct >= 1 ? "#e07070" : pct >= 0.8 ? "#e0a050" : "#0f3460";
-
-      document.getElementById("donut-card").innerHTML = `
-        <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;">Salud presupuesto</div>
-        <div class="donut-wrap">
-          <svg width="68" height="68" viewBox="0 0 68 68">
-            <circle cx="34" cy="34" r="26" fill="none" stroke="#e8f0fa" stroke-width="8"/>
-            <circle cx="34" cy="34" r="26" fill="none" stroke="${strokeColor}" stroke-width="8"
-              stroke-dasharray="${dash} ${circumference}"
-              stroke-linecap="round" transform="rotate(-90 34 34)"/>
-          </svg>
-          <div class="donut-ctr">
-            <div class="donut-pct">${pctN}%</div>
-            <div class="donut-sub2">usado</div>
-          </div>
+          <span class="dash-mini-lbl">Gastos</span>
+          <span class="dash-mini-val">${formatCOP(totalSpent)}</span>
         </div>
-        <div class="d-stat"><span class="d-lbl">Límite</span><span class="d-val">${formatCOP(totalBudgeted)}</span></div>
-        <div class="d-stat"><span class="d-lbl">Resta</span><span class="d-val g">${formatCOP(saldo)}</span></div>`;
+      `;
     }
 
-    // ── Cajitas card ──────────────────────────────────────
-    function renderWalletsCard(wallets) {
-      const shown = wallets.slice(0,3);
-      document.getElementById("wallets-card").innerHTML = `
-        <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;">Cajitas</div>
-        ${shown.map(w => `
-          <div class="wall-row">
-            <div>
-              <div class="wall-name">${w.icon||"🏦"} ${w.name}</div>
-              <div class="wall-sub">${w.type||"ahorro"}</div>
-            </div>
-            <div class="wall-val ${w.type==="credito"?"r":"b"}">${formatCOP(Number(w.balance||0))}</div>
-          </div>`).join("")}
-        <a href="./wallets.html" style="font-size:10px;color:#185fa5;cursor:pointer;margin-top:6px;display:block;text-decoration:none;">Ver todas →</a>`;
+    // ── 4 indicadores KPI (escritorio) ───────────────────
+    function renderDesktopKPIs(saldo, totalIncome, totalSpent, totalBudgeted, pct, count) {
+      const pctN = Math.round(pct * 100);
+      const kpis = [
+        { label: "Disponible",  value: formatCOP(saldo),         sub: `${pctN}% del presupuesto`, color: "var(--accent)" },
+        { label: "Ingresos",    value: formatCOP(totalIncome),   sub: "este mes",                 color: "var(--income)" },
+        { label: "Gastos",      value: formatCOP(totalSpent),    sub: `${count} registros`,       color: "var(--text)"   },
+        { label: "Presupuesto", value: formatCOP(totalBudgeted), sub: `${pctN}% usado`,           color: "var(--text)"   }
+      ];
+      document.getElementById("dash-kpis").innerHTML = kpis.map(k => `
+        <div class="dash-kpi-card">
+          <div class="dash-kpi-lbl">${k.label}</div>
+          <div class="dash-kpi-val" style="color:${k.color};">${k.value}</div>
+          <div class="dash-kpi-sub">${k.sub}</div>
+        </div>
+      `).join("");
     }
 
-    // ── Categorías top ────────────────────────────────────
-    function renderCatsTop(expenses) {
-      const actual  = sumByCategory(expenses);
-      const colors  = ["#eaf3de","#fbeaf0","#e6f1fb","#faeeda"];
-      const strokes = ["#3b6d11","#993556","#185fa5","#854f0b"];
-      const sorted  = Object.entries(actual).sort((a,b)=>b[1]-a[1]).slice(0,4);
-
-      if (!sorted.length) {
-        document.getElementById("cats-grid").innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Sin gastos este mes.</div>`;
-        return;
-      }
-      document.getElementById("cats-grid").innerHTML = sorted.map(([name,amount],i) => `
-        <div class="cat-top-card">
-          <div class="cat-ico" style="background:${colors[i%colors.length]};">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${strokes[i%strokes.length]}" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          </div>
-          <div class="cat-top-lbl">${name}</div>
-          <div class="cat-top-val">${formatCOP(amount)}</div>
-        </div>`).join("");
-    }
-
-    // ── Progreso por categoría (nuevo diseño) ─────────────
-    function renderCatProgress(expenses, budget) {
-      const el = document.getElementById("cat-progress");
+    // ── Cuadrícula de categorías ──────────────────────────
+    function renderCatsGrid(expenses, budget) {
+      const el = document.getElementById("cats-grid");
       if (!budget?.categories) {
-        el.innerHTML = `<div class="empty-state"><p>Configura tu presupuesto para ver el progreso.</p>
-          <a href="./budget.html" style="font-size:12px;color:#185fa5;display:inline-block;margin-top:8px;">Configurar →</a></div>`;
+        el.innerHTML = `
+          <div style="grid-column:1/-1;" class="empty-state">
+            <p>Configura tu presupuesto para ver las categorías.</p>
+            <a href="./budget.html" style="font-size:13px;color:var(--accent);display:inline-block;margin-top:8px;">
+              Ir a presupuesto →
+            </a>
+          </div>`;
         return;
       }
       const actual     = sumByCategory(expenses);
       const comparison = buildComparison(budget.categories, actual)
         .filter(r => r.budgeted > 0)
-        .sort((a,b) => (b.pct||0) - (a.pct||0));
+        .sort((a, b) => (b.pct || 0) - (a.pct || 0));
 
       if (!comparison.length) {
-        el.innerHTML = `<div class="empty-state">Sin datos de categorías.</div>`;
+        el.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Sin categorías configuradas.</div>`;
         return;
       }
-
-      const icoBg = ["#e6f1fb","#fbeaf0","#eaf3de","#faeeda","#e1f5ee","#fbeaf0"];
-      const icoStroke = ["#185fa5","#993556","#3b6d11","#854f0b","#0f6e56","#993556"];
-
-      el.innerHTML = comparison.map((row, i) => {
-        const pct    = row.pct !== null ? Math.min(row.pct, 1) : 0;
+      el.innerHTML = comparison.map(row => {
         const pctN   = row.pct !== null ? Math.round(row.pct * 100) : 0;
         const isOver = pctN >= 100;
-        const isWarn = pctN >= 80 && !isOver;
-        const barColor = isOver ? "#c0392b" : isWarn ? "#e0a050" : "#0f3460";
+        const barW   = Math.min(pctN, 100);
         return `
-          <div class="cat-prog-row-v2">
-            <div class="cat-prog-hdr-v2">
-              <div class="cat-prog-left">
-                <div class="cat-prog-ico" style="background:${icoBg[i%icoBg.length]};">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${icoStroke[i%icoStroke.length]}" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
-                </div>
-                <div>
-                  <div class="cat-prog-name">${row.category}</div>
-                  <div class="cat-prog-spent-sub">${formatCOP(row.actual)} gastado</div>
-                </div>
-              </div>
-              <div class="cat-prog-right">
-                <div class="cat-prog-vals">${formatCOP(row.actual)} / ${formatCOP(row.budgeted)}</div>
-                <div class="cat-prog-pct" style="color:${isOver?"#c0392b":isWarn?"#e0a050":"#888"};">${pctN}% usado</div>
-              </div>
+          <div class="cat-card-new">
+            <div class="cat-card-hdr">
+              <span class="cat-card-name">${row.category}</span>
+              <span class="cat-card-pct ${isOver ? "over" : ""}">${pctN}%</span>
             </div>
-            <div class="cat-prog-bar-v2">
-              <div class="cat-prog-fill-v2" style="width:${pct*100}%;background:${barColor};"></div>
+            <span class="cat-card-sub">${formatCOP(row.actual)} de ${formatCOP(row.budgeted)}</span>
+            <div class="cat-bar-track">
+              <div class="cat-bar-fill ${isOver ? "over" : ""}" style="width:${barW}%;"></div>
             </div>
           </div>`;
       }).join("");
+    }
+
+    // ── Movimientos recientes (escritorio) ────────────────
+    function renderRecentMovements(expenses, walletMap) {
+      const el = document.getElementById("recent-list");
+      const recent = [...expenses]
+        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+        .slice(0, 6);
+
+      if (!recent.length) {
+        el.innerHTML = `<div class="empty-state" style="margin-top:10px;"><p>Sin movimientos este mes.</p></div>`;
+        return;
+      }
+      const fmtDate = d => {
+        if (!d) return "—";
+        const [y, m, day] = d.split("-");
+        return new Date(+y, +m - 1, +day).toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+      };
+      el.innerHTML = `
+        <table class="recent-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Categoría</th>
+              <th>Cajita</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${recent.map(e => `
+              <tr>
+                <td style="color:var(--muted);">${fmtDate(e.date)}</td>
+                <td style="font-weight:600;">${e.description || e.category || "—"}</td>
+                <td><span class="recent-cat-chip">${e.category || "—"}</span></td>
+                <td style="color:var(--muted);">${walletMap[e.walletId] || "—"}</td>
+                <td>− ${formatCOP(Number(e.amount))}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
     }
   </script>
 </body>
