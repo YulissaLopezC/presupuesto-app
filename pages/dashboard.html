@@ -130,17 +130,6 @@
         letter-spacing: -0.02em; color: var(--text); margin: 0;
       }
       .dash-desktop-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-      .dash-search-wrap {
-        height: 44px; width: 260px; max-width: 100%;
-        border-radius: 12px; background: var(--surface); border: 1px solid var(--border);
-        display: flex; align-items: center; gap: 8px;
-        padding: 0 12px; color: var(--muted); cursor: text;
-      }
-      .dash-search-wrap input {
-        border: none; outline: none; background: transparent;
-        font-family: "Public Sans", sans-serif; font-size: 14px;
-        flex-grow: 1; min-width: 0; color: var(--text);
-      }
       .dash-new-btn {
         height: 44px; padding: 0 18px; border-radius: 12px; border: none;
         background: var(--accent); color: #FFFFFF;
@@ -236,10 +225,6 @@
     <div class="dash-desktop-hdr">
       <h1 class="dash-desktop-title" id="dash-title">Cargando...</h1>
       <div class="dash-desktop-actions">
-        <label class="dash-search-wrap" for="dash-search">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input type="search" id="dash-search" placeholder="Buscar movimientos" aria-label="Buscar movimientos"/>
-        </label>
         <a href="./expenses.html" class="dash-new-btn">+ Nuevo movimiento</a>
       </div>
     </div>
