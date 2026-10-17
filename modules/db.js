@@ -74,21 +74,44 @@ export async function getExpenses(uid, filters = {}) {
 }
 
 export async function updateExpense(uid, expenseId, oldData, newData) {
+  const oldAmount = Number(oldData.amount);
+  const newAmount = Number(newData.amount);
+
   await runTransaction(db, async (tx) => {
     const expRef = userDoc(uid, "expenses", expenseId);
-    // Revertir cajita anterior (operación inversa)
+
+    // Reads FIRST (Firestore exige todos los reads antes de cualquier write)
+    const oldToRef  = oldData.toWalletId ? userDoc(uid, "wallets", oldData.toWalletId) : null;
+    const newToRef  = newData.toWalletId ? userDoc(uid, "wallets", newData.toWalletId) : null;
+    const needsNewToRead = newToRef && newData.toWalletId !== oldData.toWalletId;
+    const oldToSnap = oldToRef  ? await tx.get(oldToRef) : null;
+    const newToSnap = needsNewToRead ? await tx.get(newToRef) : null;
+
+    // Revertir cajita origen anterior
     if (oldData.walletId) {
       const oldIsCredit = oldData.walletType === "credito";
       tx.update(userDoc(uid, "wallets", oldData.walletId),
-        { balance: increment(oldIsCredit ? -Number(oldData.amount) : Number(oldData.amount)) });
+        { balance: increment(oldIsCredit ? -oldAmount : oldAmount) });
     }
-    // Aplicar cajita nueva
+    // Revertir cajita destino anterior
+    if (oldToRef && oldToSnap?.exists()) {
+      const oldToIsCredit = oldToSnap.data().type === "credito";
+      tx.update(oldToRef, { balance: increment(oldToIsCredit ? oldAmount : -oldAmount) });
+    }
+    // Aplicar cajita origen nueva
     if (newData.walletId) {
       const newIsCredit = newData.walletType === "credito";
       tx.update(userDoc(uid, "wallets", newData.walletId),
-        { balance: increment(newIsCredit ? Number(newData.amount) : -Number(newData.amount)) });
+        { balance: increment(newIsCredit ? newAmount : -newAmount) });
     }
-    tx.update(expRef, { ...newData, amount: Number(newData.amount) });
+    // Aplicar cajita destino nueva
+    if (newToRef) {
+      const resolvedSnap  = needsNewToRead ? newToSnap : oldToSnap;
+      const newToIsCredit = resolvedSnap?.exists() && resolvedSnap.data().type === "credito";
+      tx.update(newToRef, { balance: increment(newToIsCredit ? -newAmount : newAmount) });
+    }
+
+    tx.update(expRef, { ...newData, amount: newAmount });
   });
 }
 
@@ -293,12 +316,21 @@ export async function getTransfers(uid, filters = {}) {
 }
 
 export async function deleteTransfer(uid, transferId, transferData) {
+  const amount  = Number(transferData.amount);
+  const fromRef = userDoc(uid, "wallets", transferData.fromWalletId);
+  const toRef   = userDoc(uid, "wallets", transferData.toWalletId);
+
   await runTransaction(db, async (tx) => {
-    const amount  = Number(transferData.amount);
-    const fromRef = userDoc(uid, "wallets", transferData.fromWalletId);
-    const toRef   = userDoc(uid, "wallets", transferData.toWalletId);
-    tx.update(fromRef, { balance: increment(amount) });
-    tx.update(toRef,   { balance: increment(-amount) });
+    // Leer tipos PRIMERO para aplicar la reversión correcta según crédito/ahorro
+    const fromSnap = await tx.get(fromRef);
+    const toSnap   = await tx.get(toRef);
+    // Lógica inversa exacta de addTransfer:
+    // addTransfer: from-crédito → +amount; from-ahorro → -amount
+    // reversa:     from-crédito → -amount; from-ahorro → +amount
+    const fromDelta = fromSnap.exists() && fromSnap.data().type === "credito" ? -amount :  amount;
+    const toDelta   = toSnap.exists()   && toSnap.data().type   === "credito" ?  amount : -amount;
+    tx.update(fromRef, { balance: increment(fromDelta) });
+    tx.update(toRef,   { balance: increment(toDelta) });
     tx.delete(userDoc(uid, "transfers", transferId));
   });
 }
@@ -382,90 +414,104 @@ export async function deleteGoal(uid, goalId) {
 // ]
 //
 // Cuando proportional=true, esta función calcula el acumulado
-// hasta hoy y actualiza/crea un registro especial en incomes
-// con source = "📅 {name} (proporcional)" y proportionalKey para identificarlo
+// hasta hoy y actualiza/crea un registro especial en incomes.
+//
+// Prevención de duplicados:
+//   - Mutex en memoria (_syncLocks) evita llamadas concurrentes en la misma pestaña.
+//   - ID determinístico (propKey como docId) garantiza idempotencia entre pestañas:
+//     dos setDoc al mismo path simplemente se solapan con los mismos datos.
+//   - Compatibilidad con docs legados (auto-ID): se detectan por query y se migran
+//     en el primer sync que los encuentre.
+
+const _syncLocks = new Set();
 
 export async function syncProportionalIncomes(uid, month) {
-  const budget = await getBudget(uid, month);
-  if (!budget?.income || typeof budget.income !== "object") return [];
+  const lockKey = `${uid}:${month}`;
+  if (_syncLocks.has(lockKey)) return [];
+  _syncLocks.add(lockKey);
 
-  // Normalizar income — objeto {name: {amount, proportional, ...}}
-  const incomeEntries = Array.isArray(budget.income)
-    ? budget.income.filter(i => i?.name)
-    : Object.entries(budget.income)
-        .filter(([k, v]) => isNaN(Number(k)) && typeof v === "object" && v !== null)
-        .map(([name, val]) => ({ name, ...val }));
+  try {
+    const budget = await getBudget(uid, month);
+    if (!budget?.income || typeof budget.income !== "object") return [];
 
-  const proportionals = incomeEntries.filter(i => i.proportional && Number(i.amount) > 0);
-  if (!proportionals.length) return [];
+    // Normalizar income — objeto {name: {amount, proportional, ...}}
+    const incomeEntries = Array.isArray(budget.income)
+      ? budget.income.filter(i => i?.name)
+      : Object.entries(budget.income)
+          .filter(([k, v]) => isNaN(Number(k)) && typeof v === "object" && v !== null)
+          .map(([name, val]) => ({ name, ...val }));
 
-  // Días transcurridos del mes hasta hoy
-  const [y, m] = month.split("-").map(Number);
-  const today  = new Date();
-  const firstDay = new Date(y, m - 1, 1);
-  const lastDay  = new Date(y, m, 0); // último día del mes
-  const daysInMonth = lastDay.getDate();
+    const proportionals = incomeEntries.filter(i => i.proportional && Number(i.amount) > 0);
+    if (!proportionals.length) return [];
 
-  // Si el mes ya pasó, usar días completos del mes
-  // Si es el mes actual, usar días hasta hoy
-  // Si es un mes futuro, usar 0
-  let daysPassed;
-  if (today < firstDay) {
-    daysPassed = 0;
-  } else if (today > lastDay) {
-    daysPassed = daysInMonth;
-  } else {
-    daysPassed = today.getDate();
-  }
+    // Días transcurridos del mes hasta hoy (hora local)
+    const [y, m] = month.split("-").map(Number);
+    const now      = new Date();
+    const firstDay = new Date(y, m - 1, 1);
+    const lastDay  = new Date(y, m, 0);
+    const daysInMonth = lastDay.getDate();
 
-  const results = [];
+    let daysPassed;
+    if (now < firstDay)      daysPassed = 0;
+    else if (now > lastDay)  daysPassed = daysInMonth;
+    else                     daysPassed = now.getDate();
 
-  for (const inc of proportionals) {
-    const dailyAmount  = inc.amount / daysInMonth;
-    const accruedAmount = Math.round(dailyAmount * daysPassed);
-    const propKey      = `prop_${uid}_${month}_${inc.name.replace(/\s+/g, "_")}`;
+    // Fecha local (evita bug UTC: en Colombia >7pm devolvería ayer)
+    const mm  = String(now.getMonth() + 1).padStart(2, "0");
+    const dd  = String(now.getDate()).padStart(2, "0");
+    const todayLocal = `${now.getFullYear()}-${mm}-${dd}`;
 
-    // Buscar si ya existe un registro proporcional para esta fuente/mes
-    const q    = query(userCol(uid, "incomes"), where("proportionalKey", "==", propKey));
-    const snap = await getDocs(q);
+    const results = [];
 
-    const incomeData = {
-      date:           today.toISOString().slice(0, 10),
-      source:         inc.name,
-      amount:         accruedAmount,
-      description:    `Proporcional: ${daysPassed} de ${daysInMonth} días`,
-      walletId:       "",
-      walletName:     "",
-      proportionalKey: propKey,
-      isProportional: true,
-      dailyAmount:    Math.round(dailyAmount),
-      daysInMonth,
-      daysPassed,
-      totalAmount:    inc.amount,
-      autoGenerated:  true
-    };
+    for (const inc of proportionals) {
+      const dailyAmount   = inc.amount / daysInMonth;
+      const accruedAmount = Math.round(dailyAmount * daysPassed);
+      const propKey       = `prop_${uid}_${month}_${inc.name.replace(/\s+/g, "_")}`;
+      const propDocRef    = userDoc(uid, "incomes", propKey);
 
-    if (snap.empty) {
-      // Crear nuevo registro proporcional
-      if (accruedAmount > 0) {
-        await addDoc(userCol(uid, "incomes"), {
-          ...incomeData,
-          createdAt: serverTimestamp()
-        });
+      const incomeData = {
+        date:            todayLocal,
+        source:          inc.name,
+        amount:          accruedAmount,
+        description:     `Proporcional: ${daysPassed} de ${daysInMonth} días`,
+        walletId:        "",
+        walletName:      "",
+        proportionalKey: propKey,
+        isProportional:  true,
+        dailyAmount:     Math.round(dailyAmount),
+        daysInMonth,
+        daysPassed,
+        totalAmount:     inc.amount,
+        autoGenerated:   true
+      };
+
+      // 1. Intentar con el doc de ID determinístico (docs nuevos)
+      const propSnap = await getDoc(propDocRef);
+
+      if (propSnap.exists()) {
+        // Doc ya existe con ID determinístico → solo actualizar
+        await updateDoc(propDocRef, { ...incomeData, updatedAt: serverTimestamp() });
+      } else {
+        // 2. Buscar doc legado (auto-ID creado antes de esta versión)
+        const legacyQ    = query(userCol(uid, "incomes"), where("proportionalKey", "==", propKey));
+        const legacySnap = await getDocs(legacyQ);
+
+        if (!legacySnap.empty) {
+          // Migrar: actualizar doc legado (no vale la pena mover el ID)
+          await updateDoc(legacySnap.docs[0].ref, { ...incomeData, updatedAt: serverTimestamp() });
+        } else if (accruedAmount > 0) {
+          // Doc nuevo con ID determinístico → idempotente entre pestañas
+          await setDoc(propDocRef, { ...incomeData, createdAt: serverTimestamp() });
+        }
       }
-    } else {
-      // Actualizar el existente con el nuevo acumulado
-      const existingDoc = snap.docs[0];
-      await updateDoc(
-        userDoc(uid, "incomes", existingDoc.id),
-        { ...incomeData, updatedAt: serverTimestamp() }
-      );
+
+      results.push({ ...incomeData });
     }
 
-    results.push({ ...incomeData, daysPasssed: daysPassed });
+    return results;
+  } finally {
+    _syncLocks.delete(lockKey);
   }
-
-  return results;
 }
 
 // Obtener solo los ingresos proporcionales del presupuesto de un mes
