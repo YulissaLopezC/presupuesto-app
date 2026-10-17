@@ -294,7 +294,11 @@ export function renderBottomNav(activeItem) {
       id: "expenses", href: "../pages/expenses.html", label: "Movimientos",
       icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M21 16l-4 4-4-4"/></svg>`
     },
-    ...secondaryItems.map(i => ({ ...i, icon: i.icon.replace(/width="20" height="20"/g, 'width="18" height="18"') }))
+    ...secondaryItems.map(i => ({ ...i, icon: i.icon.replace(/width="20" height="20"/g, 'width="18" height="18"') })).flatMap(item =>
+      item.id === "budget"
+        ? [item, { id: "wallets", href: "../pages/wallets.html", label: "Cajitas", icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>` }]
+        : [item]
+    )
   ];
 
   let sidebar = document.getElementById("sidebar");
