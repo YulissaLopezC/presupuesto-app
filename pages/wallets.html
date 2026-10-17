@@ -552,6 +552,12 @@
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
+    const WALLET_TYPES = [
+      { key: "ahorro",   label: "Ahorro",   bg: "#E3F4EE", fg: "#0F7A5C" },
+      { key: "efectivo", label: "Efectivo", bg: "#E8ECFB", fg: "#2346D1" },
+      { key: "credito",  label: "Crédito",  bg: "#FBEEDF", fg: "#A85508" },
+    ];
+
     let uid, wallets = [], editingId = null, selectedTipo = "ahorro", selectedEmoji = "🏦";
 
     const user = await requireAuth();
@@ -617,12 +623,6 @@
     }
 
     // ── List ───────────────────────────────────────────────
-    const WALLET_TYPES = [
-      { key: "ahorro",   label: "Ahorro",   bg: "#E3F4EE", fg: "#0F7A5C" },
-      { key: "efectivo", label: "Efectivo", bg: "#E8ECFB", fg: "#2346D1" },
-      { key: "credito",  label: "Crédito",  bg: "#FBEEDF", fg: "#A85508" },
-    ];
-
     function getSubtitle(w) {
       if (w.type === "credito") {
         const limit = Number(w.creditLimit || 0);
