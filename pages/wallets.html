@@ -4,261 +4,443 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Cajitas</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../assets/style.css"/>
   <style>
-    body { background: #f0f4f8; }
-    body.dark { background: #111; }
-
-    .page-hdr { padding: 14px 16px 0; max-width: 680px; margin: 0 auto; }
-    .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
-    .page-sub { font-size: 12px; color: #888; margin-top: 2px; }
-
-    .sum-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; max-width: calc(680px - 28px); }
-    .sum-card { background: #fff; border-radius: 16px; padding: 16px; }
-    body.dark .sum-card { background: #1a1a1a; }
-    .sum-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-    .sum-val-row { display: flex; align-items: baseline; gap: 4px; }
-    .sum-sym { font-size: 16px; color: #185fa5; font-weight: 500; }
-    .sum-val { font-size: 22px; font-weight: 500; color: #185fa5; letter-spacing: -0.5px; }
-    .sum-val.red { color: #c0392b; }
-    .sum-sym.red { color: #c0392b; }
-
-    .transfer-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin: 14px 14px 0; background: #0f3460; color: #fff;
-      border: none; border-radius: 12px; padding: 13px 18px;
-      font-size: 13px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif;
-      width: calc(100% - 28px); max-width: calc(680px - 28px);
-    }
-    body.dark .transfer-btn { background: #0a1f3d; }
-
-    .section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 10px; max-width: 680px; margin: 0 auto; padding-left: 0; padding-right: 0; }
-    .section-title { font-size: 15px; font-weight: 500; color: var(--text); }
-
-    .wallet-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0; max-width: 680px; margin: 0 auto; }
-    @media (max-width: 400px) { .wallet-list { grid-template-columns: 1fr; } }
-
-    .wallet-item {
-      background: #fff; border-radius: 16px; padding: 16px;
-      display: flex; flex-direction: column; gap: 0;
-      transition: background 0.1s;
-    }
-    body.dark .wallet-item { background: #1a1a1a; }
-
-    .w-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-    .w-ico { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .w-badge { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 99px; }
-    .w-badge.ahorro   { background: #eaf3de; color: #3b6d11; }
-    .w-badge.efectivo { background: #e6f1fb; color: #185fa5; }
-    .w-badge.credito  { background: #fbeaf0; color: #993556; }
-
-    .w-name { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
-    .w-type { font-size: 11px; color: #888; margin-bottom: 14px; }
-
-    .w-balance { font-size: 22px; font-weight: 500; color: #185fa5; letter-spacing: -0.5px; margin-bottom: 4px; }
-    .w-balance.red { color: #c0392b; }
-    .w-sublbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #3b6d11; }
-    .w-sublbl.red { color: #c0392b; }
-
-    .w-divider { height: 0.5px; background: #f0f0f0; margin: 12px 0; }
-    body.dark .w-divider { background: #2a2a2a; }
-    .w-actions { display: flex; gap: 6px; justify-content: flex-end; }
-    .w-btn { background: none; border: 0.5px solid #e2e8f0; border-radius: 7px; padding: 5px 10px; font-size: 11px; color: #888; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.15s; }
-    body.dark .w-btn { border-color: #2a2a2a; color: #666; }
-    .w-btn:hover { background: #f0f4f8; color: #0f3460; border-color: #b5d4f4; }
-    .w-btn.danger:hover { background: #fbeaea; color: #c0392b; border-color: #f5c6c6; }
-
-    .fab {
-      position: fixed; bottom: 76px; right: 20px;
-      width: 52px; height: 52px; background: #0f3460; color: #fff;
-      border: none; border-radius: 50%; font-size: 24px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 16px rgba(15,52,96,0.3); z-index: 90;
+    /* ── Outer layout ──────────────────────────────── */
+    .wal-outer { display: flex; min-height: 100vh; }
+    .wal-scroll {
+      flex: 1; min-width: 0;
+      padding: 20px 20px 0;
+      display: flex; flex-direction: column; gap: 16px;
     }
 
-    /* ── Modal ───────────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(15,52,96,0.4);
-      z-index: 150; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s;
-      display: flex; align-items: center; justify-content: center; padding: 16px;
+    /* ── Page header ───────────────────────────────── */
+    .wal-hdr { display: flex; align-items: center; justify-content: space-between; }
+    .wal-title {
+      font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text);
     }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: #fff; border-radius: 20px; padding: 24px 20px 20px;
-      width: 100%; max-width: 400px;
-      transform: scale(0.95); opacity: 0;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-      max-height: 90vh; overflow-y: auto;
+    .wal-sub { font-size: 14px; color: var(--muted); margin-top: 2px; }
+    .wal-new-circle {
+      width: 44px; height: 44px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
     }
-    body.dark .modal { background: #1a1a1a; }
-    .modal-overlay.open .modal { transform: scale(1); opacity: 1; }
-    .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-title { font-size: 18px; font-weight: 500; color: var(--text); }
-    .modal-close { background: none; border: none; font-size: 20px; color: #888; cursor: pointer; }
-    .field-lbl { font-size: 10px; font-weight: 500; color: #8a9ab0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .wal-new-desk {
+      display: none; height: 44px; padding: 0 18px; border-radius: 12px;
+      border: none; background: var(--accent); color: #fff;
+      font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+      align-items: center; gap: 6px;
+    }
 
-    /* Tipo selector */
-    .tipo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; }
-    .tipo-btn {
-      border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px 8px 10px;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      cursor: pointer; background: #fff; font-family: "DM Sans", sans-serif;
-      transition: all 0.15s;
+    /* ── Hero card (mobile) ────────────────────────── */
+    .wal-hero {
+      background: var(--navy); color: #fff;
+      border-radius: 24px; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
     }
-    body.dark .tipo-btn { background: #222; border-color: #333; }
-    .tipo-btn.active { border-color: #0f3460; background: #f0f4ff; }
-    body.dark .tipo-btn.active { background: #0a1f3d; }
-    .tipo-ico { width: 36px; height: 36px; border-radius: 10px; background: #f0f4f8; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .tipo-btn.active .tipo-ico { background: #e6f1fb; }
-    .tipo-name { font-size: 12px; font-weight: 500; color: #888; }
-    .tipo-btn.active .tipo-name { color: #0f3460; }
+    .wal-hero-lbl { font-size: 13px; color: var(--navy-muted); font-weight: 600; }
+    .wal-hero-amount {
+      font-family: 'Sora', sans-serif; font-size: 32px; font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .wal-hero-debt { font-size: 13px; color: var(--navy-muted); margin-top: 2px; }
+    .wal-hero-debt-val { color: #FFC48A; font-weight: 600; }
+    .wal-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .wal-hero-tr-btn {
+      height: 44px; border-radius: 12px; border: none;
+      background: var(--accent); color: #fff;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+    }
+    .wal-hero-new-btn {
+      height: 44px; border-radius: 12px; border: 1px solid #3A475F;
+      background: transparent; color: #fff;
+      font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
 
-    /* Emoji grid */
-    .emoji-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-    .emoji-btn {
-      width: 40px; height: 40px; border-radius: 10px;
-      border: 1.5px solid #e2e8f0; background: #fff;
+    /* ── Desktop summary cards ─────────────────────── */
+    .wal-desk-summary { display: none; flex-wrap: wrap; gap: 14px; }
+    .wal-desk-saldo {
+      flex: 2 1 280px; background: var(--navy); color: #fff;
+      border-radius: 20px; padding: 20px 22px;
+    }
+    .wal-desk-saldo-lbl { font-size: 13px; color: var(--navy-muted); font-weight: 600; }
+    .wal-desk-saldo-amt {
+      font-family: 'Sora', sans-serif; font-size: 34px; font-weight: 700;
+      letter-spacing: -0.02em; color: #fff;
+    }
+    .wal-desk-saldo-note { font-size: 13px; color: var(--navy-muted); margin-top: 4px; }
+    .wal-desk-debt {
+      flex: 1 1 200px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 20px 22px;
+    }
+    .wal-desk-debt-lbl { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .wal-desk-debt-amt {
+      font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700;
+      color: var(--warning-text);
+    }
+    .wal-desk-debt-note { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Groups ────────────────────────────────────── */
+    .wal-group { display: flex; flex-direction: column; gap: 8px; }
+    .wal-group-hdr {
+      display: flex; justify-content: space-between;
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em; padding: 0 4px;
+    }
+    .wal-group-items {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 2px 14px;
+    }
+
+    /* ── Wallet row ─────────────────────────────────── */
+    .wal-item {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 12px 0; border-bottom: 1px solid var(--border-soft);
+      position: relative;
+    }
+    .wal-item:last-child { border-bottom: none; }
+    .wal-item-top { display: flex; align-items: center; gap: 12px; }
+    .wal-item-ico {
+      width: 40px; height: 40px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; cursor: pointer; transition: all 0.15s;
+      font-size: 19px; flex-shrink: 0;
     }
-    body.dark .emoji-btn { background: #222; border-color: #333; }
-    .emoji-btn.active { border-color: #0f3460; background: #f0f4ff; }
+    .wal-item-body { flex-grow: 1; min-width: 0; }
+    .wal-item-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .wal-item-sub  { font-size: 13px; color: var(--muted); }
+    .wal-item-amt-mob {
+      font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 600; white-space: nowrap;
+    }
+    .wal-item-amt-desk {
+      display: none; font-family: 'Sora', sans-serif;
+      font-size: 22px; font-weight: 700;
+    }
 
-    /* Fields */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .field-block { margin-bottom: 14px; }
-    .f-input {
-      width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: #fff; outline: none; transition: border-color 0.15s;
+    /* ── More button + menu ─────────────────────────── */
+    .wal-more-btn {
+      width: 32px; height: 32px; border: none; background: transparent;
+      color: var(--muted); border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    body.dark .f-input { background: #222; border-color: #333; }
-    .f-input:focus { border-color: #0f3460; }
-    .f-input:disabled { opacity: 0.3; cursor: not-allowed; }
-    .modal-save-btn {
-      width: 100%; padding: 13px; background: #0f3460; color: #fff; border: none;
-      border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif; margin-top: 4px;
+    .wal-more-btn:hover { background: var(--bg); }
+    .wal-more-menu {
+      position: absolute; right: 0; top: 44px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 4px 16px rgba(14,23,38,0.1);
+      z-index: 50; min-width: 140px; overflow: hidden;
     }
-    .modal-save-btn:hover { background: #1a4a7a; }
+    .wal-more-menu button {
+      width: 100%; height: 40px; border: none; background: transparent;
+      padding: 0 14px; text-align: left; font-size: 14px; font-family: inherit;
+      color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px;
+    }
+    .wal-more-menu button:hover { background: var(--bg); }
+    .wal-more-menu button.danger { color: var(--danger); }
 
-    /* Transfer modal */
+    /* ── Credit bar ─────────────────────────────────── */
+    .wal-credit-bar {
+      height: 6px; border-radius: 999px; background: #F3E6D8;
+      overflow: hidden; margin-left: 52px;
+    }
+    body.dark .wal-credit-bar { background: #3A2818; }
+    .wal-credit-fill { height: 100%; border-radius: 999px; background: var(--warning); }
+
+    /* ── Empty state ────────────────────────────────── */
+    .wal-empty {
+      text-align: center; padding: 32px 16px;
+      font-size: 14px; color: var(--muted); line-height: 1.6;
+    }
+
+    /* ── Desktop transfer panel ─────────────────────── */
+    .wal-tr-panel { display: none; }
+    .wal-tr-title {
+      font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700;
+      color: var(--text); margin: 0 0 4px;
+    }
+    .wal-tr-lbl {
+      display: flex; flex-direction: column; gap: 6px;
+      font-size: 14px; font-weight: 700; color: var(--text);
+    }
+    .wal-tr-select {
+      height: 46px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface); padding: 0 10px;
+      font-family: inherit; font-size: 15px; color: var(--text);
+      outline: none; width: 100%;
+    }
+    .wal-tr-arrow {
+      align-self: center; width: 36px; height: 36px; border-radius: 999px;
+      background: var(--surface2); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wal-tr-amount-wrap {
+      height: 52px; border-radius: 12px; border: 1.5px solid var(--accent);
+      display: flex; align-items: center; gap: 6px; padding: 0 12px;
+    }
+    .wal-tr-sym { font-family: 'Sora', sans-serif; font-size: 20px; color: var(--accent); }
+    .wal-tr-input {
+      border: none; outline: none; background: transparent;
+      font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700;
+      color: var(--text); width: 100%; min-width: 0;
+    }
+    .wal-tr-footer-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: var(--muted);
+    }
+    .wal-tr-max-btn {
+      border: none; background: transparent; color: var(--accent);
+      font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0;
+    }
+    .wal-tr-submit {
+      height: 48px; border-radius: 12px; border: none;
+      background: var(--accent); color: #fff;
+      font-family: inherit; font-size: 15px; font-weight: 700;
+      cursor: pointer; width: 100%;
+    }
+    .wal-tr-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .wal-tr-submit:hover:not(:disabled) { opacity: 0.9; }
+
+    /* ── Mobile transfer drawer ─────────────────────── */
     .drawer-overlay {
-      position: fixed; inset: 0; background: rgba(15,52,96,0.4);
+      position: fixed; inset: 0; background: rgba(14,23,38,0.4);
       z-index: 150; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s;
-      display: flex; align-items: center; justify-content: center; padding: 16px;
+      transition: opacity 0.2s; display: flex; align-items: flex-end;
     }
     .drawer-overlay.open { opacity: 1; pointer-events: all; }
     .drawer {
-      background: #fff; border-radius: 20px; padding: 24px 20px 20px;
-      width: 100%; max-width: 420px;
-      transform: scale(0.95); opacity: 0;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-      max-height: 90vh; overflow-y: auto;
+      background: var(--surface); border-radius: 20px 20px 0 0;
+      padding: 24px 20px 28px; width: 100%; max-height: 90vh; overflow-y: auto;
+      transform: translateY(100%); transition: transform 0.25s ease;
     }
-    body.dark .drawer { background: #1a1a1a; }
-    .drawer-overlay.open .drawer { transform: scale(1); opacity: 1; }
-    .drawer-handle { display: none; }
-
-    /* Transfer form styles */
+    .drawer-overlay.open .drawer { transform: translateY(0); }
+    @media (min-width: 600px) {
+      .drawer-overlay { align-items: center; justify-content: center; padding: 16px; }
+      .drawer { border-radius: 20px; max-width: 420px; transform: scale(0.95); }
+      .drawer-overlay.open .drawer { transform: scale(1); }
+    }
     .tr-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .tr-title { font-size: 18px; font-weight: 500; color: var(--text); }
-    .tr-close { background: none; border: none; font-size: 20px; color: #888; cursor: pointer; }
-    .tr-wallet-card {
-      background: #f8fafc; border-radius: 14px; padding: 14px 16px;
-      margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
-      border: 1.5px solid #e2e8f0;
+    .tr-title {
+      font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; color: var(--text);
     }
-    body.dark .tr-wallet-card { background: #222; border-color: #333; }
-    .tr-wallet-ico {
-      width: 40px; height: 40px; border-radius: 50%;
+    .tr-close {
+      width: 32px; height: 32px; border: none; background: transparent;
+      color: var(--muted); font-family: inherit; cursor: pointer; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
     }
-    .tr-wallet-ico.from { background: #0f3460; }
-    .tr-wallet-ico.to   { background: #3b6d11; }
-    .tr-wallet-ico svg  { color: #fff; }
-    .tr-wallet-info { flex: 1; min-width: 0; }
-    .tr-wallet-dir { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
-    .tr-wallet-sel {
-      width: 100%; border: none; background: transparent; outline: none;
-      font-size: 14px; font-weight: 500; color: var(--text);
-      font-family: "DM Sans", sans-serif; cursor: pointer;
+    .tr-close:hover { background: var(--bg); }
+    .tr-lbl {
+      display: flex; flex-direction: column; gap: 6px;
+      font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px;
     }
-    .tr-wallet-bal { font-size: 11px; color: #888; margin-top: 2px; }
-    .tr-amount-lbl { font-size: 10px; font-weight: 500; color: #8a9ab0; text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 0 8px; }
-    .tr-amount-block {
-      background: #f8fafc; border-radius: 14px; padding: 16px 20px;
-      display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
-      border: 1.5px solid #e2e8f0;
+    .tr-select {
+      height: 46px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface); padding: 0 10px;
+      font-family: inherit; font-size: 15px; color: var(--text);
+      outline: none; width: 100%;
     }
-    body.dark .tr-amount-block { background: #222; border-color: #333; }
-    .tr-amount-sym { font-size: 26px; font-weight: 500; color: #185fa5; }
+    .tr-bal-hint { font-size: 13px; color: var(--muted); margin-top: -2px; }
+    .tr-arrow {
+      align-self: center; width: 36px; height: 36px; border-radius: 999px;
+      background: var(--surface2); color: var(--accent);
+      display: flex; align-items: center; justify-content: center; margin: 8px 0;
+    }
+    .tr-amount-wrap {
+      height: 52px; border-radius: 12px; border: 1.5px solid var(--accent);
+      display: flex; align-items: center; gap: 6px; padding: 0 12px; margin: 14px 0 8px;
+    }
+    .tr-amount-sym { font-family: 'Sora', sans-serif; font-size: 20px; color: var(--accent); }
     .tr-amount-input {
-      font-size: 36px; font-weight: 500; color: #1a1a2e; border: none;
-      background: transparent; outline: none; flex: 1; min-width: 0;
-      font-family: "DM Sans", sans-serif;
+      border: none; outline: none; background: transparent;
+      font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700;
+      color: var(--text); width: 100%; min-width: 0;
     }
-    body.dark .tr-amount-input { color: #e8e8e8; }
-    .tr-amount-input::placeholder { color: #c8d4e0; }
-    .tr-chips { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tr-amount-input::placeholder { color: var(--border); }
+    .tr-chips { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
     .tr-chip {
-      padding: 6px 14px; border-radius: 99px; border: 1.5px solid #e2e8f0;
-      font-size: 12px; font-weight: 500; color: #555; cursor: pointer;
-      background: #fff; font-family: "DM Sans", sans-serif; transition: all 0.15s;
+      padding: 6px 14px; border-radius: 99px; border: 1.5px solid var(--border);
+      font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer;
+      background: var(--surface); font-family: inherit; transition: border-color 0.15s, color 0.15s;
     }
-    body.dark .tr-chip { background: #222; border-color: #333; color: #aaa; }
-    .tr-chip:hover { border-color: #0f3460; color: #0f3460; }
+    .tr-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .tr-footer-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: var(--muted); margin-bottom: 16px;
+    }
+    .tr-max-btn {
+      border: none; background: transparent; color: var(--accent);
+      font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0;
+    }
     .tr-submit {
-      width: 100%; padding: 14px; background: #0f3460; color: #fff; border: none;
-      border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-bottom: 14px;
+      width: 100%; height: 48px; background: var(--accent); color: #fff;
+      border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
     }
-    .tr-submit:hover { background: #1a4a7a; }
-    .tr-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #888; }
+    .tr-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Modal (nueva/editar cajita) ────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(14,23,38,0.4);
+      z-index: 160; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s; display: flex; align-items: flex-end;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface); border-radius: 20px 20px 0 0;
+      padding: 24px 20px 28px; width: 100%; max-height: 92vh; overflow-y: auto;
+      transform: translateY(100%); transition: transform 0.25s ease;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    @media (min-width: 600px) {
+      .modal-overlay { align-items: center; justify-content: center; padding: 16px; }
+      .modal { border-radius: 20px; max-width: 400px; transform: scale(0.95); }
+      .modal-overlay.open .modal { transform: scale(1); }
+    }
+    .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title {
+      font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; color: var(--text);
+    }
+    .modal-close {
+      width: 32px; height: 32px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg); }
+    .field-lbl {
+      display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px;
+    }
+    .tipo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .tipo-btn {
+      border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 8px 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; background: var(--surface); font-family: inherit; transition: all 0.15s;
+    }
+    .tipo-btn.active { border-color: var(--accent); background: var(--surface2); }
+    .tipo-ico {
+      width: 36px; height: 36px; border-radius: 10px; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .tipo-btn.active .tipo-ico { background: var(--surface2); }
+    .tipo-name { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .tipo-btn.active .tipo-name { color: var(--accent); }
+    .emoji-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .emoji-btn {
+      width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--surface); display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; transition: all 0.15s;
+    }
+    .emoji-btn.active { border-color: var(--accent); background: var(--surface2); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .field-block { margin-bottom: 14px; }
+    .f-input {
+      width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 14px; font-family: inherit; color: var(--text); background: var(--surface);
+      outline: none; transition: border-color 0.15s; box-sizing: border-box;
+    }
+    .f-input:focus { border-color: var(--accent); }
+    .f-input:disabled { opacity: 0.3; cursor: not-allowed; }
+    .modal-save-btn {
+      width: 100%; height: 48px; background: var(--accent); color: #fff;
+      border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit; margin-top: 4px;
+    }
+    .modal-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Responsive ─────────────────────────────────── */
+    @media (min-width: 900px) {
+      .wal-scroll { padding: 28px 32px 40px 32px; padding-right: 332px; }
+      .wal-new-circle { display: none; }
+      .wal-new-desk { display: flex; }
+      .wal-hero { display: none; }
+      .wal-desk-summary { display: flex; }
+      .wal-group-items {
+        background: transparent; border: none; border-radius: 0; padding: 0;
+        display: flex; flex-wrap: wrap; gap: 14px;
+      }
+      .wal-item {
+        flex: 1 1 220px; max-width: 360px;
+        background: var(--surface); border: 1px solid var(--border) !important;
+        border-radius: 18px; padding: 16px; gap: 10px;
+      }
+      .wal-item:last-child { border-bottom: 1px solid var(--border); }
+      .wal-item-top { align-items: flex-start; }
+      .wal-item-amt-mob { display: none; }
+      .wal-item-amt-desk { display: block; }
+      .wal-credit-bar { margin-left: 0; }
+      .wal-tr-panel {
+        display: flex; flex-direction: column; gap: 16px;
+        position: fixed; right: 0; top: 0; bottom: 0; width: 300px;
+        background: var(--surface); border-left: 1px solid var(--border);
+        padding: 28px 24px; box-sizing: border-box; overflow-y: auto; z-index: 50;
+      }
+      .drawer-overlay { display: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
+  <div class="wal-outer">
+    <div class="wal-scroll">
 
-  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
-  <div class="page-hdr" style="padding:14px 0 0;">
-    <div class="page-title">Cajitas</div>
-    <div class="page-sub">Tus cuentas, ahorros y tarjetas</div>
-  </div>
-  </div>
+      <div class="wal-hdr">
+        <div>
+          <h1 class="wal-title">Cajitas</h1>
+          <div class="wal-sub">Tus cuentas, ahorros y tarjetas</div>
+        </div>
+        <button class="wal-new-circle" id="btn-new-circle" aria-label="Nueva cajita">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="wal-new-desk" id="btn-new-desk">+ Nueva cajita</button>
+      </div>
 
-  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
-  <div class="sum-row" id="sum-row" style="margin:14px 0 0;">
-    <div class="skeleton" style="height:80px;border-radius:16px;"></div>
-    <div class="skeleton" style="height:80px;border-radius:16px;"></div>
-  </div>
-  </div>
+      <!-- Mobile hero -->
+      <div class="wal-hero" id="wal-hero">
+        <div class="skeleton" style="height:58px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:44px;border-radius:12px;"></div>
+      </div>
 
-  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
-  <button class="transfer-btn" id="btn-transfer" style="margin:14px 0 0;width:100%;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-    Transferir entre cajitas
-  </button>
-  </div>
+      <!-- Desktop summary -->
+      <div class="wal-desk-summary" id="wal-desk-summary">
+        <div class="skeleton" style="flex:2 1 280px;height:100px;border-radius:20px;"></div>
+        <div class="skeleton" style="flex:1 1 200px;height:100px;border-radius:20px;"></div>
+      </div>
 
-  <div style="max-width:680px;margin:0 auto;padding:0 14px;">
-  <div class="section-hdr" style="padding:18px 0 10px;">
-    <div class="section-title">Cajitas activas</div>
-  </div>
-  <div class="wallet-list" id="wallet-list">
-    <div class="skeleton" style="height:72px;border-radius:14px;"></div>
-    <div class="skeleton" style="height:72px;border-radius:14px;"></div>
-  </div>
-  </div>
+      <!-- Groups -->
+      <div id="wal-groups">
+        <div class="skeleton" style="height:14px;width:80px;border-radius:4px;margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:72px;border-radius:16px;margin-bottom:14px;"></div>
+        <div class="skeleton" style="height:14px;width:80px;border-radius:4px;margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:72px;border-radius:16px;"></div>
+      </div>
 
-  <button class="fab" id="fab">+</button>
+    </div><!-- /wal-scroll -->
+
+    <!-- Desktop transfer panel -->
+    <aside class="wal-tr-panel" id="wal-tr-panel">
+      <h2 class="wal-tr-title">Transferir entre cajitas</h2>
+      <label class="wal-tr-lbl">Desde
+        <select class="wal-tr-select" id="desk-from"></select>
+      </label>
+      <div class="wal-tr-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      </div>
+      <label class="wal-tr-lbl">Hacia
+        <select class="wal-tr-select" id="desk-to"></select>
+      </label>
+      <label class="wal-tr-lbl">Monto a transferir
+        <div class="wal-tr-amount-wrap">
+          <span class="wal-tr-sym">$</span>
+          <input type="text" inputmode="numeric" class="wal-tr-input" id="desk-amount" placeholder="0" autocomplete="off"/>
+        </div>
+      </label>
+      <div class="wal-tr-footer-row">
+        <span>Comisión: $ 0</span>
+        <button class="wal-tr-max-btn" id="btn-desk-max" type="button">Usar máximo</button>
+      </div>
+      <button class="wal-tr-submit" id="btn-desk-do-transfer" type="button">Transferir</button>
+    </aside>
+  </div><!-- /wal-outer -->
+
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Modal nueva/editar cajita -->
@@ -266,26 +448,28 @@
     <div class="modal" id="modal">
       <div class="modal-hdr">
         <div class="modal-title" id="modal-title">Nueva cajita</div>
-        <button class="modal-close" id="modal-close">×</button>
+        <button class="modal-close" id="modal-close" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
 
-      <div class="field-lbl">Tipo de cuenta</div>
+      <span class="field-lbl">Tipo de cuenta</span>
       <div class="tipo-grid" id="tipo-grid">
-        <button class="tipo-btn active" data-tipo="ahorro">
+        <button class="tipo-btn active" data-tipo="ahorro" type="button">
           <div class="tipo-ico">🏦</div>
           <span class="tipo-name">Ahorro</span>
         </button>
-        <button class="tipo-btn" data-tipo="efectivo">
+        <button class="tipo-btn" data-tipo="efectivo" type="button">
           <div class="tipo-ico">💵</div>
           <span class="tipo-name">Efectivo</span>
         </button>
-        <button class="tipo-btn" data-tipo="credito">
+        <button class="tipo-btn" data-tipo="credito" type="button">
           <div class="tipo-ico">💳</div>
           <span class="tipo-name">Crédito</span>
         </button>
       </div>
 
-      <div class="field-lbl">Selecciona un ícono</div>
+      <span class="field-lbl">Ícono</span>
       <div class="emoji-grid" id="emoji-grid">
         <div class="emoji-btn active" data-emoji="🏦">🏦</div>
         <div class="emoji-btn" data-emoji="💵">💵</div>
@@ -301,83 +485,69 @@
 
       <div class="two-col">
         <div>
-          <div class="field-lbl">Nombre</div>
-          <input class="f-input" id="field-name" placeholder="Ej. Fondo emergencia"/>
+          <span class="field-lbl">Nombre</span>
+          <input class="f-input" id="field-name" placeholder="Ej. Nu" autocomplete="off"/>
         </div>
         <div>
-          <div class="field-lbl" id="balance-label">Saldo inicial</div>
-          <input type="number" class="f-input" id="field-balance" placeholder="0" min="0"/>
+          <span class="field-lbl" id="balance-label">Saldo inicial</span>
+          <input type="text" inputmode="numeric" class="f-input" id="field-balance" placeholder="0"/>
         </div>
       </div>
 
       <div class="field-block" id="credit-limit-block">
-        <div class="field-lbl">Límite de crédito</div>
-        <input type="number" class="f-input" id="field-credit-limit" placeholder="0" min="0" disabled/>
+        <span class="field-lbl">Límite de crédito</span>
+        <input type="text" inputmode="numeric" class="f-input" id="field-credit-limit" placeholder="0" disabled/>
       </div>
 
-      <button class="modal-save-btn" id="btn-save-wallet">Guardar cajita</button>
+      <button class="modal-save-btn" id="btn-save-wallet" type="button">Guardar cajita</button>
     </div>
   </div>
 
-  <!-- Transfer modal -->
+  <!-- Mobile transfer drawer -->
   <div class="drawer-overlay" id="drawer-overlay">
     <div class="drawer" id="drawer">
       <div class="tr-hdr">
         <div class="tr-title">Transferir entre cajitas</div>
-        <button class="tr-close" id="btn-close-transfer">×</button>
+        <button class="tr-close" id="btn-close-transfer" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
 
-      <div class="tr-wallet-card">
-        <div class="tr-wallet-ico from">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/></svg>
-        </div>
-        <div class="tr-wallet-info">
-          <div class="tr-wallet-dir">Desde</div>
-          <select class="tr-wallet-sel" id="transfer-from"></select>
-          <div class="tr-wallet-bal" id="from-bal">Saldo: —</div>
-        </div>
+      <label class="tr-lbl">Desde
+        <select class="tr-select" id="transfer-from"></select>
+        <div class="tr-bal-hint" id="from-bal">Saldo: —</div>
+      </label>
+      <div class="tr-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
       </div>
+      <label class="tr-lbl">Hacia
+        <select class="tr-select" id="transfer-to"></select>
+        <div class="tr-bal-hint" id="to-bal">Saldo: —</div>
+      </label>
 
-      <div class="tr-wallet-card">
-        <div class="tr-wallet-ico to">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-        </div>
-        <div class="tr-wallet-info">
-          <div class="tr-wallet-dir">Hacia</div>
-          <select class="tr-wallet-sel" id="transfer-to"></select>
-          <div class="tr-wallet-bal" id="to-bal">Saldo: —</div>
-        </div>
-      </div>
-
-      <div class="tr-amount-lbl">Monto a transferir</div>
-      <div class="tr-amount-block">
+      <div class="tr-amount-wrap">
         <span class="tr-amount-sym">$</span>
-        <input type="number" class="tr-amount-input" id="transfer-amount" placeholder="0" min="0" inputmode="decimal"/>
+        <input type="text" inputmode="numeric" class="tr-amount-input" id="transfer-amount" placeholder="0" autocomplete="off"/>
       </div>
 
       <div class="tr-chips">
-        <button class="tr-chip" data-add="50000">+$50k</button>
-        <button class="tr-chip" data-add="100000">+$100k</button>
-        <button class="tr-chip" data-add="200000">+$200k</button>
-        <button class="tr-chip" data-max>Máximo</button>
+        <button class="tr-chip" data-add="50000" type="button">+$50k</button>
+        <button class="tr-chip" data-add="100000" type="button">+$100k</button>
+        <button class="tr-chip" data-add="200000" type="button">+$200k</button>
       </div>
 
-      <button class="tr-submit" id="btn-do-transfer">
-        Transferir
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
-
-      <div class="tr-footer">
-        <span>🔒 Transacción protegida</span>
-        <span>Comisión: $0</span>
+      <div class="tr-footer-row">
+        <span>Comisión: $ 0</span>
+        <button class="tr-max-btn" id="btn-mob-max" type="button">Usar máximo</button>
       </div>
+      <button class="tr-submit" id="btn-do-transfer" type="button">Transferir</button>
     </div>
   </div>
 
   <script type="module">
-    import { requireAuth } from "../modules/auth.js";
-    import { getWallets, addWallet, updateWallet, deleteWallet, archiveWallet, restoreWallet, addTransfer } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
+    import { requireAuth }   from "../modules/auth.js";
+    import { getWallets, addWallet, updateWallet, archiveWallet, addTransfer } from "../modules/db.js";
+    import { renderBottomNav, showToast } from "../assets/ui.js?v=3";
     import { formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
@@ -386,82 +556,224 @@
 
     const user = await requireAuth();
     uid = user.uid;
-    renderTopbar(user);
     renderBottomNav("wallets");
     await loadWallets();
+
     applyNumericFormat(document.getElementById("field-balance"));
     applyNumericFormat(document.getElementById("field-credit-limit"));
     applyNumericFormat(document.getElementById("transfer-amount"));
+    applyNumericFormat(document.getElementById("desk-amount"));
 
-    // ── Load ──────────────────────────────────────────────
+    // ── Load ───────────────────────────────────────────────
     async function loadWallets() {
       wallets = await getWallets(uid);
       renderSummary();
       renderList();
+      populateTransferSelects();
     }
 
-    // ── Summary ───────────────────────────────────────────
+    // ── Summary ────────────────────────────────────────────
     function renderSummary() {
-      const available = wallets.filter(w => w.type !== "credito").reduce((s,w) => s+Number(w.balance||0), 0);
-      const debt      = wallets.filter(w => w.type === "credito").reduce((s,w) => s+Number(w.balance||0), 0);
-      document.getElementById("sum-row").innerHTML = `
-        <div class="sum-card">
-          <div class="sum-lbl">Saldo disponible</div>
-          <div class="sum-val-row">
-            <span class="sum-sym">$</span>
-            <span class="sum-val">${formatCOP(available).replace("$","")}</span>
+      const available = wallets
+        .filter(w => w.type !== "credito")
+        .reduce((s, w) => s + Number(w.balance || 0), 0);
+      const debt = wallets
+        .filter(w => w.type === "credito")
+        .reduce((s, w) => s + Number(w.balance || 0), 0);
+      const totalLimit = wallets
+        .filter(w => w.type === "credito" && Number(w.creditLimit || 0) > 0)
+        .reduce((s, w) => s + Number(w.creditLimit || 0), 0);
+      const debtPct = totalLimit > 0 ? Math.round(debt / totalLimit * 100) : 0;
+
+      document.getElementById("wal-hero").innerHTML = `
+        <div>
+          <div class="wal-hero-lbl">Saldo disponible</div>
+          <div class="wal-hero-amount">${formatCOP(available)}</div>
+          <div class="wal-hero-debt">Deuda en crédito:
+            <span class="wal-hero-debt-val">${formatCOP(debt)}</span>
           </div>
         </div>
-        <div class="sum-card">
-          <div class="sum-lbl">Deuda en crédito</div>
-          <div class="sum-val-row">
-            <span class="sum-sym red">$</span>
-            <span class="sum-val red">${formatCOP(debt).replace("$","")}</span>
-          </div>
+        <div class="wal-hero-actions">
+          <button class="wal-hero-tr-btn" id="btn-transfer-hero" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>
+            Transferir
+          </button>
+          <button class="wal-hero-new-btn" id="btn-new-hero" type="button">Nueva cajita</button>
+        </div>`;
+      document.getElementById("btn-transfer-hero").addEventListener("click", openTransfer);
+      document.getElementById("btn-new-hero").addEventListener("click", openNewModal);
+
+      document.getElementById("wal-desk-summary").innerHTML = `
+        <div class="wal-desk-saldo">
+          <div class="wal-desk-saldo-lbl">Saldo disponible</div>
+          <div class="wal-desk-saldo-amt">${formatCOP(available)}</div>
+          <div class="wal-desk-saldo-note">Suma de ahorro y efectivo</div>
+        </div>
+        <div class="wal-desk-debt">
+          <div class="wal-desk-debt-lbl">Deuda en crédito</div>
+          <div class="wal-desk-debt-amt">${formatCOP(debt)}</div>
+          <div class="wal-desk-debt-note">${debtPct}% del cupo usado</div>
         </div>`;
     }
 
-    // ── List ──────────────────────────────────────────────
-    function renderList() {
-      const el = document.getElementById("wallet-list");
-      const active = wallets.filter(w => !w.archived);
-      if (!active.length) {
-        el.innerHTML = `<div class="empty-state"><p>No tienes cajitas creadas.</p>
-          <p style="margin-top:6px;font-size:12px;">Toca <strong style="color:#0f3460;">+</strong> para crear una.</p></div>`;
-        return;
+    // ── List ───────────────────────────────────────────────
+    const WALLET_TYPES = [
+      { key: "ahorro",   label: "Ahorro",   bg: "#E3F4EE", fg: "#0F7A5C" },
+      { key: "efectivo", label: "Efectivo", bg: "#E8ECFB", fg: "#2346D1" },
+      { key: "credito",  label: "Crédito",  bg: "#FBEEDF", fg: "#A85508" },
+    ];
+
+    function getSubtitle(w) {
+      if (w.type === "credito") {
+        const limit = Number(w.creditLimit || 0);
+        return limit > 0
+          ? `Usado ${formatCOP(Number(w.balance || 0))} de ${formatCOP(limit)}`
+          : "Tarjeta de crédito";
       }
-      const icoBg = { ahorro: "#e6f1fb", efectivo: "#eaf3de", credito: "#fbeaf0" };
-      const typeLabel = { ahorro: "Ahorro", efectivo: "Efectivo", credito: "Crédito" };
-      el.innerHTML = active.map(w => {
-        const isCredit = w.type === "credito";
-        const balance  = Number(w.balance||0);
-        return `
-          <div class="wallet-item">
-            <div class="w-top">
-              <div class="w-ico" style="background:${icoBg[w.type]||"#f0f4f8"};">${w.icon||"🏦"}</div>
-              <span class="w-badge ${w.type||"ahorro"}">${typeLabel[w.type]||"Ahorro"}</span>
-            </div>
-            <div class="w-name">${w.name}</div>
-            <div class="w-type">${isCredit?"Tarjeta de crédito":w.type==="efectivo"?"Cuenta de efectivo":"Cuenta de ahorros"}</div>
-            <div class="w-balance ${isCredit&&balance>0?"red":""}">${formatCOP(balance)}</div>
-            <div class="w-sublbl ${isCredit&&balance>0?"red":""}">${isCredit?"Deuda actual":"Disponible"}</div>
-            <div class="w-divider"></div>
-            <div class="w-actions">
-              <button class="w-btn" onclick="openEdit('${w.id}')">Editar</button>
-              <button class="w-btn danger" onclick="handleArchive('${w.id}')">Archivar</button>
-            </div>
-          </div>`;
-      }).join("");
+      return w.type === "efectivo" ? "Billetera" : "Cuenta de ahorro";
     }
 
-    // Archive / delete
-    window.openEdit = (id) => {
+    function renderList() {
+      const el     = document.getElementById("wal-groups");
+      const active = wallets.filter(w => !w.archived);
+      if (!active.length) {
+        el.innerHTML = `<div class="wal-empty">No tienes cajitas creadas.<br>Toca <strong>+</strong> para crear una.</div>`;
+        return;
+      }
+      el.innerHTML = WALLET_TYPES.map(g => {
+        const items = active.filter(w => w.type === g.key);
+        if (!items.length) return "";
+        const groupTotal = items.reduce((s, w) => s + Number(w.balance || 0), 0);
+        const totalStr   = g.key === "credito" && groupTotal > 0
+          ? `− ${formatCOP(groupTotal)}`
+          : formatCOP(groupTotal);
+        return `<div class="wal-group">
+          <div class="wal-group-hdr"><span>${g.label}</span><span>${totalStr}</span></div>
+          <div class="wal-group-items">
+            ${items.map(w => {
+              const balance  = Number(w.balance || 0);
+              const isCredit = w.type === "credito";
+              const tone     = isCredit ? "var(--warning-text)" : "var(--text)";
+              const balStr   = isCredit && balance > 0 ? `− ${formatCOP(balance)}` : formatCOP(balance);
+              const limit    = Number(w.creditLimit || 0);
+              const pct      = isCredit && limit > 0 ? Math.min(100, Math.round(balance / limit * 100)) : 0;
+              return `<div class="wal-item" data-id="${w.id}">
+                <div class="wal-item-top">
+                  <div class="wal-item-ico" style="background:${g.bg};color:${g.fg}">${w.icon || "🏦"}</div>
+                  <div class="wal-item-body">
+                    <div class="wal-item-name">${w.name}</div>
+                    <div class="wal-item-sub">${getSubtitle(w)}</div>
+                  </div>
+                  <div class="wal-item-amt-mob" style="color:${tone}">${balStr}</div>
+                  <button class="wal-more-btn" aria-label="Opciones" data-id="${w.id}" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                  </button>
+                </div>
+                <div class="wal-item-amt-desk" style="color:${tone}">${balStr}</div>
+                ${isCredit && limit > 0 ? `<div class="wal-credit-bar"><div class="wal-credit-fill" style="width:${pct}%"></div></div>` : ""}
+                <div class="wal-more-menu" id="wal-menu-${w.id}" style="display:none">
+                  <button data-action="edit" data-id="${w.id}" type="button">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                    Editar
+                  </button>
+                  <button data-action="archive" data-id="${w.id}" class="danger" type="button">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>
+                    Archivar
+                  </button>
+                </div>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>`;
+      }).filter(Boolean).join("");
+    }
+
+    // ── Transfer selects ───────────────────────────────────
+    function populateTransferSelects() {
+      const active = wallets.filter(w => !w.archived);
+
+      const mobOpts = active.map(w => `<option value="${w.id}">${w.icon || "🏦"} ${w.name}</option>`).join("");
+      document.getElementById("transfer-from").innerHTML = mobOpts;
+      const mobTo = document.getElementById("transfer-to");
+      mobTo.innerHTML = mobOpts;
+      if (active.length > 1) mobTo.value = active[1].id;
+
+      const deskOpts = active.map(w =>
+        `<option value="${w.id}">${w.icon || "🏦"} ${w.name} · ${formatCOP(w.balance || 0)}</option>`
+      ).join("");
+      document.getElementById("desk-from").innerHTML = deskOpts;
+      const deskTo = document.getElementById("desk-to");
+      deskTo.innerHTML = deskOpts;
+      if (active.length > 1) deskTo.value = active[1].id;
+
+      updateMobBalLabels();
+    }
+
+    function updateMobBalLabels() {
+      const fromId = document.getElementById("transfer-from").value;
+      const toId   = document.getElementById("transfer-to").value;
+      const fromW  = wallets.find(w => w.id === fromId);
+      const toW    = wallets.find(w => w.id === toId);
+      document.getElementById("from-bal").textContent = fromW ? `Saldo: ${formatCOP(fromW.balance || 0)}` : "Saldo: —";
+      document.getElementById("to-bal").textContent   = toW   ? `Saldo: ${formatCOP(toW.balance   || 0)}` : "Saldo: —";
+    }
+
+    // ── Event delegation for list ──────────────────────────
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".wal-more-btn") && !e.target.closest(".wal-more-menu")) {
+        document.querySelectorAll(".wal-more-menu").forEach(m => m.style.display = "none");
+      }
+    });
+
+    document.getElementById("wal-groups").addEventListener("click", e => {
+      const moreBtn = e.target.closest(".wal-more-btn");
+      if (moreBtn) {
+        e.stopPropagation();
+        const id   = moreBtn.dataset.id;
+        const menu = document.getElementById(`wal-menu-${id}`);
+        const open = menu.style.display !== "none";
+        document.querySelectorAll(".wal-more-menu").forEach(m => m.style.display = "none");
+        if (!open) menu.style.display = "block";
+        return;
+      }
+      const action = e.target.closest("[data-action]");
+      if (action) {
+        e.stopPropagation();
+        const id = action.dataset.id;
+        document.querySelectorAll(".wal-more-menu").forEach(m => m.style.display = "none");
+        if (action.dataset.action === "edit")    openEdit(id);
+        if (action.dataset.action === "archive") handleArchive(id);
+      }
+    });
+
+    // ── New / Edit modal ───────────────────────────────────
+    document.getElementById("btn-new-circle").addEventListener("click", openNewModal);
+    document.getElementById("btn-new-desk").addEventListener("click",   openNewModal);
+    document.getElementById("modal-close").addEventListener("click",    closeModal);
+    document.getElementById("modal-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("modal-overlay")) closeModal();
+    });
+
+    function openNewModal() {
+      editingId = null; selectedTipo = "ahorro"; selectedEmoji = "🏦";
+      document.getElementById("modal-title").textContent     = "Nueva cajita";
+      document.getElementById("btn-save-wallet").textContent = "Guardar cajita";
+      document.getElementById("field-name").value = "";
+      ["field-balance", "field-credit-limit"].forEach(id => {
+        const inp = document.getElementById(id);
+        inp.dataset.raw = ""; inp.value = "";
+      });
+      updateTipoUI(); updateEmojiUI(); updateCreditFields();
+      openModal();
+    }
+    function openModal()  { document.getElementById("modal-overlay").classList.add("open"); }
+    function closeModal() { document.getElementById("modal-overlay").classList.remove("open"); editingId = null; }
+
+    function openEdit(id) {
       const w = wallets.find(x => x.id === id);
       if (!w) return;
-      editingId = id;
-      selectedTipo  = w.type || "ahorro";
-      selectedEmoji = w.icon || "🏦";
-      document.getElementById("modal-title").textContent = "Editar cajita";
+      editingId = id; selectedTipo = w.type || "ahorro"; selectedEmoji = w.icon || "🏦";
+      document.getElementById("modal-title").textContent     = "Editar cajita";
       document.getElementById("btn-save-wallet").textContent = "Actualizar cajita";
       document.getElementById("field-name").value = w.name || "";
       [["field-balance", w.balance], ["field-credit-limit", w.creditLimit]].forEach(([fid, val]) => {
@@ -472,36 +784,17 @@
       });
       updateTipoUI(); updateEmojiUI(); updateCreditFields();
       openModal();
-    };
-    window.handleArchive = async (id) => {
-      if (!confirm("¿Archivar esta cajita?")) return;
-      try { await archiveWallet(uid, id); showToast("Cajita archivada.", "success"); await loadWallets(); }
-      catch(e) { showToast("Error.", "error"); }
-    };
-
-    // ── Modal ─────────────────────────────────────────────
-    document.getElementById("fab").addEventListener("click", openNewModal);
-    document.getElementById("modal-close").addEventListener("click", closeModal);
-    document.getElementById("modal-overlay").addEventListener("click", e => {
-      if (e.target === document.getElementById("modal-overlay")) closeModal();
-    });
-
-    function openNewModal() {
-      editingId = null; selectedTipo = "ahorro"; selectedEmoji = "🏦";
-      document.getElementById("modal-title").textContent     = "Nueva cajita";
-      document.getElementById("btn-save-wallet").textContent = "Guardar cajita";
-      document.getElementById("field-name").value = "";
-      ["field-balance","field-credit-limit"].forEach(id => {
-        const inp = document.getElementById(id);
-        inp.dataset.raw = ""; inp.value = "";
-      });
-      updateTipoUI(); updateEmojiUI(); updateCreditFields();
-      openModal();
     }
-    function openModal()  { document.getElementById("modal-overlay").classList.add("open"); }
-    function closeModal() { document.getElementById("modal-overlay").classList.remove("open"); editingId = null; }
 
-    // Tipo buttons
+    async function handleArchive(id) {
+      if (!confirm("¿Archivar esta cajita?")) return;
+      try {
+        await archiveWallet(uid, id);
+        showToast("Cajita archivada.", "success");
+        await loadWallets();
+      } catch(e) { showToast("Error.", "error"); }
+    }
+
     document.getElementById("tipo-grid").addEventListener("click", e => {
       const btn = e.target.closest("[data-tipo]");
       if (!btn) return;
@@ -509,15 +802,16 @@
       updateTipoUI(); updateCreditFields();
     });
     function updateTipoUI() {
-      document.querySelectorAll(".tipo-btn").forEach(b => b.classList.toggle("active", b.dataset.tipo === selectedTipo));
+      document.querySelectorAll(".tipo-btn").forEach(b =>
+        b.classList.toggle("active", b.dataset.tipo === selectedTipo)
+      );
     }
     function updateCreditFields() {
       const isCredit = selectedTipo === "credito";
       document.getElementById("field-credit-limit").disabled = !isCredit;
-      document.getElementById("balance-label").textContent = isCredit ? "Deuda actual" : "Saldo inicial";
+      document.getElementById("balance-label").textContent   = isCredit ? "Deuda actual" : "Saldo inicial";
     }
 
-    // Emoji buttons
     document.getElementById("emoji-grid").addEventListener("click", e => {
       const btn = e.target.closest("[data-emoji]");
       if (!btn) return;
@@ -525,10 +819,11 @@
       updateEmojiUI();
     });
     function updateEmojiUI() {
-      document.querySelectorAll(".emoji-btn").forEach(b => b.classList.toggle("active", b.dataset.emoji === selectedEmoji));
+      document.querySelectorAll(".emoji-btn").forEach(b =>
+        b.classList.toggle("active", b.dataset.emoji === selectedEmoji)
+      );
     }
 
-    // Save
     document.getElementById("btn-save-wallet").addEventListener("click", saveWallet);
     async function saveWallet() {
       const name    = document.getElementById("field-name").value.trim();
@@ -540,85 +835,100 @@
       try {
         const data = { name, type: selectedTipo, icon: selectedEmoji, balance };
         if (selectedTipo === "credito" && limit) data.creditLimit = limit;
-        if (editingId) { await updateWallet(uid, editingId, data); showToast("Cajita actualizada.", "success"); }
-        else           { await addWallet(uid, data);               showToast("Cajita creada.", "success"); }
+        if (editingId) {
+          await updateWallet(uid, editingId, data);
+          showToast("Cajita actualizada.", "success");
+        } else {
+          await addWallet(uid, data);
+          showToast("Cajita creada.", "success");
+        }
         closeModal(); await loadWallets();
       } catch(e) { showToast("Error al guardar.", "error"); console.error(e); }
-      finally { btn.disabled = false; btn.textContent = editingId ? "Actualizar cajita" : "Guardar cajita"; }
+      finally {
+        btn.disabled = false;
+        btn.textContent = editingId ? "Actualizar cajita" : "Guardar cajita";
+      }
     }
 
-    // ── Transfer ──────────────────────────────────────────
-    document.getElementById("btn-transfer").addEventListener("click", openTransfer);
-    document.getElementById("drawer-overlay").addEventListener("click", e => {
-      if (e.target === document.getElementById("drawer-overlay")) closeTransfer();
-    });
-
-    function updateBalanceLabels() {
-      const fromId = document.getElementById("transfer-from").value;
-      const toId   = document.getElementById("transfer-to").value;
-      const fromW  = wallets.find(w=>w.id===fromId);
-      const toW    = wallets.find(w=>w.id===toId);
-      document.getElementById("from-bal").textContent = fromW ? `Saldo: ${formatCOP(fromW.balance||0)}` : "Saldo: —";
-      document.getElementById("to-bal").textContent   = toW   ? `Saldo: ${formatCOP(toW.balance||0)}`   : "Saldo: —";
-    }
-
+    // ── Transfer – mobile drawer ───────────────────────────
     function openTransfer() {
-      const active = wallets.filter(w=>!w.archived);
-      const opts   = active.map(w=>`<option value="${w.id}">${w.icon||"🏦"} ${w.name}</option>`).join("");
-      document.getElementById("transfer-from").innerHTML = opts;
-      document.getElementById("transfer-to").innerHTML   = opts;
-      // default to-wallet = second wallet
-      if (active.length > 1) document.getElementById("transfer-to").value = active[1].id;
-      const amtInp = document.getElementById("transfer-amount");
-      amtInp.dataset.raw = ""; amtInp.value = "";
-      updateBalanceLabels();
+      const inp = document.getElementById("transfer-amount");
+      inp.dataset.raw = ""; inp.value = "";
+      updateMobBalLabels();
       document.getElementById("drawer-overlay").classList.add("open");
     }
-
     function closeTransfer() {
       document.getElementById("drawer-overlay").classList.remove("open");
     }
 
     document.getElementById("btn-close-transfer").addEventListener("click", closeTransfer);
-    document.getElementById("transfer-from").addEventListener("change", updateBalanceLabels);
-    document.getElementById("transfer-to").addEventListener("change",   updateBalanceLabels);
+    document.getElementById("drawer-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("drawer-overlay")) closeTransfer();
+    });
+    document.getElementById("transfer-from").addEventListener("change", updateMobBalLabels);
+    document.getElementById("transfer-to").addEventListener("change",   updateMobBalLabels);
 
-    // Chips
     document.querySelector(".tr-chips").addEventListener("click", e => {
       const chip = e.target.closest("[data-add]");
-      const max  = e.target.closest("[data-max]");
-      const inp  = document.getElementById("transfer-amount");
-      if (chip) {
-        const raw = String(getNumericValue(inp) + Number(chip.dataset.add));
-        inp.dataset.raw = raw;
-        inp.value = Number(raw).toLocaleString("es-CO");
-      }
-      if (max) {
-        const fromW = wallets.find(w=>w.id===document.getElementById("transfer-from").value);
-        if (fromW) {
-          const raw = String(Math.max(fromW.balance||0, 0));
-          inp.dataset.raw = raw;
-          inp.value = Number(raw).toLocaleString("es-CO");
-        }
-      }
+      if (!chip) return;
+      const inp = document.getElementById("transfer-amount");
+      const raw = String(getNumericValue(inp) + Number(chip.dataset.add));
+      inp.dataset.raw = raw;
+      inp.value = Number(raw).toLocaleString("es-CO");
+    });
+
+    document.getElementById("btn-mob-max").addEventListener("click", () => {
+      const fromW = wallets.find(w => w.id === document.getElementById("transfer-from").value);
+      if (!fromW) return;
+      const inp = document.getElementById("transfer-amount");
+      const raw = String(Math.max(Number(fromW.balance || 0), 0));
+      inp.dataset.raw = raw; inp.value = Number(raw).toLocaleString("es-CO");
     });
 
     document.getElementById("btn-do-transfer").addEventListener("click", async () => {
       const fromId = document.getElementById("transfer-from").value;
       const toId   = document.getElementById("transfer-to").value;
       const amount = getNumericValue(document.getElementById("transfer-amount"));
+      await doTransfer(fromId, toId, amount, document.getElementById("btn-do-transfer"), true);
+    });
+
+    // ── Transfer – desktop panel ───────────────────────────
+    document.getElementById("btn-desk-max").addEventListener("click", () => {
+      const fromW = wallets.find(w => w.id === document.getElementById("desk-from").value);
+      if (!fromW) return;
+      const inp = document.getElementById("desk-amount");
+      const raw = String(Math.max(Number(fromW.balance || 0), 0));
+      inp.dataset.raw = raw; inp.value = Number(raw).toLocaleString("es-CO");
+    });
+
+    document.getElementById("btn-desk-do-transfer").addEventListener("click", async () => {
+      const fromId = document.getElementById("desk-from").value;
+      const toId   = document.getElementById("desk-to").value;
+      const amount = getNumericValue(document.getElementById("desk-amount"));
+      const btn    = document.getElementById("btn-desk-do-transfer");
+      await doTransfer(fromId, toId, amount, btn, false);
+      const inp = document.getElementById("desk-amount");
+      inp.dataset.raw = ""; inp.value = "";
+    });
+
+    // ── Shared transfer logic ──────────────────────────────
+    async function doTransfer(fromId, toId, amount, btn, isMobile) {
       if (!amount || fromId === toId) { showToast("Revisa los datos.", "error"); return; }
-      const fromW  = wallets.find(w=>w.id===fromId);
-      const toW    = wallets.find(w=>w.id===toId);
-      const btn    = document.getElementById("btn-do-transfer");
+      const fromW = wallets.find(w => w.id === fromId);
+      const toW   = wallets.find(w => w.id === toId);
       btn.disabled = true; btn.textContent = "Procesando...";
       try {
-        await addTransfer(uid, { fromWalletId: fromId, fromWalletName: fromW?.name, toWalletId: toId, toWalletName: toW?.name, amount });
+        await addTransfer(uid, {
+          fromWalletId: fromId, fromWalletName: fromW?.name,
+          toWalletId:   toId,   toWalletName:   toW?.name,
+          amount
+        });
         showToast("Transferencia realizada.", "success");
-        closeTransfer(); await loadWallets();
-      } catch(e) { showToast("Error.", "error"); }
-      finally { btn.disabled = false; btn.innerHTML = 'Transferir <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'; }
-    });
+        if (isMobile) closeTransfer();
+        await loadWallets();
+      } catch(e) { showToast("Error.", "error"); console.error(e); }
+      finally { btn.disabled = false; btn.textContent = "Transferir"; }
+    }
   </script>
 </body>
 </html>
