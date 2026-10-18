@@ -23,6 +23,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { db } from "../firebase-config.js";
+import { today } from "../assets/utils.js";
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -223,14 +224,24 @@ export async function getWallets(uid, includeArchived = false) {
 }
 
 export async function updateWallet(uid, walletId, data) {
-  const isCredit = data.type === "credito";
-  const updates  = { ...data, updatedAt: serverTimestamp() };
+  const isCredit  = data.type === "credito";
+  const walletRef = userDoc(uid, "wallets", walletId);
+  const updates   = { ...data, updatedAt: serverTimestamp() };
   if (isCredit) {
     updates.creditLimit = Number(data.creditLimit || 0);
+    if ("balance" in data) updates.balance = Number(data.balance || 0);
   } else {
     updates.balance = Number(data.balance || 0);
   }
-  return updateDoc(userDoc(uid, "wallets", walletId), updates);
+
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(walletRef);
+    if (!snap.exists()) throw new Error("Cajita no encontrada");
+    tx.update(walletRef, updates);
+    if ("balance" in updates) {
+      recordAdjustment(tx, uid, walletId, snap.data(), updates.balance, data.name);
+    }
+  });
 }
 
 export async function archiveWallet(uid, walletId) {
@@ -254,9 +265,33 @@ export async function deleteWallet(uid, walletId) {
 
 // Ajuste manual de saldo (para correcciones)
 export async function adjustWalletBalance(uid, walletId, newBalance) {
-  return updateDoc(userDoc(uid, "wallets", walletId), {
-    balance: Number(newBalance),
-    updatedAt: serverTimestamp()
+  const walletRef = userDoc(uid, "wallets", walletId);
+  const balance   = Number(newBalance);
+
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(walletRef);
+    if (!snap.exists()) throw new Error("Cajita no encontrada");
+    tx.update(walletRef, { balance, updatedAt: serverTimestamp() });
+    recordAdjustment(tx, uid, walletId, snap.data(), balance);
+  });
+}
+
+// Deja rastro de un cambio manual de saldo en users/{uid}/adjustments.
+// amount = diferencia con signo sobre el número guardado en la cajita
+// (en crédito ese número es deuda: positivo = la deuda subió).
+// Debe llamarse dentro de una transacción, después de leer la cajita.
+function recordAdjustment(tx, uid, walletId, wallet, newBalance, newName) {
+  const previousBalance = Number(wallet.balance || 0);
+  if (newBalance === previousBalance) return;
+  tx.set(doc(userCol(uid, "adjustments")), {
+    walletId,
+    walletName: newName || wallet.name || "",
+    date: today(),
+    amount: newBalance - previousBalance,
+    previousBalance,
+    newBalance,
+    note: "Ajuste de saldo",
+    createdAt: serverTimestamp()
   });
 }
 
