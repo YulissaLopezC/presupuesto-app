@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { auth, db } from "../firebase-config.js";
+import { auth, db } from "../firebase-config.js?v=20261018";
 
 // ── Categorías por defecto ────────────────────────────────
 const DEFAULT_CATEGORIES = [

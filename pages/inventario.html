@@ -6,7 +6,7 @@
   <title>Inventario · Mi Presupuesto</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
     body { background: #f0f4f8; }
@@ -620,16 +620,16 @@
   </div>
 
   <script type="module">
-    import { requireAuth } from "../modules/auth.js";
+    import { requireAuth } from "../modules/auth.js?v=20261018";
     import {
       getCategories, addExpense, deleteExpense, getExpense, updateExpenseFields, getWallets,
       getAppConfig,
       getListas, addLista, updateLista, deleteLista,
       getProductos, addProducto, updateProducto, softDeleteProducto, revertirStockProducto,
       addCompra, getCompras, updateCompra
-    } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js";
-    import { formatCOP, today, applyNumericFormat, getNumericValue, formatDate, formatName } from "../assets/utils.js";
+    } from "../modules/db.js?v=20261018";
+    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
+    import { formatCOP, today, applyNumericFormat, getNumericValue, formatDate, formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 

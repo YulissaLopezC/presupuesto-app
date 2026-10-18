@@ -6,7 +6,7 @@
   <title>Asistente · Mi Presupuesto</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
     /* ── Tema oscuro específico de esta página ──────────────── */
     body {
@@ -253,11 +253,11 @@
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script type="module">
-    import { requireAuth }                                          from "../modules/auth.js";
-    import { getExpenses, getBudget, getWallets }                   from "../modules/db.js";
-    import { renderTopbar, renderBottomNav }                        from "../assets/ui.js";
-    import { formatCOP, currentMonth, formatMonth, sumByCategory }  from "../assets/utils.js";
-    import { GEMINI_API_KEY, GEMINI_ENDPOINT, GEMINI_TIMEOUT_MS }   from "../config/gemini.js";
+    import { requireAuth }                                          from "../modules/auth.js?v=20261018";
+    import { getExpenses, getBudget, getWallets }                   from "../modules/db.js?v=20261018";
+    import { renderTopbar, renderBottomNav }                        from "../assets/ui.js?v=20261018";
+    import { formatCOP, currentMonth, formatMonth, sumByCategory }  from "../assets/utils.js?v=20261018";
+    import { GEMINI_API_KEY, GEMINI_ENDPOINT, GEMINI_TIMEOUT_MS }   from "../config/gemini.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 

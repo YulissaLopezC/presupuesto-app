@@ -6,7 +6,7 @@
   <title>Presupuesto · Movimientos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link rel="stylesheet" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
     /* ── Página ──────────────────────────────────────────── */
     .mov-page {
@@ -680,16 +680,16 @@
   </div>
 
   <script type="module">
-    import { requireAuth } from "../modules/auth.js";
+    import { requireAuth } from "../modules/auth.js?v=20261018";
     import {
       addExpense, getExpenses, updateExpense, deleteExpense,
       addIncome, getIncomes, updateIncome, deleteIncome,
       getCategories, getWallets, getBudget,
       syncProportionalIncomes, getProportionalSummary,
       getProportionalExpensesSummary
-    } from "../modules/db.js";
-    import { renderBottomNav, showToast } from "../assets/ui.js";
-    import { formatCOP, currentMonth, formatDate, formatMonth, today, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js";
+    } from "../modules/db.js?v=20261018";
+    import { renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
+    import { formatCOP, currentMonth, formatDate, formatMonth, today, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 

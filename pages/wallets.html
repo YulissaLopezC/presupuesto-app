@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Cajitas</title>
-  <link rel="stylesheet" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
     /* ── Outer layout ──────────────────────────────── */
     .wal-outer { display: flex; min-height: 100vh; }
@@ -548,10 +548,10 @@
   </div>
 
   <script type="module">
-    import { requireAuth }   from "../modules/auth.js";
-    import { getWallets, addWallet, updateWallet, archiveWallet, addTransfer } from "../modules/db.js";
-    import { renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js";
+    import { requireAuth }   from "../modules/auth.js?v=20261018";
+    import { getWallets, addWallet, updateWallet, archiveWallet, addTransfer } from "../modules/db.js?v=20261018";
+    import { renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
+    import { formatCOP, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 

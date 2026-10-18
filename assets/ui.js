@@ -3,8 +3,8 @@
 // Componentes de UI reutilizables entre páginas.
 // ============================================================
 
-import { logout, getCurrentUser } from "../modules/auth.js";
-import { formatMonth } from "./utils.js";
+import { logout, getCurrentUser } from "../modules/auth.js?v=20261018";
+import { formatMonth } from "./utils.js?v=20261018";
 
 // ── SVGs de tema y helper de toggle ──────────────────────
 function _moonSvg(s = 16) {

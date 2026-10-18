@@ -16,7 +16,7 @@
 <body>
   <p>Cargando...</p>
   <script type="module">
-    import { onAuthChange } from "./modules/auth.js";
+    import { onAuthChange } from "./modules/auth.js?v=20261018";
     const BASE = window.location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "");
     onAuthChange((user) => {
       if (user) {

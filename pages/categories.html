@@ -6,7 +6,7 @@
   <title>Presupuesto · Categorías</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
     .fab {
       position: fixed; bottom: 76px; right: 20px;
@@ -189,10 +189,10 @@
   </div>
 
   <script type="module">
-    import { requireAuth }   from "../modules/auth.js";
-    import { getCategories, addCategory, updateCategory, deleteCategory } from "../modules/db.js";
-    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatName } from "../assets/utils.js";
+    import { requireAuth }   from "../modules/auth.js?v=20261018";
+    import { getCategories, addCategory, updateCategory, deleteCategory } from "../modules/db.js?v=20261018";
+    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
+    import { formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
