@@ -129,6 +129,9 @@ export function renderBottomNav(activeItem) {
 
   const inventarioActivo = localStorage.getItem("inventarioActivo") === "true";
 
+  // Ocultos del menú por el momento (las páginas siguen existiendo)
+  const hiddenItems = ["goals", "asistente"];
+
   // Items secundarios — aparecen en "Más" (móvil) y en el sidebar (escritorio)
   const secondaryItems = [
     {
@@ -159,7 +162,7 @@ export function renderBottomNav(activeItem) {
       id: "categories", href: "../pages/categories.html", label: "Categorías",
       icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>`
     }
-  ];
+  ].filter(item => !hiddenItems.includes(item.id));
 
   const isSecondaryActive = secondaryItems.some(i => i.id === activeItem);
 
