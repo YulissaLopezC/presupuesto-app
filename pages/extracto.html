@@ -269,7 +269,7 @@
       <div class="skeleton" style="height:96px;border-radius:12px;opacity:0.2;"></div>
     </div>
 
-    <div class="ext-warn" id="ext-warn" style="display:none;" role="status"></div>
+    <div class="ext-warn ext-mob" data-warn style="display:none;" role="status"></div>
 
     <div class="ext-chips ext-mob" role="tablist" aria-label="Filtrar movimientos" id="mob-chips">
       <button class="ext-chip active" role="tab" aria-selected="true"  data-filter="all"  type="button">Todo</button>
@@ -297,6 +297,7 @@
       </div>
       <div class="ext-print-hdr" id="print-hdr"></div>
       <div class="ext-kpis" id="desk-kpis"></div>
+      <div class="ext-warn" data-warn style="display:none;" role="status"></div>
       <section class="ext-table-card">
         <div class="ext-table-scroll" id="desk-table"></div>
       </section>
@@ -450,11 +451,12 @@
       document.getElementById("mob-next").disabled = selectedMonth >= currentMonth();
       document.title = `Presupuesto · Extracto ${currentWalletName()}`;
 
-      const warn = document.getElementById("ext-warn");
-      if (st.unexplained !== 0) {
-        warn.textContent = `Hay diferencias sin explicar de ${formatCOP(Math.abs(st.unexplained))}`;
-        warn.style.display = "block";
-      } else warn.style.display = "none";
+      document.querySelectorAll("[data-warn]").forEach(warn => {
+        if (st.unexplained !== 0) {
+          warn.textContent = `Hay diferencias sin explicar de ${formatCOP(Math.abs(st.unexplained))}`;
+          warn.style.display = "";
+        } else warn.style.display = "none";
+      });
 
       renderMobileCard();
       renderList();
