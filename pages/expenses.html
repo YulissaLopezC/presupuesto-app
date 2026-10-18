@@ -99,11 +99,12 @@
     /* ── Tarjeta lista ───────────────────────────────────── */
     .mov-list-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 6px 16px;
+      border-radius: 20px; padding: 16px 16px 6px;
     }
+    .mov-day + .mov-day { margin-top: 28px; }
     .mov-day-hdr {
       font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--muted); padding: 12px 0 4px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
     }
 
     /* ── Ítem ────────────────────────────────────────────── */
@@ -1105,7 +1106,7 @@
       }
       const groups=filtered.reduce((acc,e)=>{(acc[e.date]=acc[e.date]||[]).push(e);return acc;},{});
       el.innerHTML=`<div class="mov-list-card">${
-        Object.keys(groups).sort().reverse().map(date=>`
+        Object.keys(groups).sort().reverse().map(date=>`<div class="mov-day">
           <div class="mov-day-hdr">${formatDate(date)}</div>
           ${groups[date].map(e=>{
             const label=formatName(e.description||e.category||"");
@@ -1124,7 +1125,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
             </div>`;}).join("")}
-        `).join("")
+        </div>`).join("")
       }</div>`;
       el.onclick=e=>{
         const del=e.target.closest("[data-del]");
@@ -1244,7 +1245,7 @@
       if (!filtered.length){el.innerHTML=`<div class="empty-state"><p>No hay ingresos registrados este mes.</p></div>`;return;}
       const groups=filtered.reduce((acc,i)=>{(acc[i.date]=acc[i.date]||[]).push(i);return acc;},{});
       el.innerHTML=`<div class="mov-list-card">${
-        Object.keys(groups).sort().reverse().map(date=>`
+        Object.keys(groups).sort().reverse().map(date=>`<div class="mov-day">
           <div class="mov-day-hdr">${formatDate(date)}</div>
           ${groups[date].map(i=>`
             <div class="mov-item" data-inc-id="${i.id}">
@@ -1261,7 +1262,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
             </div>`).join("")}
-        `).join("")
+        </div>`).join("")
       }</div>`;
       el.onclick=e=>{
         const del=e.target.closest("[data-del-inc]");
@@ -1284,7 +1285,7 @@
       if (!all.length){el.innerHTML=`<div class="empty-state"><p>Sin movimientos este mes.</p></div>`;return;}
       const groups=all.reduce((acc,m)=>{(acc[m.date]=acc[m.date]||[]).push(m);return acc;},{});
       el.innerHTML=`<div class="mov-list-card">${
-        Object.keys(groups).sort().reverse().map(date=>`
+        Object.keys(groups).sort().reverse().map(date=>`<div class="mov-day">
           <div class="mov-day-hdr">${formatDate(date)}</div>
           ${groups[date].map(m=>{
             const isInc=m._type==="ingreso";
@@ -1303,7 +1304,7 @@
                 </div>
               </div>`;
           }).join("")}
-        `).join("")
+        </div>`).join("")
       }</div>`;
     }
 

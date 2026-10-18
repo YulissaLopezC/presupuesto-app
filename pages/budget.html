@@ -81,7 +81,7 @@
     .bud-tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 700; }
 
     /* ── Grupos ─────────────────────────────────────────── */
-    .bud-groups-wrap { display: flex; flex-direction: column; gap: 20px; }
+    .bud-groups-wrap { display: flex; flex-direction: column; gap: 28px; }
     .bud-group { display: flex; flex-direction: column; gap: 10px; }
     .bud-group-hdr { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
     .bud-group-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
@@ -176,7 +176,8 @@
     .bud-calc-total { font-size: 14px; font-weight: 700; color: var(--accent); min-width: 60px; text-align: right; }
 
     /* ── Ocultas ────────────────────────────────────────── */
-    .bud-hidden-section { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .bud-hidden-section { display: flex; flex-direction: column; gap: 6px; margin-top: 28px; }
+    .bud-hidden-section > .bud-group-hdr { margin-bottom: 4px; }
     .bud-hidden-row {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 12px; padding: 10px 14px;
@@ -328,7 +329,7 @@
     @media (min-width: 900px) {
       .bud-page { padding: 28px 32px 0; max-width: none; }
       .bud-title { font-size: 28px; }
-      .bud-groups-wrap { flex-direction: row; align-items: flex-start; }
+      .bud-groups-wrap { flex-direction: row; align-items: flex-start; gap: 20px; }
       .bud-group { flex: 1 1 260px; min-width: 0; }
       .bud-save-btn { display: none; }
       .bud-save-desk { display: flex; }
@@ -663,7 +664,7 @@
           </div>`;
       }).join("") + `</div>` + (hidden.length ? `
         <div class="bud-hidden-section">
-          <div class="bud-group-hdr" style="margin-top:6px;">
+          <div class="bud-group-hdr">
             <span class="bud-group-dot" style="background:var(--border)"></span>
             <span class="bud-group-lbl" style="font-size:13px;font-family:'Public Sans',sans-serif;font-weight:600;color:var(--muted);">Ocultas este mes (${hidden.length})</span>
           </div>
