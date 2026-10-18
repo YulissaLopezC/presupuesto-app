@@ -382,7 +382,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getBudget, setBudget, getCategories, addCategory, updateCategory, syncProportionalIncomes, getAppConfig, updateAppConfig } from "../modules/db.js";
     import { renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=3";
-    import { currentMonth, formatMonth, formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
+    import { currentMonth, formatMonth, formatCOP, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -607,7 +607,7 @@
             <div class="bud-cat-row">
               <div class="bud-cat-main">
                 <div class="bud-cat-info">
-                  <div class="bud-cat-name-disp">${cat.name}</div>
+                  <div class="bud-cat-name-disp">${formatName(cat.name)}</div>
                   <input type="text" class="budget-name-input bud-cat-name-inp"
                          data-cat-id="${cat.id}" data-original-name="${cat.name}"
                          value="${cat.name}" placeholder="Nombre..." style="display:none;"/>
@@ -619,7 +619,7 @@
                          data-cat="${cat.name}" inputmode="numeric"
                          value="${savedCats[cat.name]||""}" placeholder="0"/>
                 </label>
-                <button type="button" class="bud-more-btn" data-cat-name="${cat.name}" aria-label="Opciones de ${cat.name}">${dotsSvg}</button>
+                <button type="button" class="bud-more-btn" data-cat-name="${cat.name}" aria-label="Opciones de ${formatName(cat.name)}">${dotsSvg}</button>
               </div>
               <div class="bud-more-menu" style="display:none;">
                 <button type="button" class="bud-menu-item" data-action="calc" data-cat-name="${cat.name}">Calcular</button>
@@ -669,7 +669,7 @@
           </div>
           ${hidden.map(name => `
             <div class="bud-hidden-row">
-              <span class="bud-hidden-name">${name}</span>
+              <span class="bud-hidden-name">${formatName(name)}</span>
               <button class="btn-restore-cat" data-cat-name="${name}">Restaurar</button>
             </div>`).join("")}
         </div>` : "");
@@ -722,7 +722,7 @@
           const name = inp.value.trim() || inp.dataset.originalName;
           inp.value = name;
           const disp = inp.closest(".bud-cat-row").querySelector(".bud-cat-name-disp");
-          disp.textContent = name;
+          disp.textContent = formatName(name);
           disp.style.display = "";
           inp.style.display = "none";
         });
@@ -812,7 +812,7 @@
             document.querySelector(`[data-add-type="${type}"]`)?.style.setProperty("display","");
             await restoreCategory(existing.name);
           } else {
-            showToast(`"${existing.name}" ya existe.`, "error");
+            showToast(`"${formatName(existing.name)}" ya existe.`, "error");
           }
           return;
         }
@@ -857,7 +857,7 @@
       currentBudget = { ...currentBudget, hiddenCats };
       renderStats();
       renderExpensesForm();
-      showToast(`"${catName}" oculta este mes.`, "success");
+      showToast(`"${formatName(catName)}" oculta este mes.`, "success");
     }
 
     async function restoreCategory(catName) {
@@ -872,7 +872,7 @@
       currentBudget = { ...currentBudget, hiddenCats };
       renderStats();
       renderExpensesForm();
-      showToast(`"${catName}" restaurada.`, "success");
+      showToast(`"${formatName(catName)}" restaurada.`, "success");
     }
 
     // ── Formulario de ingresos ────────────────────────────

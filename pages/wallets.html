@@ -548,7 +548,7 @@
     import { requireAuth }   from "../modules/auth.js";
     import { getWallets, addWallet, updateWallet, archiveWallet, addTransfer } from "../modules/db.js";
     import { renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, applyNumericFormat, getNumericValue } from "../assets/utils.js";
+    import { formatCOP, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -661,7 +661,7 @@
                 <div class="wal-item-top">
                   <div class="wal-item-ico" style="background:${g.bg};color:${g.fg}">${w.icon || "🏦"}</div>
                   <div class="wal-item-body">
-                    <div class="wal-item-name">${w.name}</div>
+                    <div class="wal-item-name">${formatName(w.name)}</div>
                     <div class="wal-item-sub">${getSubtitle(w)}</div>
                   </div>
                   <div class="wal-item-amt-mob" style="color:${tone}">${balStr}</div>
@@ -692,14 +692,14 @@
     function populateTransferSelects() {
       const active = wallets.filter(w => !w.archived);
 
-      const mobOpts = active.map(w => `<option value="${w.id}">${w.icon || "🏦"} ${w.name}</option>`).join("");
+      const mobOpts = active.map(w => `<option value="${w.id}">${w.icon || "🏦"} ${formatName(w.name)}</option>`).join("");
       document.getElementById("transfer-from").innerHTML = mobOpts;
       const mobTo = document.getElementById("transfer-to");
       mobTo.innerHTML = mobOpts;
       if (active.length > 1) mobTo.value = active[1].id;
 
       const deskOpts = active.map(w =>
-        `<option value="${w.id}">${w.icon || "🏦"} ${w.name} · ${formatCOP(w.balance || 0)}</option>`
+        `<option value="${w.id}">${w.icon || "🏦"} ${formatName(w.name)} · ${formatCOP(w.balance || 0)}</option>`
       ).join("");
       document.getElementById("desk-from").innerHTML = deskOpts;
       const deskTo = document.getElementById("desk-to");

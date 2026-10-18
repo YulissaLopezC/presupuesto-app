@@ -192,6 +192,7 @@
     import { requireAuth }   from "../modules/auth.js";
     import { getCategories, addCategory, updateCategory, deleteCategory } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
+    import { formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -241,7 +242,7 @@
             </div>
             ${items.map(cat => `
               <div class="cat-item" data-id="${cat.id}">
-                <span class="cat-item-name">${cat.name}</span>
+                <span class="cat-item-name">${formatName(cat.name)}</span>
                 <div class="cat-item-actions">
                   <span class="badge ${type.cls}">${type.label.split(" ")[0]}</span>
                   <button class="btn-danger" data-id="${cat.id}" data-name="${cat.name}">✕</button>
@@ -363,7 +364,7 @@
 
     // ── Eliminar ──────────────────────────────────────────
     async function handleDelete(id, name) {
-      if (!confirm(`¿Eliminar la categoría "${name}"?\nLos gastos existentes con esta categoría no se borran.`)) return;
+      if (!confirm(`¿Eliminar la categoría "${formatName(name)}"?\nLos gastos existentes con esta categoría no se borran.`)) return;
       try {
         await deleteCategory(uid, id);
         showToast("Categoría eliminada.", "success");

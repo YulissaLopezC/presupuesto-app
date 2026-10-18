@@ -251,7 +251,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getGoals, addGoal, updateGoal, deleteGoal } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, formatDate, applyNumericFormat, getNumericValue } from "../assets/utils.js";
+    import { formatCOP, formatDate, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -312,7 +312,7 @@
               <div class="goal-left">
                 <div class="goal-ico">${g.icon || "🎯"}</div>
                 <div>
-                  <div class="goal-name">${g.name}</div>
+                  <div class="goal-name">${formatName(g.name)}</div>
                   ${g.targetDate ? `<div class="goal-date">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     ${formatDate(g.targetDate)}
@@ -345,7 +345,7 @@
                 <div class="goal-stat-val">${monthsLeft !== null ? monthsLeft + " meses" : formatCOP(remaining)}</div>
               </div>
             </div>
-            ${g.notes ? `<div style="margin-top:10px;font-size:11px;color:#888;padding-top:10px;border-top:0.5px solid #f0f0f0;">${g.notes}</div>` : ""}
+            ${g.notes ? `<div style="margin-top:10px;font-size:11px;color:#888;padding-top:10px;border-top:0.5px solid #f0f0f0;">${formatName(g.notes)}</div>` : ""}
           </div>`;
       }).join("");
     }

@@ -271,7 +271,7 @@
     import { requireAuth } from "../modules/auth.js";
     import { getExpenses, getBudget, getWallets, getIncomes } from "../modules/db.js";
     import { renderBottomNav, renderMonthSelector } from "../assets/ui.js";
-    import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison } from "../assets/utils.js";
+    import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison, formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -312,7 +312,7 @@
       const saldo = totalBudgeted - totalSpent;
       const pct   = totalBudgeted > 0 ? totalSpent / totalBudgeted : 0;
 
-      const walletMap = Object.fromEntries(wallets.map(w => [w.id, w.name || w.id]));
+      const walletMap = Object.fromEntries(wallets.map(w => [w.id, formatName(w.name) || w.id]));
 
       renderMainCard(saldo, pct, totalBudgeted);
       renderMiniStats(totalIncome, totalSpent);
@@ -434,7 +434,7 @@
         return `
           <div class="cat-card-new">
             <div class="cat-card-hdr">
-              <span class="cat-card-name">${row.category}</span>
+              <span class="cat-card-name">${formatName(row.category)}</span>
               <span class="cat-card-pct ${isOver ? "over" : ""}">${pctN}%</span>
             </div>
             <span class="cat-card-sub">${formatCOP(row.actual)} de ${formatCOP(row.budgeted)}</span>
@@ -476,8 +476,8 @@
             ${recent.map(e => `
               <tr>
                 <td style="color:var(--muted);">${fmtDate(e.date)}</td>
-                <td style="font-weight:600;">${e.description || e.category || "—"}</td>
-                <td><span class="recent-cat-chip">${e.category || "—"}</span></td>
+                <td style="font-weight:600;">${formatName(e.description || e.category) || "—"}</td>
+                <td><span class="recent-cat-chip">${formatName(e.category) || "—"}</span></td>
                 <td style="color:var(--muted);">${walletMap[e.walletId] || "—"}</td>
                 <td>− ${formatCOP(Number(e.amount))}</td>
               </tr>`).join("")}

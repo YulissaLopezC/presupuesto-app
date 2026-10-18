@@ -364,7 +364,7 @@
       migrateOldLoans, getWallets
     } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, formatDate, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
+    import { formatCOP, formatDate, today, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -450,14 +450,15 @@
       const pending   = Math.max(totalAmt - totalPaid, 0);
       const pct       = totalAmt > 0 ? Math.min(Math.round(totalPaid / totalAmt * 100), 100) : 0;
       const isPaid    = d.status === "pagado";
-      const initials  = (d.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+      const name      = formatName(d.name);
+      const initials  = (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
       return `
         <div class="loan-card" id="dcard-${d.id}">
           <div class="loan-top">
             <div class="loan-avatar ${isPaid ? "paid" : ""}">${initials}</div>
             <div class="loan-info">
-              <div class="loan-name">${d.name}</div>
+              <div class="loan-name">${name}</div>
               <div class="loan-meta">${isPaid ? "Deuda saldada" : "Deuda pendiente"}</div>
             </div>
             <span class="loan-badge ${d.status}">${isPaid ? "✓ Pagado" : "Pendiente"}</span>
@@ -516,8 +517,8 @@
             <div class="item-row">
               <div class="item-main">
                 <span class="item-date">${formatDate(l.date)}</span>
-                ${l.walletName ? `<span class="item-wallet">${l.walletName}</span>` : ""}
-                ${l.notes      ? `<span class="item-note">${l.notes}</span>`       : ""}
+                ${l.walletName ? `<span class="item-wallet">${formatName(l.walletName)}</span>` : ""}
+                ${l.notes      ? `<span class="item-note">${formatName(l.notes)}</span>`       : ""}
               </div>
               <span class="item-amount total-v">${formatCOP(l.amount)}</span>
               <button class="item-del" onclick="handleDeleteLoan('${debtorId}','${l.id}')">✕</button>
@@ -529,8 +530,8 @@
             <div class="item-row">
               <div class="item-main">
                 <span class="item-date">${formatDate(p.date)}</span>
-                ${p.walletName ? `<span class="item-wallet">${p.walletName}</span>` : ""}
-                ${p.notes      ? `<span class="item-note">${p.notes}</span>`       : ""}
+                ${p.walletName ? `<span class="item-wallet">${formatName(p.walletName)}</span>` : ""}
+                ${p.notes      ? `<span class="item-note">${formatName(p.notes)}</span>`       : ""}
               </div>
               <span class="item-amount payment-v">+${formatCOP(p.amount)}</span>
               <button class="item-del" onclick="handleDelPay('${debtorId}','${p.id}')">✕</button>
@@ -636,7 +637,7 @@
     window.openAddLoanModal = (debtorId) => {
       activeDebtorId = debtorId;
       const d = debtors.find(x => x.id === debtorId);
-      document.getElementById("loan-modal-title").textContent = `Nuevo préstamo · ${d?.name || ""}`;
+      document.getElementById("loan-modal-title").textContent = `Nuevo préstamo · ${formatName(d?.name)}`;
       document.getElementById("loan-date").value   = today();
       document.getElementById("loan-wallet").value = "";
       document.getElementById("loan-notes").value  = "";
@@ -682,7 +683,7 @@
     window.openPayModal = (debtorId, pending) => {
       activeDebtorId = debtorId;
       const d = debtors.find(x => x.id === debtorId);
-      document.getElementById("pay-title").textContent = `Abono de ${d?.name || ""}`;
+      document.getElementById("pay-title").textContent = `Abono de ${formatName(d?.name)}`;
       const inp = document.getElementById("pay-amount");
       const raw = pending > 0 ? String(Math.round(pending)) : "";
       inp.dataset.raw = raw;
@@ -742,12 +743,13 @@
       return paid.map(d => {
         const totalAmt  = Number(d.totalAmount || 0);
         const totalPaid = Number(d.totalPaid   || 0);
-        const initials  = (d.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+        const name      = formatName(d.name);
+        const initials  = (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
         return `
           <div class="paid-loan-item">
             <div class="loan-avatar paid" style="width:36px;height:36px;font-size:13px;flex-shrink:0;">${initials}</div>
             <div style="flex:1;min-width:0;opacity:0.75;">
-              <div style="font-size:13px;font-weight:500;color:var(--text);">${d.name}</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text);">${name}</div>
               <div style="font-size:11px;color:#888;margin-top:2px;">${formatCOP(totalPaid)} de ${formatCOP(totalAmt)}</div>
             </div>
             <span class="loan-badge pagado">✓ Pagado</span>
@@ -758,7 +760,7 @@
     // ── Wallets ───────────────────────────────────────────────
     function populateWalletSelects() {
       const opts = `<option value="">Sin cajita asignada</option>` +
-        wallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon || "🏦"} ${w.name} · ${formatCOP(w.balance || 0)}</option>`).join("");
+        wallets.map(w => `<option value="${w.id}" data-name="${w.name}">${w.icon || "🏦"} ${formatName(w.name)} · ${formatCOP(w.balance || 0)}</option>`).join("");
       ["debtor-wallet", "loan-wallet", "pay-wallet"].forEach(id => {
         document.getElementById(id).innerHTML = opts;
       });

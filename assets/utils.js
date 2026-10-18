@@ -20,6 +20,23 @@ export function parseCOP(str) {
   return parseInt(String(str).replace(/[^0-9]/g, ""), 10) || 0;
 }
 
+// ── Nombres escritos por el usuario ───────────────────────
+
+// Normaliza mayúsculas solo para mostrar (no toca lo guardado).
+// "ALIMENTO + PURGANTE" → "Alimento + purgante"
+// "mensualidad gym"     → "Mensualidad gym"
+// "Nu Bank", "iCloud"   → sin cambios
+export function formatName(text) {
+  const s = String(text ?? "");
+  if (!s) return s;
+  const isAllCaps = s === s.toUpperCase() && s !== s.toLowerCase();
+  if (isAllCaps) return s.charAt(0) + s.slice(1).toLowerCase();
+  // Marcas tipo "iCloud" / "eBay": la primera palabra ya trae mayúsculas internas
+  const firstWord = s.split(/\s/)[0];
+  if (/\p{Lu}/u.test(firstWord.slice(1))) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 // ── Fechas ────────────────────────────────────────────────
 
 // Hoy como "YYYY-MM-DD" (hora local, no UTC)

@@ -680,7 +680,7 @@
       getProportionalExpensesSummary
     } from "../modules/db.js";
     import { renderBottomNav, showToast } from "../assets/ui.js";
-    import { formatCOP, currentMonth, formatDate, formatMonth, today, applyNumericFormat, getNumericValue } from "../assets/utils.js";
+    import { formatCOP, currentMonth, formatDate, formatMonth, today, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -893,7 +893,7 @@
       if (selectedCat && !shown.includes(selectedCat)) shown=[selectedCat,...shown.slice(0,4)];
       grid.innerHTML = shown.map(name=>{
         const active = name===selectedCat;
-        return `<button class="cat-btn${active?" active":""}" data-cat="${name}" type="button">${name}</button>`;
+        return `<button class="cat-btn${active?" active":""}" data-cat="${name}" type="button">${formatName(name)}</button>`;
       }).join("")+
       `<button class="cat-btn-all" id="btn-cat-all" type="button">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Todas
@@ -910,7 +910,7 @@
       const chipsEl=document.getElementById("recent-sources-chips");
       if (!sources.length){wrapper.style.display="none";return;}
       wrapper.style.display="flex";
-      chipsEl.innerHTML=sources.map(s=>`<button class="recent-chip" data-src="${s}" type="button">${s}</button>`).join("");
+      chipsEl.innerHTML=sources.map(s=>`<button class="recent-chip" data-src="${s}" type="button">${formatName(s)}</button>`).join("");
       chipsEl.querySelectorAll(".recent-chip").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           document.getElementById("field-source").value=btn.dataset.src;
@@ -949,7 +949,7 @@
           const isSel = c.name===selectedCat;
           html += `<button class="cat-row${isSel?" selected":""}" data-cat="${c.name}" type="button">
             <span class="cat-row-dot" style="background:${group.dot}"></span>
-            <span class="cat-row-name">${c.name}</span>
+            <span class="cat-row-name">${formatName(c.name)}</span>
             ${isSel?checkSvg:""}
           </button>`;
         });
@@ -963,7 +963,7 @@
           const isSel = c.name===selectedCat;
           html += `<button class="cat-row${isSel?" selected":""}" data-cat="${c.name}" type="button">
             <span class="cat-row-dot" style="background:var(--muted)"></span>
-            <span class="cat-row-name">${c.name}</span>
+            <span class="cat-row-name">${formatName(c.name)}</span>
             ${isSel?checkSvg:""}
           </button>`;
         });
@@ -1067,7 +1067,7 @@
       if (cats.length <= 1) { el.style.display="none"; return; }
       el.style.display = "flex";
       el.innerHTML = `<button class="chip${!categoryFilter?" active":""}" data-cat="" type="button">Todas las categorías</button>` +
-        cats.map(n=>`<button class="chip${categoryFilter===n?" active":""}" data-cat="${n}" type="button">${n}</button>`).join("");
+        cats.map(n=>`<button class="chip${categoryFilter===n?" active":""}" data-cat="${n}" type="button">${formatName(n)}</button>`).join("");
       el.querySelectorAll(".chip").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           categoryFilter = btn.dataset.cat;
@@ -1084,7 +1084,7 @@
       if (names.length <= 1) { el.style.display="none"; return; }
       el.style.display = "flex";
       el.innerHTML = `<button class="chip${!activeFilter?" active":""}" data-cat="" type="button">Todas las fuentes</button>` +
-        names.map(n=>`<button class="chip${activeFilter===n?" active":""}" data-cat="${n}" type="button">${n}</button>`).join("");
+        names.map(n=>`<button class="chip${activeFilter===n?" active":""}" data-cat="${n}" type="button">${formatName(n)}</button>`).join("");
       el.querySelectorAll(".chip").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           activeFilter = btn.dataset.cat;
@@ -1107,21 +1107,23 @@
       el.innerHTML=`<div class="mov-list-card">${
         Object.keys(groups).sort().reverse().map(date=>`
           <div class="mov-day-hdr">${formatDate(date)}</div>
-          ${groups[date].map(e=>`
+          ${groups[date].map(e=>{
+            const label=formatName(e.description||e.category||"");
+            return `
             <div class="mov-item" data-id="${e.id}">
-              <div class="mov-ico">${initials(e.description||e.category||"")}</div>
+              <div class="mov-ico">${initials(label)}</div>
               <div class="mov-info">
-                <div class="mov-name">${e.description||e.category||"—"}</div>
-                ${e.category&&e.description?`<div class="mov-desc">${e.category}</div>`:""}
+                <div class="mov-name">${label||"—"}</div>
+                ${e.category&&e.description?`<div class="mov-desc">${formatName(e.category)}</div>`:""}
               </div>
               <div class="mov-right">
                 <div class="mov-amt">− ${formatCOP(e.amount)}</div>
-                ${e.walletName?`<div class="mov-wallet">${e.walletName}${e.toWalletName?" → "+e.toWalletName:""}</div>`:""}
+                ${e.walletName?`<div class="mov-wallet">${formatName(e.walletName)}${e.toWalletName?" → "+formatName(e.toWalletName):""}</div>`:""}
               </div>
               <button class="mov-del" data-del="${e.id}" aria-label="Eliminar">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
-            </div>`).join("")}
+            </div>`;}).join("")}
         `).join("")
       }</div>`;
       el.onclick=e=>{
@@ -1141,7 +1143,7 @@
       list.innerHTML=propExpenses.map(s=>`
         <div class="dev-card">
           <div class="dev-hdr">
-            <span class="dev-name">${s.name}</span>
+            <span class="dev-name">${formatName(s.name)}</span>
             <span class="dev-amount">${formatCOP(s.accrued)}</span>
           </div>
           <div class="dev-bar"><div class="dev-fill" style="width:${Math.min(s.pct,1)*100}%;background:${s.pct>=1?'var(--danger)':s.pct>=0.8?'var(--warning)':'var(--accent)'};"></div></div>
@@ -1182,7 +1184,7 @@
       section.style.display="block";
       list.innerHTML=propSummary.map(s=>`
         <div class="dev-card">
-          <div class="dev-hdr"><span class="dev-name">${s.name}</span><span class="dev-amount">${formatCOP(s.accruedAmount)}</span></div>
+          <div class="dev-hdr"><span class="dev-name">${formatName(s.name)}</span><span class="dev-amount">${formatCOP(s.accruedAmount)}</span></div>
           <div class="dev-bar"><div class="dev-fill" style="width:${Math.min(s.pct,1)*100}%;"></div></div>
           <div class="dev-sub">${s.daysPassed}/${s.daysInMonth} días · ${formatCOP(s.dailyAmount)}/día · de ${formatCOP(s.totalAmount)}</div>
         </div>`).join("");
@@ -1218,7 +1220,7 @@
         return `
           <div class="source-item">
             <div>
-              <div class="source-name">${inc.name}<span class="type-badge ${inc.proportional?"prop":inc.type}">${typeLabel}</span></div>
+              <div class="source-name">${formatName(inc.name)}<span class="type-badge ${inc.proportional?"prop":inc.type}">${typeLabel}</span></div>
               ${prop?`<div class="source-sub">${formatCOP(prop.dailyAmount)}/día · ${prop.daysPassed}/${prop.daysInMonth} días</div>`:""}
             </div>
             <div class="source-right">
@@ -1246,14 +1248,14 @@
           <div class="mov-day-hdr">${formatDate(date)}</div>
           ${groups[date].map(i=>`
             <div class="mov-item" data-inc-id="${i.id}">
-              <div class="mov-ico inc">${initials(i.source||"")}</div>
+              <div class="mov-ico inc">${initials(formatName(i.source||""))}</div>
               <div class="mov-info">
-                <div class="mov-name">${i.source||"—"}</div>
-                ${i.description?`<div class="mov-desc">${i.description}</div>`:""}
+                <div class="mov-name">${formatName(i.source||"")||"—"}</div>
+                ${i.description?`<div class="mov-desc">${formatName(i.description)}</div>`:""}
               </div>
               <div class="mov-right">
                 <div class="mov-amt pos">+ ${formatCOP(i.amount)}</div>
-                ${i.walletName?`<div class="mov-wallet">→ ${i.walletName}</div>`:""}
+                ${i.walletName?`<div class="mov-wallet">→ ${formatName(i.walletName)}</div>`:""}
               </div>
               <button class="mov-del" data-del-inc="${i.id}" aria-label="Eliminar">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -1286,8 +1288,8 @@
           <div class="mov-day-hdr">${formatDate(date)}</div>
           ${groups[date].map(m=>{
             const isInc=m._type==="ingreso";
-            const label=isInc?(m.source||"—"):(m.description||m.category||"—");
-            const sub  =isInc?"":(m.category&&m.description?m.category:"");
+            const label=formatName(isInc?(m.source||""):(m.description||m.category||""))||"—";
+            const sub  =isInc?"":(m.category&&m.description?formatName(m.category):"");
             return `
               <div class="mov-item">
                 <div class="mov-ico ${isInc?"inc":""}">${initials(label)}</div>
@@ -1297,7 +1299,7 @@
                 </div>
                 <div class="mov-right">
                   <div class="mov-amt ${isInc?"pos":""}">${isInc?"+ ":"− "}${formatCOP(m.amount)}</div>
-                  ${m.walletName?`<div class="mov-wallet">${m.walletName}</div>`:""}
+                  ${m.walletName?`<div class="mov-wallet">${formatName(m.walletName)}</div>`:""}
                 </div>
               </div>`;
           }).join("")}
@@ -1447,7 +1449,8 @@
       const walletOpt=document.querySelector(`#field-wallet option[value="${walletId}"]`);
       const walletName=walletOpt?.dataset.name||"";
       const walletType=walletOpt?.dataset.type||"ahorro";
-      const desc=document.getElementById("field-description").value.trim();
+      const rawDesc=document.getElementById("field-description").value.trim();
+      const desc=editingId?rawDesc:formatName(rawDesc);
       const btn=document.getElementById("btn-save");
       if (!date||!amount){showToast("Completa fecha y valor.","error");return;}
       btn.disabled=true; btn.textContent="Guardando...";
@@ -1462,7 +1465,8 @@
           if (editingId){const old=allExpenses.find(x=>x.id===editingId);await withTimeout(updateExpense(uid,editingId,old,data));showToast("Gasto actualizado.","success");}
           else{await withTimeout(addExpense(uid,data));showToast("Gasto registrado.","success");}
         } else {
-          const source=document.getElementById("field-source").value.trim();
+          const rawSource=document.getElementById("field-source").value.trim();
+          const source=editingId?rawSource:canonicalSource(rawSource);
           if (!source){showToast("Escribe la fuente.","error");btn.disabled=false;btn.textContent=editingId?"Actualizar ingreso":"Registrar ingreso";return;}
           const incData={date,source,amount,description:desc,walletId,walletName};
           if (editingId){const old=allIncomes.find(x=>x.id===editingId);await withTimeout(updateIncome(uid,editingId,old,incData));showToast("Ingreso actualizado.","success");}
@@ -1505,7 +1509,7 @@
     function populateWalletSelect() {
       document.getElementById("field-wallet").innerHTML=
         `<option value="">Sin cajita asignada</option>`+
-        wallets.map(w=>`<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||"🏦"} ${w.name}</option>`).join("");
+        wallets.map(w=>`<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||"🏦"} ${formatName(w.name)}</option>`).join("");
     }
     function populateSavingsWalletSelect(catType) {
       const sel=document.getElementById("field-savings-wallet");
@@ -1513,13 +1517,21 @@
       const normal=wallets.filter(w=>w.type!=="credito");
       const credit=wallets.filter(w=>w.type==="credito");
       let opts=`<option value="">Sin cajita destino</option>`;
-      if (normal.length) opts+=`<optgroup label="Ahorro / Efectivo">`+normal.map(w=>`<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||"🏦"} ${w.name}</option>`).join("")+`</optgroup>`;
-      if (credit.length) opts+=`<optgroup label="Tarjetas de crédito">`+credit.map(w=>`<option value="${w.id}" data-name="${w.name}" data-type="credito">${w.icon||"💳"} ${w.name}</option>`).join("")+`</optgroup>`;
+      if (normal.length) opts+=`<optgroup label="Ahorro / Efectivo">`+normal.map(w=>`<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||"🏦"} ${formatName(w.name)}</option>`).join("")+`</optgroup>`;
+      if (credit.length) opts+=`<optgroup label="Tarjetas de crédito">`+credit.map(w=>`<option value="${w.id}" data-name="${w.name}" data-type="credito">${w.icon||"💳"} ${formatName(w.name)}</option>`).join("")+`</optgroup>`;
       sel.innerHTML=opts;
       if (labelEl) labelEl.innerHTML=catType==="AHORRO O INVERSIÓN"?'¿A cuál cajita de ahorro va? <span style="color:var(--muted);font-weight:400;">(opcional)</span>':'¿A cuál cajita va el pago? <span style="color:var(--muted);font-weight:400;">(opcional)</span>';
     }
+    function knownSources() {
+      return [...new Set([...allIncomes.map(i=>i.source),...Object.keys(budget?.income||{}).filter(k=>isNaN(Number(k)))])].filter(Boolean);
+    }
+    // Reutiliza la escritura de una fuente existente para no romper el cruce con el presupuesto
+    function canonicalSource(text) {
+      const match=knownSources().find(s=>s.toLowerCase()===text.toLowerCase());
+      return match||formatName(text);
+    }
     function populateSourcesSuggestions() {
-      const sources=[...new Set([...allIncomes.map(i=>i.source),...Object.keys(budget?.income||{}).filter(k=>isNaN(Number(k)))])];
+      const sources=knownSources();
       document.getElementById("sources-datalist").innerHTML=sources.map(s=>`<option value="${s}">`).join("");
     }
   </script>

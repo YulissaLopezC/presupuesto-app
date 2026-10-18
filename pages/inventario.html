@@ -629,7 +629,7 @@
       addCompra, getCompras, updateCompra
     } from "../modules/db.js";
     import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js";
-    import { formatCOP, today, applyNumericFormat, getNumericValue, formatDate } from "../assets/utils.js";
+    import { formatCOP, today, applyNumericFormat, getNumericValue, formatDate, formatName } from "../assets/utils.js";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -669,7 +669,7 @@
       const sel = document.getElementById(selectId);
       if (!sel) return;
       sel.innerHTML = `<option value="">Sin categoría</option>` +
-        categorias.map(c => `<option value="${c.name}">${c.name}</option>`).join("");
+        categorias.map(c => `<option value="${c.name}">${formatName(c.name)}</option>`).join("");
     }
 
     // ── LISTAS ────────────────────────────────────────────
@@ -1064,7 +1064,7 @@
       const sel = document.getElementById("edit-compra-cat");
       sel.innerHTML = `<option value="">Sin categoría</option>` +
         categorias.map(c =>
-          `<option value="${c.name}" ${c.name === compra.categoriaPresupuesto ? "selected" : ""}>${c.name}</option>`
+          `<option value="${c.name}" ${c.name === compra.categoriaPresupuesto ? "selected" : ""}>${formatName(c.name)}</option>`
         ).join("");
 
       document.getElementById("edit-compra-fecha").value = compra.fecha || today();
@@ -1210,7 +1210,7 @@
 
       const catPreselect  = listaSeleccionada.categoriaPresupuesto || "";
       const walletOptions = wallets.map(w =>
-        `<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||'🏦'} ${w.name}</option>`
+        `<option value="${w.id}" data-name="${w.name}" data-type="${w.type||'ahorro'}">${w.icon||'🏦'} ${formatName(w.name)}</option>`
       ).join("");
 
       function calcTotal() {
@@ -1265,7 +1265,7 @@
           <select class="f-sel" id="compra-cat">
             <option value="">Sin categoría</option>
             ${categorias.map(c =>
-              `<option value="${c.name}" ${c.name === catPreselect ? "selected" : ""}>${c.name}</option>`
+              `<option value="${c.name}" ${c.name === catPreselect ? "selected" : ""}>${formatName(c.name)}</option>`
             ).join("")}
           </select>
         </div>
@@ -1360,7 +1360,7 @@
             date: fecha,
             category: categoria,
             amount: total,
-            description: `Compra ${listaSeleccionada.nombre} - ${fecha}`,
+            description: formatName(`Compra ${listaSeleccionada.nombre} - ${fecha}`),
             walletId,
             walletName,
             walletType,
