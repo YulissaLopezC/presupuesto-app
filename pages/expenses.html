@@ -124,9 +124,17 @@
     .mov-name { font-size: 15px; font-weight: 600; color: var(--text); }
     .mov-desc { font-size: 13px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .mov-right { text-align: right; flex-shrink: 0; }
-    .mov-amt { font-size: 15px; font-weight: 700; color: var(--text); }
+    .mov-amt { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; }
     .mov-amt.pos { color: var(--income); }
-    .mov-wallet { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    /* El ancho de la columna lo da el valor; la cajita se recorta a ese ancho */
+    .mov-wallet {
+      font-size: 12px; color: var(--muted); margin-top: 2px;
+      width: 0; min-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    @media (min-width: 900px) {
+      .mov-wallet { width: auto; min-width: 0; }
+    }
     .mov-del {
       background: none; border: none; color: var(--muted);
       cursor: pointer; padding: 6px; flex-shrink: 0; border-radius: 8px;
