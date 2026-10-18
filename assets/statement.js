@@ -9,7 +9,7 @@
 // que hace modules/db.js al escribir. En crédito ese número es deuda.
 // ============================================================
 
-import { formatName } from "./utils.js";
+import { formatName } from "./utils.js?v=20261018";
 
 export const ALL_WALLETS = "all";
 
@@ -118,7 +118,7 @@ function describe(ev, walletId, byId) {
     case "gasto": {
       const cat = formatName(ev.category);
       // Sin descripción, la categoría hace de descripción (como en Movimientos)
-      return { desc: formatName(ev.label) || cat || "Gasto", sub: cat ? `Gasto · ${cat}` : "Gasto", detail: ev.label ? cat : "" };
+      return { desc: formatName(ev.label) || cat || "Gasto", sub: cat ? `Gasto · ${cat}` : "Gasto", detail: ev.label && formatName(ev.label) !== cat ? cat : "" };
     }
     case "ahorro":
     case "pago": {
@@ -193,14 +193,19 @@ export function buildStatement(events, wallets, walletId, month) {
   });
 
   // Control: el acumulado debe terminar en el saldo final
-  let unexplained = final - running;
-  // Las tarjetas se crean con deuda 0 (addWallet) y todo cambio posterior queda
-  // registrado como movimiento: lo que no explican los movimientos es una
-  // diferencia (p. ej. un saldo editado a mano antes de existir `adjustments`).
-  if (isCredit) {
-    unexplained += balanceNow - relevant.reduce((s, ev) => s + effectOf(ev), 0);
-  }
+  const unexplained = final - running;
   return { rows, initial, final, totalIn, totalOut, countIn, countOut, isCredit, unexplained };
+}
+
+// ── Control de tarjetas de crédito ─────────────────────────
+// Las tarjetas se crean con deuda 0 (addWallet) y todo cambio posterior queda
+// registrado como movimiento: lo que no explican los movimientos es una
+// diferencia (p. ej. un saldo editado a mano antes de existir `adjustments`).
+// historyEvents: buildEvents() sobre el historial COMPLETO de esa cajita.
+export function creditUnexplained(historyEvents, wallet) {
+  const explained = historyEvents.reduce((s, ev) =>
+    s + ev.effects.filter(f => f.walletId === wallet.id).reduce((a, f) => a + f.delta, 0), 0);
+  return Number(wallet.balance || 0) - explained;
 }
 
 // ── Exportar ──────────────────────────────────────────────

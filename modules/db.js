@@ -19,11 +19,11 @@ import {
   addDoc, setDoc, updateDoc, deleteDoc,
   getDocs, getDoc,
   query, where, orderBy,
-  serverTimestamp, increment, runTransaction, writeBatch
+  serverTimestamp, increment, runTransaction, writeBatch, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { db } from "../firebase-config.js";
-import { today } from "../assets/utils.js";
+import { db } from "../firebase-config.js?v=20261018";
+import { today } from "../assets/utils.js?v=20261018";
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -371,31 +371,66 @@ export async function deleteTransfer(uid, transferId, transferData) {
 }
 
 // ── EXTRACTO DE CAJITA (solo lectura) ─────────────────────
-//
-// Trae todo lo que mueve saldos de cajitas, sin filtrar por mes: para
-// meses pasados el saldo se recalcula hacia atrás desde el saldo actual,
-// así que hacen falta también los movimientos posteriores.
-// Sin orderBy: las transferencias no guardan `date` y Firestore excluye
-// del resultado los documentos sin el campo ordenado.
 
-export async function getWalletStatementSources(uid) {
-  const all = async (col) => (await getDocs(col)).docs.map(d => ({ id: d.id, ...d.data() }));
-  const [expenses, incomes, transfers, adjustments, debtors] = await Promise.all([
-    all(userCol(uid, "expenses")),
-    all(userCol(uid, "incomes")),
-    all(userCol(uid, "transfers")),
-    all(userCol(uid, "adjustments")),
-    all(debtorCol(uid))
+const docsOf = async (q) => (await getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
+// Une resultados de varias consultas sin repetir documentos
+const mergeById = (lists) => [...new Map(lists.flat().map(x => [x.id, x])).values()];
+
+// Movimientos desde fromDate ("YYYY-MM-DD") hasta hoy. Para un mes basta
+// desde su día 1: lo posterior sirve para recalcular el saldo hacia atrás.
+// Las transferencias no guardan `date` y préstamos/abonos pueden tenerlo
+// vacío: a esas colecciones se les consulta también por `createdAt`, porque
+// un where("date", ...) excluye los documentos sin ese campo.
+export async function getWalletStatementSources(uid, fromDate) {
+  const [y, m, d] = fromDate.split("-").map(Number);
+  const fromTs    = Timestamp.fromDate(new Date(y, m - 1, d));
+  const byDate    = (col) => docsOf(query(col, where("date", ">=", fromDate)));
+  const byDateOrCreated = async (col) => mergeById(await Promise.all([
+    byDate(col),
+    docsOf(query(col, where("createdAt", ">=", fromTs)))
+  ]));
+
+  // Los préstamos solo esperan la lista de deudores, no al resto de consultas
+  const [expenses, incomes, transfers, adjustments, { loans, payments }] = await Promise.all([
+    byDate(userCol(uid, "expenses")),
+    byDate(userCol(uid, "incomes")),
+    byDateOrCreated(userCol(uid, "transfers")),
+    byDate(userCol(uid, "adjustments")),
+    docsOf(debtorCol(uid)).then(debtors => getDebtorMovements(uid, debtors, byDateOrCreated))
   ]);
+  return { expenses, incomes, transfers, adjustments, loans, payments };
+}
+
+// Historial completo de UNA cajita (todas las fechas), para verificar que
+// la deuda de una tarjeta se explique desde su creación. Solo consultas por
+// igualdad de un campo: no requieren índices compuestos.
+export async function getWalletHistorySources(uid, walletId) {
+  const eq = (col, field) => docsOf(query(col, where(field, "==", walletId)));
+  const [expFrom, expTo, incomes, trFrom, trTo, adjustments, { loans, payments }] = await Promise.all([
+    eq(userCol(uid, "expenses"), "walletId"),
+    eq(userCol(uid, "expenses"), "toWalletId"),
+    eq(userCol(uid, "incomes"), "walletId"),
+    eq(userCol(uid, "transfers"), "fromWalletId"),
+    eq(userCol(uid, "transfers"), "toWalletId"),
+    eq(userCol(uid, "adjustments"), "walletId"),
+    docsOf(debtorCol(uid)).then(debtors => getDebtorMovements(uid, debtors, (col) => eq(col, "walletId")))
+  ]);
+  return {
+    expenses: mergeById([expFrom, expTo]), incomes,
+    transfers: mergeById([trFrom, trTo]), adjustments, loans, payments
+  };
+}
+
+// Préstamos y abonos de todos los deudores, todas las consultas en paralelo
+async function getDebtorMovements(uid, debtors, fetchCol) {
   const perDebtor = await Promise.all(debtors.map(async d => {
-    const [loans, payments] = await Promise.all([all(loanCol(uid, d.id)), all(paymentCol(uid, d.id))]);
+    const [loans, payments] = await Promise.all([fetchCol(loanCol(uid, d.id)), fetchCol(paymentCol(uid, d.id))]);
     return {
       loans:    loans.map(l => ({ ...l, debtorName: d.name })),
       payments: payments.map(p => ({ ...p, debtorName: d.name }))
     };
   }));
   return {
-    expenses, incomes, transfers, adjustments,
     loans:    perDebtor.flatMap(x => x.loans),
     payments: perDebtor.flatMap(x => x.payments)
   };

@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Extracto</title>
-  <link rel="stylesheet" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
     /* ── Página ──────────────────────────────────────────── */
     .ext-page {
@@ -198,6 +198,22 @@
       font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap;
     }
 
+    /* ── Estado de carga / error ─────────────────────────── */
+    .ext-status { display: none; }
+    .is-loading .ext-status, .is-error .ext-status {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+      padding: 32px 16px; text-align: center; font-size: 14px; color: var(--muted);
+    }
+    .is-error .ext-status { color: var(--text); font-weight: 600; }
+    .is-loading .ext-data, .is-error .ext-data { display: none !important; }
+    .ext-spinner {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 3px solid var(--surface2); border-top-color: var(--accent);
+      animation: ext-spin 0.7s linear infinite;
+    }
+    @keyframes ext-spin { to { transform: rotate(360deg); } }
+
     .sr-only {
       position: absolute; width: 1px; height: 1px; overflow: hidden;
       clip: rect(0 0 0 0); white-space: nowrap;
@@ -232,7 +248,7 @@
   </style>
 </head>
 <body>
-  <div class="ext-page">
+  <div class="ext-page is-loading">
 
     <!-- ── Celular ── -->
     <div class="ext-hdr ext-mob">
@@ -265,21 +281,17 @@
       </button>
     </div>
 
-    <div class="ext-card ext-mob" id="mob-card">
-      <div class="skeleton" style="height:96px;border-radius:12px;opacity:0.2;"></div>
-    </div>
+    <div class="ext-card ext-mob ext-data" id="mob-card"></div>
 
-    <div class="ext-warn ext-mob" data-warn style="display:none;" role="status"></div>
+    <div class="ext-warn ext-mob ext-data" data-warn style="display:none;" role="status"></div>
 
-    <div class="ext-chips ext-mob" role="tablist" aria-label="Filtrar movimientos" id="mob-chips">
+    <div class="ext-chips ext-mob ext-data" role="tablist" aria-label="Filtrar movimientos" id="mob-chips">
       <button class="ext-chip active" role="tab" aria-selected="true"  data-filter="all"  type="button">Todo</button>
       <button class="ext-chip"        role="tab" aria-selected="false" data-filter="in"   type="button">Entradas</button>
       <button class="ext-chip"        role="tab" aria-selected="false" data-filter="out"  type="button">Salidas</button>
     </div>
 
-    <div class="ext-list ext-mob" id="mob-list">
-      <div class="skeleton" style="height:200px;border-radius:12px;"></div>
-    </div>
+    <div class="ext-list ext-mob ext-data" id="mob-list"></div>
 
     <!-- ── Escritorio (y versión imprimible) ── -->
     <div class="ext-desk">
@@ -295,23 +307,59 @@
           <button class="ext-btn primary" type="button" data-export="pdf">Descargar PDF</button>
         </div>
       </div>
-      <div class="ext-print-hdr" id="print-hdr"></div>
-      <div class="ext-kpis" id="desk-kpis"></div>
-      <div class="ext-warn" data-warn style="display:none;" role="status"></div>
-      <section class="ext-table-card">
+      <div class="ext-print-hdr ext-data" id="print-hdr"></div>
+      <div class="ext-kpis ext-data" id="desk-kpis"></div>
+      <div class="ext-warn ext-data" data-warn style="display:none;" role="status"></div>
+      <section class="ext-table-card ext-data">
         <div class="ext-table-scroll" id="desk-table"></div>
       </section>
     </div>
+
+    <div class="ext-status" id="ext-status" role="status" aria-live="polite"></div>
   </div>
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
+  <!-- Estado de carga con límite de 15 s. Es un script clásico a propósito:
+       si el módulo de abajo falla al cargar (archivo viejo en caché, error de
+       red) igual se muestra el error con "Reintentar" en vez de cargar sin fin. -->
+  <script>
+    (function () {
+      var LIMIT_MS = 15000, timer = null;
+      window.extStatus = function (state, opts) {
+        var page  = document.querySelector(".ext-page");
+        var box   = document.getElementById("ext-status");
+        var retry = opts && opts.retry;
+        clearTimeout(timer);
+        page.classList.remove("is-loading", "is-error");
+        if (state === "loading") {
+          page.classList.add("is-loading");
+          box.innerHTML = '<span class="ext-spinner" aria-hidden="true"></span><span>Cargando extracto…</span>';
+          timer = setTimeout(function () {
+            console.error("[extracto] La carga no terminó en " + LIMIT_MS / 1000 + " s");
+            window.extStatus("error", { retry: retry });
+          }, LIMIT_MS);
+        } else if (state === "error") {
+          page.classList.add("is-error");
+          box.innerHTML = '<span>No se pudo cargar el extracto</span>' +
+            '<button type="button" class="ext-btn primary" id="ext-retry">Reintentar</button>';
+          document.getElementById("ext-retry").onclick = function () {
+            if (retry) retry(); else location.reload();
+          };
+        } else {
+          box.innerHTML = "";
+        }
+      };
+      window.extStatus("loading");
+    })();
+  </script>
+
   <script type="module">
-    import { requireAuth } from "../modules/auth.js";
-    import { getWallets, getWalletStatementSources } from "../modules/db.js";
-    import { renderBottomNav, showToast } from "../assets/ui.js?v=3";
-    import { formatCOP, formatMonth, currentMonth, today, lastMonths, formatName } from "../assets/utils.js";
-    import { buildEvents, buildStatement, statementToCSV, KIND_LABEL, ALL_WALLETS } from "../assets/statement.js";
+    import { requireAuth } from "../modules/auth.js?v=20261018";
+    import { getWallets, getWalletStatementSources, getWalletHistorySources } from "../modules/db.js?v=20261018";
+    import { renderBottomNav } from "../assets/ui.js?v=20261018";
+    import { formatCOP, formatMonth, currentMonth, today, lastMonths, formatName } from "../assets/utils.js?v=20261018";
+    import { buildEvents, buildStatement, creditUnexplained, statementToCSV, KIND_LABEL, ALL_WALLETS } from "../assets/statement.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
@@ -330,27 +378,63 @@
     let selectedWallet = params.get("wallet") || "";
     let selectedMonth  = /^\d{4}-\d{2}$/.test(params.get("month") || "") ? params.get("month") : currentMonth();
     let filter = "all";
-    let wallets = [], events = [], st = null;
+    let wallets = [], active = [], events = [], st = null;
+    let uid = null;
+    let loadedFrom = null;          // "YYYY-MM": los datos cubren desde ese mes hasta hoy
+    let loadSeq = 0;                // descarta respuestas de cargas anteriores
+    const creditCheck = new Map();  // walletId → diferencia sin explicar (historial completo)
 
-    const user = await requireAuth();
-    const uid  = user.uid;
-    renderBottomNav("wallets");
+    // Carga los movimientos desde el día 1 del mes elegido. Cualquier error
+    // (red, permisos, al dibujar) se muestra en pantalla y en consola.
+    async function load() {
+      const seq = ++loadSeq;
+      window.extStatus("loading", { retry: load });
+      document.getElementById("mob-month-lbl").textContent = monthLabel(selectedMonth);
+      try {
+        if (!uid) {
+          const user = await requireAuth();
+          uid = user.uid;
+          renderBottomNav("wallets");
+        }
+        const from = selectedMonth;
+        const [ws, sources] = await Promise.all([
+          getWallets(uid, true),
+          getWalletStatementSources(uid, `${from}-01`)
+        ]);
+        if (seq !== loadSeq) return;
+        wallets = ws;
+        active  = wallets.filter(w => !w.archived);
+        events  = buildEvents(sources, wallets);
+        loadedFrom = from;
+        // Una cajita archivada se puede ver si llega por URL, pero no aparece en el selector
+        if (selectedWallet !== ALL_WALLETS && !wallets.some(w => w.id === selectedWallet)) {
+          selectedWallet = active[0]?.id || ALL_WALLETS;
+        }
+        populateSelectors();
+        render();
+        window.extStatus("ready");
+      } catch (err) {
+        if (seq !== loadSeq) return;
+        console.error("[extracto] Error al cargar:", err);
+        window.extStatus("error", { retry: load });
+      }
+    }
 
-    try {
-      const [ws, sources] = await Promise.all([getWallets(uid, true), getWalletStatementSources(uid)]);
-      wallets = ws;
-      events  = buildEvents(sources, wallets);
-    } catch (err) {
-      console.error(err);
-      showToast("No se pudo cargar el extracto.", "error");
+    // Tarjetas de crédito: verificar contra su historial completo, en segundo
+    // plano y sin bloquear el extracto. Si falla, solo queda en consola.
+    async function checkCredit(walletId) {
+      const wallet = wallets.find(w => w.id === walletId);
+      if (!wallet || wallet.type !== "credito" || creditCheck.has(walletId)) return;
+      creditCheck.set(walletId, 0);
+      try {
+        const history = await getWalletHistorySources(uid, walletId);
+        creditCheck.set(walletId, creditUnexplained(buildEvents(history, wallets), wallet));
+        if (selectedWallet === walletId && st) renderWarning();
+      } catch (err) {
+        creditCheck.delete(walletId);
+        console.error("[extracto] No se pudo verificar la tarjeta:", err);
+      }
     }
-    const active = wallets.filter(w => !w.archived);
-    // Una cajita archivada se puede ver si llega por URL, pero no aparece en el selector
-    if (selectedWallet !== ALL_WALLETS && !wallets.some(w => w.id === selectedWallet)) {
-      selectedWallet = active[0]?.id || ALL_WALLETS;
-    }
-    populateSelectors();
-    render();
 
     // ── Selectores ────────────────────────────────────────
     function walletOptions() {
@@ -381,12 +465,23 @@
       selectedWallet = id;
       document.getElementById("mob-wallet").value  = id;
       document.getElementById("desk-wallet").value = id;
-      syncUrl(); render();
+      syncUrl(); safeRender();
     }
+    // Hacia meses posteriores los datos ya cargados alcanzan; hacia atrás
+    // hay que recargar desde el día 1 del nuevo mes.
     function setMonth(m) {
       selectedMonth = m;
       populateSelectors();
-      syncUrl(); render();
+      syncUrl();
+      if (!loadedFrom || m < loadedFrom) load();
+      else safeRender();
+    }
+    function safeRender() {
+      try { render(); }
+      catch (err) {
+        console.error("[extracto] Error al mostrar:", err);
+        window.extStatus("error", { retry: load });
+      }
     }
     function syncUrl() {
       history.replaceState(null, "", `?wallet=${encodeURIComponent(selectedWallet)}&month=${selectedMonth}`);
@@ -407,7 +502,7 @@
         c.classList.toggle("active", on);
         c.setAttribute("aria-selected", String(on));
       });
-      renderList();
+      safeRender();
     });
 
     // ── Exportar ──────────────────────────────────────────
@@ -451,16 +546,22 @@
       document.getElementById("mob-next").disabled = selectedMonth >= currentMonth();
       document.title = `Presupuesto · Extracto ${currentWalletName()}`;
 
-      document.querySelectorAll("[data-warn]").forEach(warn => {
-        if (st.unexplained !== 0) {
-          warn.textContent = `Hay diferencias sin explicar de ${formatCOP(Math.abs(st.unexplained))}`;
-          warn.style.display = "";
-        } else warn.style.display = "none";
-      });
+      renderWarning();
+      checkCredit(selectedWallet);
 
       renderMobileCard();
       renderList();
       renderDesktop();
+    }
+
+    function renderWarning() {
+      const diff = st.unexplained + (st.isCredit ? (creditCheck.get(selectedWallet) || 0) : 0);
+      document.querySelectorAll("[data-warn]").forEach(warn => {
+        if (diff !== 0) {
+          warn.textContent = `Hay diferencias sin explicar de ${formatCOP(Math.abs(diff))}`;
+          warn.style.display = "";
+        } else warn.style.display = "none";
+      });
     }
 
     // Etiquetas según tipo de extracto
@@ -596,6 +697,8 @@
           </tbody>
         </table>`;
     }
+
+    load();
   </script>
 </body>
 </html>
