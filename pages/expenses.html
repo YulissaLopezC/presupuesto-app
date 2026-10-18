@@ -19,27 +19,13 @@
     .mov-header {
       display: flex; align-items: center; justify-content: space-between;
     }
+    @media (max-width: 899px) {
+      .mov-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
     .mov-title {
       font-family: "Sora", sans-serif; font-size: 26px; font-weight: 700;
       letter-spacing: -0.02em; color: var(--text); margin: 0;
     }
-    .mov-header-right { display: flex; align-items: center; gap: 8px; }
-    .mov-filter-btn {
-      width: 44px; height: 44px; border-radius: 999px; position: relative;
-      border: 1px solid var(--border); background: var(--surface);
-      color: var(--text); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: border-color 0.2s, color 0.2s; flex-shrink: 0;
-    }
-    .mov-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .mov-filter-btn.has-filters { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .filter-badge {
-      position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px;
-      border-radius: 999px; background: #fff; color: var(--accent);
-      font-size: 9px; font-weight: 800; display: none;
-      align-items: center; justify-content: center; padding: 0 3px;
-    }
-    .mov-filter-btn.has-filters .filter-badge { display: flex; }
-
     /* ── Píldora de mes ──────────────────────────────────── */
     .month-pill {
       display: inline-flex; align-items: center; gap: 10px;
@@ -83,47 +69,6 @@
     }
     .mov-tab.active { color: var(--text); font-weight: 700; border-bottom-color: var(--accent); }
     .mov-tab:hover:not(.active) { color: var(--text); }
-
-    /* ── Panel de filtros ────────────────────────────────── */
-    .filter-panel {
-      background: var(--surface); border-radius: 20px; padding: 16px;
-      border: 1px solid var(--border);
-    }
-    .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    .filter-lbl {
-      font-size: 11px; font-weight: 700; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block;
-    }
-    .filter-select, .filter-date-input {
-      width: 100%; padding: 10px 12px;
-      border: 1px solid var(--border); border-radius: 10px;
-      font-size: 13px; font-family: "Public Sans", sans-serif;
-      color: var(--text); background: var(--surface);
-      outline: none; appearance: none; box-sizing: border-box; transition: border-color 0.2s;
-    }
-    .filter-select:focus, .filter-date-input:focus { border-color: var(--accent); }
-    .filter-date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .filter-date-sub { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-    .quick-dates { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-    .quick-date-btn {
-      padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border);
-      font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer;
-      background: var(--surface); font-family: "Public Sans", sans-serif;
-      white-space: nowrap; transition: border-color 0.15s, color 0.15s;
-    }
-    .quick-date-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .quick-date-btn.active-range { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
-    .filter-footer {
-      display: flex; justify-content: space-between; align-items: center;
-      border-top: 1px solid var(--border-soft); padding-top: 10px;
-    }
-    .filter-results { font-size: 12px; color: var(--muted); }
-    .clear-filters-btn {
-      font-size: 12px; color: var(--muted); background: none; border: none;
-      cursor: pointer; font-family: "Public Sans", sans-serif; padding: 0;
-      text-decoration: underline; text-underline-offset: 2px; transition: color 0.15s;
-    }
-    .clear-filters-btn:hover { color: var(--danger); }
 
     /* ── Chips de filtro rápido (fuentes / categorías) ────── */
     .filters {
@@ -518,13 +463,7 @@
     <!-- Encabezado -->
     <div class="mov-header">
       <h1 class="mov-title">Movimientos</h1>
-      <div class="mov-header-right">
-        <div id="month-selector-container"></div>
-        <button class="mov-filter-btn" id="filter-toggle-btn" aria-label="Filtros">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-          <span class="filter-badge" id="filter-badge"></span>
-        </button>
-      </div>
+      <div id="month-selector-container"></div>
     </div>
 
     <!-- Buscador -->
@@ -538,49 +477,6 @@
       <button class="mov-tab active" id="tab-gastos" role="tab" aria-selected="true">Gastos</button>
       <button class="mov-tab" id="tab-ingresos" role="tab" aria-selected="false">Ingresos</button>
       <button class="mov-tab" id="tab-todos" role="tab" aria-selected="false">Todos</button>
-    </div>
-
-    <!-- Panel de filtros (gastos) -->
-    <div id="filter-bar">
-      <div class="filter-panel" id="filter-panel" style="display:none;">
-        <div class="filter-row">
-          <div>
-            <span class="filter-lbl">Categoría</span>
-            <select class="filter-select" id="filter-cat">
-              <option value="">Todas las categorías</option>
-            </select>
-          </div>
-          <div id="filter-wallet-group">
-            <span class="filter-lbl">Cajita</span>
-            <select class="filter-select" id="filter-wal">
-              <option value="">Todas las cajitas</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <span class="filter-lbl">Rango de fechas</span>
-          <div class="filter-date-row">
-            <div>
-              <div class="filter-date-sub">Desde</div>
-              <input type="date" class="filter-date-input" id="filter-from"/>
-            </div>
-            <div>
-              <div class="filter-date-sub">Hasta</div>
-              <input type="date" class="filter-date-input" id="filter-to"/>
-            </div>
-          </div>
-          <div class="quick-dates" id="quick-dates">
-            <button class="quick-date-btn" data-range="month">Este mes</button>
-            <button class="quick-date-btn" data-range="prev">Mes anterior</button>
-            <button class="quick-date-btn" data-range="3m">Últimos 3 meses</button>
-            <button class="quick-date-btn" data-range="year">Este año</button>
-          </div>
-        </div>
-        <div class="filter-footer">
-          <span class="filter-results" id="filter-results"></span>
-          <button class="clear-filters-btn" id="clear-filters-btn">Limpiar filtros</button>
-        </div>
-      </div>
     </div>
 
     <!-- Chips de categorías (gastos) — fila horizontal -->
@@ -792,9 +688,7 @@
     let allExpenses=[], allIncomes=[], categories=[], wallets=[], budget=null;
     let propSummary=[], propExpenses=[];
     let editingId=null, activeFilter="", activeTab="gastos";
-    let allExpensesAll=null;
-    let filters={ category:"", wallet:"", dateFrom:"", dateTo:"" };
-    let filterPanelOpen=false;
+    let categoryFilter="";
     let searchQuery="";
     let formType="gasto", dateMode="hoy", topCats=[];
 
@@ -888,7 +782,6 @@
     }
 
     async function loadAll() {
-      allExpensesAll = null;
       syncProportionalIncomes(uid, selectedMonth).catch(console.error);
       const [exp,inc,bud,prop] = await Promise.all([
         getExpenses(uid, {month:selectedMonth}),
@@ -899,7 +792,6 @@
       allExpenses=exp; allIncomes=inc; budget=bud; propSummary=prop;
       populateCategorySelect();
       propExpenses = await getProportionalExpensesSummary(uid, selectedMonth, allExpenses);
-      if (filters.dateFrom || filters.dateTo) await ensureAllExpenses();
       renderHeroSum(); renderFilters();
       if (activeTab==="gastos")    { renderPropExpenses(); renderExpenses(); }
       else if (activeTab==="ingresos") { renderDevengado(); renderSources(); renderIncomes(); }
@@ -907,61 +799,18 @@
     }
 
     // ── Helpers filtros ───────────────────────────────────
-    function filterActiveCount() {
-      return (filters.category?1:0)+(filters.wallet?1:0)+(filters.dateFrom||filters.dateTo?1:0);
-    }
     function getFilteredExpenses() {
-      const hasDate = filters.dateFrom || filters.dateTo;
-      let src = hasDate && allExpensesAll ? allExpensesAll : allExpenses;
-      if (filters.category) src = src.filter(e=>e.category===filters.category);
-      if (filters.wallet)   src = src.filter(e=>e.walletId===filters.wallet||e.toWalletId===filters.wallet);
-      if (filters.dateFrom) src = src.filter(e=>e.date>=filters.dateFrom);
-      if (filters.dateTo)   src = src.filter(e=>e.date<=filters.dateTo);
+      let src = allExpenses;
+      if (categoryFilter) src = src.filter(e=>e.category===categoryFilter);
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         src = src.filter(e=>(e.category||"").toLowerCase().includes(q)||(e.description||"").toLowerCase().includes(q));
       }
       return src;
     }
-    async function ensureAllExpenses() {
-      if (!allExpensesAll) allExpensesAll = await getExpenses(uid, {});
-    }
     function resetFilters() {
-      filters={category:"",wallet:"",dateFrom:"",dateTo:""};
-      filterPanelOpen=false;
-      const panel=document.getElementById("filter-panel");
-      if (panel) panel.style.display="none";
-      const fromEl=document.getElementById("filter-from");
-      const toEl  =document.getElementById("filter-to");
-      if (fromEl) fromEl.value="";
-      if (toEl)   toEl.value="";
-      document.querySelectorAll(".quick-date-btn").forEach(b=>b.classList.remove("active-range"));
-      updateFilterToggleBtn();
+      categoryFilter="";
       renderCatChips(); // refleja "Todas las categorías" como activa
-    }
-    function updateFilterToggleBtn() {
-      const btn   = document.getElementById("filter-toggle-btn");
-      const badge = document.getElementById("filter-badge");
-      if (!btn) return;
-      const count = filterActiveCount();
-      btn.classList.toggle("has-filters", count>0);
-      btn.setAttribute("aria-label", count>0 ? `Filtros (${count} activos)` : "Filtros");
-      if (badge) badge.textContent = String(count);
-    }
-    function populateFilterPanel() {
-      const catSel   = document.getElementById("filter-cat");
-      const catNames = [...new Set(allExpenses.map(e=>e.category).filter(Boolean))].sort();
-      catSel.innerHTML = `<option value="">Todas las categorías</option>`+
-        catNames.map(n=>`<option value="${n}"${filters.category===n?" selected":""}>${n}</option>`).join("");
-      const walSel   = document.getElementById("filter-wal");
-      const walGroup = document.getElementById("filter-wallet-group");
-      if (wallets.length) {
-        walGroup.style.display="block";
-        walSel.innerHTML=`<option value="">Todas las cajitas</option>`+
-          wallets.map(w=>`<option value="${w.id}"${filters.wallet===w.id?" selected":""}>${w.icon||"🏦"} ${w.name}</option>`).join("");
-      } else { walGroup.style.display="none"; }
-      document.getElementById("filter-from").value=filters.dateFrom;
-      document.getElementById("filter-to").value  =filters.dateTo;
     }
 
     // ── Helpers renderizado ───────────────────────────────
@@ -974,8 +823,7 @@
     // ── Funciones del formulario de registro ──────────────
 
     function calcTopCategories() {
-      const src = allExpensesAll || allExpenses;
-      const counts = src.reduce((acc,e)=>{if(e.category)acc[e.category]=(acc[e.category]||0)+1;return acc;},{});
+      const counts = allExpenses.reduce((acc,e)=>{if(e.category)acc[e.category]=(acc[e.category]||0)+1;return acc;},{});
       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([cat])=>cat);
       const hiddenCats = budget?.hiddenCats||[];
       const visible = categories.filter(c=>{
@@ -1197,10 +1045,9 @@
         items=[...exps,...incs]; count=items.length;
       }
       const total=items.reduce((s,i)=>s+Number(i.amount),0);
-      const hasRange=isG&&(filters.dateFrom||filters.dateTo);
       const monthLbl=formatMonth(selectedMonth);
       document.getElementById("hero-sum").innerHTML=`
-        <span class="mov-sum-lbl">${monthLbl} · ${count} registro${count!==1?"s":""} ${hasRange?"en el rango":""}</span>
+        <span class="mov-sum-lbl">${monthLbl} · ${count} registro${count!==1?"s":""}</span>
         <span class="mov-sum-amt">${isI?"+ ":"− "}${formatCOP(total)}</span>
       `;
     }
@@ -1208,10 +1055,9 @@
     // ── Filtros visibles ──────────────────────────────────
     function renderFilters() {
       const isG=activeTab==="gastos", isI=activeTab==="ingresos";
-      document.getElementById("filter-bar").style.display       = isG ? "block" : "none";
       document.getElementById("cat-filter-chips").style.display = "none"; // renderCatChips lo muestra si hace falta
       document.getElementById("item-filters").style.display     = "none"; // renderSourceChips lo muestra si hace falta
-      if (isG) { populateFilterPanel(); updateFilterToggleBtn(); renderCatChips(); }
+      if (isG) { renderCatChips(); }
       else if (isI) { renderSourceChips(); }
     }
 
@@ -1220,17 +1066,14 @@
       const cats = [...new Set(allExpenses.map(e=>e.category).filter(Boolean))].sort();
       if (cats.length <= 1) { el.style.display="none"; return; }
       el.style.display = "flex";
-      el.innerHTML = `<button class="chip${!filters.category?" active":""}" data-cat="" type="button">Todas las categorías</button>` +
-        cats.map(n=>`<button class="chip${filters.category===n?" active":""}" data-cat="${n}" type="button">${n}</button>`).join("");
+      el.innerHTML = `<button class="chip${!categoryFilter?" active":""}" data-cat="" type="button">Todas las categorías</button>` +
+        cats.map(n=>`<button class="chip${categoryFilter===n?" active":""}" data-cat="${n}" type="button">${n}</button>`).join("");
       el.querySelectorAll(".chip").forEach(btn=>{
         btn.addEventListener("click", ()=>{
-          filters.category = btn.dataset.cat;
-          activeFilter = btn.dataset.cat;
+          categoryFilter = btn.dataset.cat;
           el.querySelectorAll(".chip").forEach(b=>b.classList.remove("active"));
           btn.classList.add("active");
-          const catSel=document.getElementById("filter-cat");
-          if (catSel) catSel.value=btn.dataset.cat;
-          updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
+          renderHeroSum(); renderExpenses();
         });
       });
     }
@@ -1256,10 +1099,8 @@
     function renderExpenses() {
       const el=document.getElementById("expenses-list");
       const filtered=getFilteredExpenses();
-      const countEl=document.getElementById("filter-results");
-      if (countEl) countEl.textContent=`${filtered.length} resultado${filtered.length!==1?"s":""}`;
       if (!filtered.length) {
-        el.innerHTML=`<div class="empty-state"><p>${filterActiveCount()>0?"No hay movimientos con estos filtros.":"No hay gastos este mes."}</p></div>`;
+        el.innerHTML=`<div class="empty-state"><p>${categoryFilter||searchQuery?"No hay movimientos con estos filtros.":"No hay gastos este mes."}</p></div>`;
         return;
       }
       const groups=filtered.reduce((acc,e)=>{(acc[e.date]=acc[e.date]||[]).push(e);return acc;},{});
@@ -1644,51 +1485,6 @@
       try{const i=allIncomes.find(x=>x.id===id);await deleteIncome(uid,id,i);showToast("Eliminado.","success");wallets=await getWallets(uid);populateWalletSelect();await loadAll();}
       catch{showToast("Error al eliminar.","error");}
     }
-
-    // ── Eventos del panel de filtros ──────────────────────
-    document.getElementById("filter-toggle-btn").addEventListener("click", () => {
-      filterPanelOpen=!filterPanelOpen;
-      document.getElementById("filter-panel").style.display=filterPanelOpen?"block":"none";
-      if (filterPanelOpen) populateFilterPanel();
-      updateFilterToggleBtn();
-    });
-    document.getElementById("filter-cat").addEventListener("change", e=>{
-      filters.category=e.target.value; activeFilter=filters.category;
-      updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
-      renderCatChips(); // sincroniza los chips con el select
-    });
-    document.getElementById("filter-wal").addEventListener("change", e=>{
-      filters.wallet=e.target.value; updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
-    });
-    document.getElementById("filter-from").addEventListener("change", async e=>{
-      filters.dateFrom=e.target.value;
-      if (filters.dateFrom) await ensureAllExpenses();
-      updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
-    });
-    document.getElementById("filter-to").addEventListener("change", async e=>{
-      filters.dateTo=e.target.value;
-      if (filters.dateTo) await ensureAllExpenses();
-      updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
-    });
-    document.getElementById("quick-dates").addEventListener("click", async e=>{
-      const btn=e.target.closest(".quick-date-btn"); if (!btn) return;
-      document.querySelectorAll(".quick-date-btn").forEach(b=>b.classList.remove("active-range"));
-      btn.classList.add("active-range");
-      const range=btn.dataset.range;
-      const now=new Date(); const y=now.getFullYear(), m=now.getMonth();
-      let from,to;
-      if (range==="month"){from=`${y}-${String(m+1).padStart(2,"0")}-01`;to=`${y}-${String(m+1).padStart(2,"0")}-31`;}
-      else if (range==="prev"){const pm=m===0?12:m,py=m===0?y-1:y;from=`${py}-${String(pm).padStart(2,"0")}-01`;to=`${py}-${String(pm).padStart(2,"0")}-31`;}
-      else if (range==="3m"){const start=new Date(y,m-2,1);from=`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,"0")}-01`;to=`${y}-${String(m+1).padStart(2,"0")}-31`;}
-      else if (range==="year"){from=`${y}-01-01`;to=`${y}-12-31`;}
-      filters.dateFrom=from; filters.dateTo=to;
-      document.getElementById("filter-from").value=from;
-      document.getElementById("filter-to").value  =to;
-      await ensureAllExpenses(); updateFilterToggleBtn(); renderHeroSum(); renderExpenses();
-    });
-    document.getElementById("clear-filters-btn").addEventListener("click", ()=>{
-      resetFilters(); activeFilter=""; populateFilterPanel(); renderHeroSum(); renderExpenses();
-    });
 
     // ── Selects del modal ─────────────────────────────────
     function populateCategorySelect() {

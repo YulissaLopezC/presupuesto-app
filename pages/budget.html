@@ -24,6 +24,9 @@
       letter-spacing: -0.02em; color: var(--text); margin: 0;
     }
     .bud-header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    @media (max-width: 899px) {
+      .bud-header { flex-direction: column; align-items: flex-start; }
+    }
 
     /* ── Resumen ────────────────────────────────────────── */
     .bud-summary {
