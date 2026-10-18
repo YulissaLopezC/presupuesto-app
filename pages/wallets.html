@@ -103,6 +103,8 @@
       position: relative;
     }
     .wal-item:last-child { border-bottom: none; }
+    .wal-item[data-id] { cursor: pointer; }
+    .wal-item[data-id]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
     .wal-item-top { display: flex; align-items: center; gap: 12px; }
     .wal-item-ico {
       width: 40px; height: 40px; border-radius: 12px;
@@ -658,7 +660,7 @@
               const balStr   = isCredit && balance > 0 ? `− ${formatCOP(balance)}` : formatCOP(balance);
               const limit    = Number(w.creditLimit || 0);
               const pct      = isCredit && limit > 0 ? Math.min(100, Math.round(balance / limit * 100)) : 0;
-              return `<div class="wal-item" data-id="${w.id}">
+              return `<div class="wal-item" data-id="${w.id}" role="link" tabindex="0" aria-label="Ver extracto de ${formatName(w.name)}">
                 <div class="wal-item-top">
                   <div class="wal-item-ico" style="background:${g.bg};color:${g.fg}">${w.icon || "🏦"}</div>
                   <div class="wal-item-body">
@@ -744,8 +746,19 @@
         document.querySelectorAll(".wal-more-menu").forEach(m => m.style.display = "none");
         if (action.dataset.action === "edit")    openEdit(id);
         if (action.dataset.action === "archive") handleArchive(id);
+        return;
       }
+      if (e.target.closest(".wal-more-menu")) return;
+      const item = e.target.closest(".wal-item[data-id]");
+      if (item) openStatement(item.dataset.id);
     });
+    document.getElementById("wal-groups").addEventListener("keydown", e => {
+      if (e.key !== "Enter" || !e.target.matches(".wal-item[data-id]")) return;
+      openStatement(e.target.dataset.id);
+    });
+    function openStatement(id) {
+      location.href = `./extracto.html?wallet=${encodeURIComponent(id)}`;
+    }
 
     // ── New / Edit modal ───────────────────────────────────
     document.getElementById("btn-new-circle").addEventListener("click", openNewModal);

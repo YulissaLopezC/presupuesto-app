@@ -370,6 +370,37 @@ export async function deleteTransfer(uid, transferId, transferData) {
   });
 }
 
+// ── EXTRACTO DE CAJITA (solo lectura) ─────────────────────
+//
+// Trae todo lo que mueve saldos de cajitas, sin filtrar por mes: para
+// meses pasados el saldo se recalcula hacia atrás desde el saldo actual,
+// así que hacen falta también los movimientos posteriores.
+// Sin orderBy: las transferencias no guardan `date` y Firestore excluye
+// del resultado los documentos sin el campo ordenado.
+
+export async function getWalletStatementSources(uid) {
+  const all = async (col) => (await getDocs(col)).docs.map(d => ({ id: d.id, ...d.data() }));
+  const [expenses, incomes, transfers, adjustments, debtors] = await Promise.all([
+    all(userCol(uid, "expenses")),
+    all(userCol(uid, "incomes")),
+    all(userCol(uid, "transfers")),
+    all(userCol(uid, "adjustments")),
+    all(debtorCol(uid))
+  ]);
+  const perDebtor = await Promise.all(debtors.map(async d => {
+    const [loans, payments] = await Promise.all([all(loanCol(uid, d.id)), all(paymentCol(uid, d.id))]);
+    return {
+      loans:    loans.map(l => ({ ...l, debtorName: d.name })),
+      payments: payments.map(p => ({ ...p, debtorName: d.name }))
+    };
+  }));
+  return {
+    expenses, incomes, transfers, adjustments,
+    loans:    perDebtor.flatMap(x => x.loans),
+    payments: perDebtor.flatMap(x => x.payments)
+  };
+}
+
 // ── PRESUPUESTO MENSUAL (budgets) ─────────────────────────
 
 export async function setBudget(uid, month, data) {
