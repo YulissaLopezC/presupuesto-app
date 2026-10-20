@@ -5,352 +5,423 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Préstamos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
-    body { background: #f0f4f8; }
-    body.dark { background: #111; }
-    .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px; }
-
-    .page-hdr { padding: 14px 0 0; margin-bottom: 16px; }
-    .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
-    .page-sub { font-size: 12px; color: #888; margin-top: 3px; }
-
-    /* Stats */
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-    .stat-card { background: #fff; border-radius: 16px; padding: 18px; }
-    body.dark .stat-card { background: #1a1a1a; }
-    .stat-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-    .stat-val { font-size: 24px; font-weight: 500; letter-spacing: -0.5px; }
-    .stat-val.pending { color: #185fa5; }
-    .stat-val.paid    { color: #3b6d11; }
-    .stat-ico { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 10px; }
-    .stat-ico.pending { background: #e6f1fb; }
-    .stat-ico.paid    { background: #eaf3de; }
-
-    /* Section header */
-    .section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .section-title { font-size: 15px; font-weight: 500; color: var(--text); }
-
-    /* Debtor card */
-    .loan-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 10px; }
-    body.dark .loan-card { background: #1a1a1a; }
-    .loan-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-    .loan-avatar {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: #e6f1fb; display: flex; align-items: center; justify-content: center;
-      font-size: 16px; font-weight: 500; color: #185fa5; flex-shrink: 0;
+    /* ── Layout ─────────────────────────────────────────────
+       Móvil: una columna de 680px máx.
+       Escritorio (≥ 900px): resumen 5fr (fijo al hacer scroll) + deudores 7fr, gap 16px. */
+    .lns {
+      max-width: 680px; margin: 0 auto;
+      padding: 20px 20px 0;
+      display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px;
     }
-    .loan-avatar.paid { background: #eaf3de; color: #3b6d11; }
-    .loan-info { flex: 1; min-width: 0; }
-    .loan-name { font-size: 14px; font-weight: 500; color: var(--text); }
-    .loan-meta { font-size: 11px; color: #888; margin-top: 2px; }
-    .loan-badge { font-size: 10px; font-weight: 500; padding: 4px 10px; border-radius: 99px; flex-shrink: 0; }
-    .loan-badge.pendiente { background: #e6f4ea; color: #3b6d11; }
-    .loan-badge.pagado    { background: #f0f4f8; color: #888; }
+    .lns .card { margin-bottom: 0; }
+    .lns-col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; min-width: 0; }
 
-    .loan-amounts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .loan-amt-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
-    .loan-amt-val { font-size: 14px; font-weight: 500; }
-    .loan-amt-val.total  { color: var(--text); }
-    .loan-amt-val.paid-v { color: #3b6d11; }
-    .loan-amt-val.pend-v { color: #c0392b; }
-
-    .loan-prog-row { display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-bottom: 5px; }
-    .loan-prog-pct { font-weight: 500; color: #3b6d11; }
-    .loan-prog-bar { height: 5px; background: #e8edf2; border-radius: 99px; overflow: hidden; margin-bottom: 12px; }
-    body.dark .loan-prog-bar { background: #2a2a2a; }
-    .loan-prog-fill { height: 100%; border-radius: 99px; background: #3b6d11; }
-
-    .loan-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .detail-toggle { font-size: 11px; color: #185fa5; cursor: pointer; background: none; border: none; font-family: "DM Sans", sans-serif; padding: 0; text-decoration: underline; text-underline-offset: 2px; margin-right: auto; }
-    .loan-new-btn {
-      display: flex; align-items: center; gap: 5px;
-      background: #f0f4f8; color: #185fa5;
-      border: 1.5px solid #d0dce8; border-radius: 8px;
-      padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif;
+    /* ── Título + acciones (igual que Ingresos) ──────────── */
+    .lns-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    body.dark .loan-new-btn { background: #222; color: #6fa8dc; border-color: #333; }
-    .loan-new-btn:hover { background: #e0eaf6; }
-    .loan-abono-btn {
-      display: flex; align-items: center; gap: 5px;
-      background: #0f3460; color: #fff; border: none; border-radius: 8px;
-      padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif;
+    .lns-head h1 {
+      font-family: "Sora", sans-serif; font-size: 22px; font-weight: 600;
+      letter-spacing: -0.02em; color: var(--text);
     }
-    .loan-abono-btn:hover { background: #1a4a7a; }
-    .loan-del-btn { background: #f0f4f8; border: none; border-radius: 8px; padding: 7px 10px; font-size: 13px; color: #888; cursor: pointer; transition: all 0.15s; }
-    body.dark .loan-del-btn { background: #222; }
-    .loan-del-btn:hover { background: #fbeaea; color: #c0392b; }
-
-    /* Monto prominente (saldo pendiente) */
-    .loan-amt-val.prominent { font-size: 18px; }
-
-    /* Botón ver préstamos pagados */
-    .paid-loans-link {
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      width: 100%; padding: 12px; margin-top: 4px;
-      background: none; border: 1.5px dashed #d0d8e0; border-radius: 12px;
-      font-size: 13px; color: #888; cursor: pointer; font-family: "DM Sans", sans-serif;
+    /* Nuevo préstamo: círculo en móvil (como Cajitas), botón primario en escritorio */
+    .lns-new {
+      width: 44px; height: 44px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-family: "Public Sans", sans-serif;
+      transition: border-color 0.2s, background 0.2s;
     }
-    .paid-loans-link:hover { border-color: #b0bec5; color: #555; }
-    body.dark .paid-loans-link { border-color: #333; color: #666; }
+    .lns-new:hover { border-color: var(--text); }
+    .lns-new-lbl { display: none; }
 
-    /* Items del modal de préstamos pagados */
-    .paid-loan-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 0; border-bottom: 0.5px solid #f0f4f8;
+    /* ── Cifras ──────────────────────────────────────────── */
+    .num {
+      font-family: "Sora", sans-serif; font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em; white-space: nowrap;
     }
-    body.dark .paid-loan-item { border-bottom-color: #222; }
-    .paid-loan-item:last-child { border-bottom: none; }
+    .num.pos { color: var(--income); }
 
-    /* Detalle expandido */
-    .debtor-detail { border-top: 0.5px solid #f0f0f0; padding-top: 12px; margin-top: 8px; }
-    body.dark .debtor-detail { border-top-color: #2a2a2a; }
-    .detail-section { margin-bottom: 12px; }
-    .detail-section:last-child { margin-bottom: 0; }
-    .detail-section-hdr { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-    .item-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid #f8f8f8; font-size: 12px; }
-    body.dark .item-row { border-bottom-color: #222; }
-    .item-row:last-child { border-bottom: none; }
-    .item-main { flex: 1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-width: 0; }
-    .item-date { color: #888; white-space: nowrap; }
-    .item-wallet { color: #aaa; }
-    .item-note { color: #bbb; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-    .item-amount { font-weight: 500; flex-shrink: 0; }
-    .item-amount.total-v   { color: var(--text); }
-    .item-amount.payment-v { color: #3b6d11; }
-    .item-del { background: none; border: none; color: #ddd; font-size: 11px; cursor: pointer; flex-shrink: 0; padding: 3px 5px; }
-    .item-del:hover { color: #c0392b; }
-    .no-items { font-size: 12px; color: #aaa; padding: 4px 0 6px; }
-
-    /* FAB */
-    .fab {
-      position: fixed; bottom: 76px; right: 20px;
-      width: 52px; height: 52px; background: #0f3460; color: #fff;
-      border: none; border-radius: 50%; font-size: 24px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 16px rgba(15,52,96,0.3); z-index: 90;
-      transition: transform 0.2s;
+    /* ── Resumen: por cobrar ─────────────────────────────── */
+    .sum-amount { display: block; margin-top: 10px; }
+    .sum-sub {
+      font-family: "Sora", sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); margin-top: 8px;
     }
-    .fab:active { transform: scale(0.95); }
+    .sum-card .progress-bar { height: 10px; margin-top: 16px; }
 
-    /* Modals */
+    /* Tira de cifras (igual que "Este mes" en Inicio) */
+    .month-grid { display: grid; grid-template-columns: 1fr 1fr; margin-top: 18px; }
+    .month-cell { padding: 14px 0; border-top: 1px solid var(--border-soft); }
+    .month-cell:nth-child(odd)  { padding-right: 14px; }
+    .month-cell:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--border-soft); }
+    .month-cell .num { display: block; font-size: 18px; font-weight: 700; margin-top: 6px; color: var(--text); }
+    .month-cell .num.pos { color: var(--income); }
+    .month-cell .num.zero { color: var(--muted); }
+
+    /* ── Encabezado de sección dentro de tarjeta ─────────── */
+    .sect-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; min-height: 24px;
+    }
+    .sect-hdr h2 {
+      font-family: "Public Sans", sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .sect-count { font-size: 13px; color: var(--muted); }
+
+    /* ── Filas (igual que Inicio) ────────────────────────── */
+    .rows { list-style: none; margin-top: 8px; }
+    .row { padding: 16px 0; border-top: 1px solid var(--border-soft); }
+    .row:first-child { border-top: none; }
+    .row-line {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    }
+    .row-name {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row-amt { font-size: 16px; font-weight: 600; color: var(--text); }
+    .row-meta {
+      font-size: 13px; color: var(--muted);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row .num.row-meta { font-weight: 600; }
+    .row .progress-bar { margin: 12px 0 8px; }
+
+    /* Deudor: iniciales + nombre + saldo */
+    .debtor-top { display: flex; align-items: center; gap: 12px; }
+    .debtor-avatar {
+      width: 36px; height: 36px; border-radius: 999px; flex-shrink: 0;
+      background: var(--surface2); color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600;
+    }
+    .debtor-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .debtor-owes { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }
+
+    /* Acciones del deudor */
+    .loan-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .loan-actions .btn-ghost {
+      min-height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;
+      color: var(--text); font-weight: 600;
+    }
+    .detail-toggle {
+      margin-right: auto; background: none; border: none; cursor: pointer;
+      font-family: "Public Sans", sans-serif; font-size: 14px; font-weight: 600; color: var(--text);
+      padding: 4px 0; border-bottom: 1px solid var(--border); transition: border-color 0.2s;
+    }
+    .detail-toggle:hover { border-color: var(--text); }
+    .icon-del {
+      width: 40px; height: 40px; padding: 0; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* Detalle expandido: préstamos y abonos */
+    .debtor-detail {
+      margin-top: 14px; padding: 4px 16px;
+      background: var(--bg); border-radius: 14px;
+    }
+    .detail-section { padding: 12px 0; }
+    .detail-section + .detail-section { border-top: 1px solid var(--border); }
+    .detail-section-hdr {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;
+    }
+    .item-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+    .item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .item-date { font-size: 13px; font-weight: 600; color: var(--text); }
+    .item-sub {
+      font-size: 13px; color: var(--muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .item-amount { font-size: 15px; font-weight: 600; color: var(--text); }
+    .item-amount.payment-v { color: var(--income); }
+    .item-del {
+      width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .item-del:hover { background: rgba(217,63,63,0.1); color: var(--danger); }
+    .no-items { font-size: 13px; color: var(--muted); padding: 6px 0; }
+
+    .paid-loans-link { width: 100%; margin-top: 8px; color: var(--text); font-weight: 600; }
+
+    /* ── Estados ─────────────────────────────────────────── */
+    .lns .empty-state { padding: 28px 12px; }
+    .lns .empty-state p { margin-top: 0; color: var(--text); }
+    .sk-line { height: 14px; }
+
+    /* ── Modales ─────────────────────────────────────────── */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(15,52,96,0.4);
-      z-index: 150; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s;
+      position: fixed; inset: 0; background: rgba(14,23,38,0.5);
+      z-index: 150; opacity: 0; pointer-events: none; visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
       display: flex; align-items: center; justify-content: center; padding: 16px;
     }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; visibility: visible; }
     .modal {
-      background: #fff; border-radius: 20px; padding: 24px 20px 20px;
-      width: 100%; max-width: 420px;
-      transform: scale(0.95); opacity: 0;
+      background: var(--surface); border-radius: 20px; padding: 24px 20px 20px;
+      width: 100%; max-width: 480px;
+      transform: scale(0.97); opacity: 0;
       transition: transform 0.2s ease, opacity 0.2s ease;
       max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
-    body.dark .modal { background: #1a1a1a; }
     .modal-overlay.open .modal { transform: scale(1); opacity: 1; }
-    .modal-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-    .modal-title { font-size: 18px; font-weight: 500; color: var(--text); }
-    .modal-subtitle { font-size: 12px; color: #888; margin-bottom: 20px; }
-    .modal-close { background: none; border: none; font-size: 20px; color: #888; cursor: pointer; }
-    .field-lbl { font-size: 10px; font-weight: 500; color: #8a9ab0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
-    .field-block { margin-bottom: 14px; }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .f-input {
-      width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: #fff; outline: none; transition: border-color 0.15s; box-sizing: border-box;
+    .modal-hdr { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .modal-title {
+      font-family: "Sora", sans-serif; font-size: 18px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text);
     }
-    body.dark .f-input { background: #222; border-color: #333; }
-    .f-input:focus { border-color: #0f3460; }
-    .f-textarea {
-      width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text);
-      background: #fff; outline: none; resize: none; height: 80px; box-sizing: border-box;
+    .modal-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+    .modal-close {
+      width: 44px; height: 44px; border-radius: 999px; flex-shrink: 0;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color 0.2s;
     }
-    body.dark .f-textarea { background: #222; border-color: #333; }
-    .f-input-icon { position: relative; }
-    .f-input-icon .f-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #888; pointer-events: none; }
-    .f-input-icon .f-input { padding-left: 34px; }
-    .amount-block { background: #f8fafc; border-radius: 12px; padding: 13px 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; border: 1.5px solid #e2e8f0; }
-    body.dark .amount-block { background: #222; border-color: #333; }
-    .amount-sym { font-size: 20px; font-weight: 500; color: #185fa5; }
-    .amount-input { font-size: 28px; font-weight: 500; color: #1a1a2e; border: none; background: transparent; outline: none; flex: 1; min-width: 0; font-family: "DM Sans", sans-serif; }
-    body.dark .amount-input { color: #e8e8e8; }
-    .amount-input::placeholder { color: #c8d4e0; }
-    .modal-save-btn {
-      width: 100%; padding: 13px; background: #0f3460; color: #fff; border: none;
-      border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
-      font-family: "DM Sans", sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px;
+    .modal-close:hover { border-color: var(--text); }
+    .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .form-textarea { resize: none; height: 80px; }
+    .form-optional { text-transform: none; letter-spacing: 0; font-weight: 400; }
+    /* Tarjeta de valor (como en el registro de Movimientos) */
+    .amount-block {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 10px 16px; display: flex; align-items: center; gap: 6px; min-height: 56px;
+      transition: border-color 0.2s;
     }
-    .modal-save-btn:hover { background: #1a4a7a; }
-    .modal-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .amount-block:focus-within { border-color: var(--accent); }
+    .amount-sym { font-family: "Sora", sans-serif; font-size: 22px; font-weight: 700; color: var(--muted); }
+    .amount-input {
+      font-family: "Sora", sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+      color: var(--text); border: none; background: transparent; outline: none;
+      flex: 1; min-width: 0; font-variant-numeric: tabular-nums;
+    }
+    .amount-input::placeholder { color: var(--muted); opacity: 0.5; }
+    .modal .btn-primary { margin-top: 4px; }
+
+    /* Lista del modal de pagados */
+    .paid-loan-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border-soft); }
+    .paid-loan-item:first-child { border-top: none; }
+
+    /* Móvil: acciones en una fila + "Ver detalle" debajo; campos del modal apilados */
+    @media (max-width: 899px) {
+      .loan-actions { display: grid; grid-template-columns: 1fr 1fr 40px; }
+      .loan-actions .btn-ghost { justify-content: center; }
+      .detail-toggle { order: 3; grid-column: 1 / -1; justify-self: start; margin-right: 0; }
+    }
+    @media (max-width: 480px) {
+      .two-col { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill, .modal, .modal-overlay, .lns-new, .item-del, .detail-toggle { transition: none; }
+      .skeleton { animation: none; }
+    }
+
+    /* ── Escritorio ≥ 900px ──────────────────────────────── */
+    @media (min-width: 900px) {
+      .lns {
+        max-width: 1240px; padding: 32px;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px;
+      }
+      .lns-col  { gap: 16px; }
+      .lns-head { grid-column: 1 / -1; }
+      .lns-head h1 { font-size: 26px; }
+      .lns-side { align-self: start; position: sticky; top: 32px; }
+      .lns-new {
+        width: auto; height: 44px; padding: 0 18px; border: none; border-radius: 12px; gap: 6px;
+        background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
+      }
+      .lns-new:hover { background: var(--accent-strong); }
+      .lns-new-lbl { display: inline; }
+    }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
-  <div class="wrap">
-    <div class="page-hdr">
-      <div class="page-title">Préstamos</div>
-      <div class="page-sub">Dinero que has prestado a terceros</div>
+  <main class="lns">
+
+    <div class="lns-head">
+      <h1>Préstamos</h1>
+      <button class="lns-new" id="fab" type="button" aria-label="Nuevo préstamo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="lns-new-lbl">Nuevo préstamo</span>
+      </button>
     </div>
 
-    <div class="stats-row" id="stats-row">
-      <div class="skeleton" style="height:100px;border-radius:16px;"></div>
-      <div class="skeleton" style="height:100px;border-radius:16px;"></div>
+    <!-- Por cobrar -->
+    <div class="lns-col lns-side">
+      <section class="card sum-card" id="stats-row" aria-live="polite">
+        <div class="skeleton sk-line" style="width:40%;"></div>
+        <div class="skeleton" style="height:38px;width:60%;margin-top:12px;"></div>
+        <div class="skeleton sk-line" style="width:55%;margin-top:10px;"></div>
+        <div class="skeleton" style="height:10px;margin-top:22px;border-radius:999px;"></div>
+      </section>
     </div>
 
-    <div class="section-hdr">
-      <div class="section-title">Deudores</div>
+    <!-- Deudores -->
+    <div class="lns-col">
+      <section class="card">
+        <div class="sect-hdr">
+          <h2>Deudores</h2>
+          <span class="sect-count" id="debtors-count"></span>
+        </div>
+        <div id="debtors-list">
+          <ul class="rows">
+            <li class="row"><div class="skeleton" style="height:96px;"></div></li>
+            <li class="row"><div class="skeleton" style="height:96px;"></div></li>
+          </ul>
+        </div>
+      </section>
     </div>
-    <div id="debtors-list" style="margin-bottom:90px;">
-      <div class="skeleton" style="height:200px;border-radius:16px;"></div>
-    </div>
-  </div>
 
-  <button class="fab" id="fab">+</button>
+  </main>
+
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Modal: Nuevo deudor (FAB) -->
+  <!-- Modal: Nuevo deudor -->
   <div class="modal-overlay" id="debtor-overlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="debtor-title">
       <div class="modal-hdr">
-        <div class="modal-title">Nuevo deudor</div>
-        <button class="modal-close" id="debtor-close">×</button>
+        <h2 class="modal-title" id="debtor-title">Nuevo préstamo</h2>
+        <button class="modal-close" id="debtor-close" type="button" aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-      <div class="modal-subtitle">Registra un deudor con su primer préstamo.</div>
+      <p class="modal-subtitle">Registra a quién le prestas y cuánto.</p>
 
-      <div class="field-block">
-        <div class="field-lbl">¿A quién le prestas?</div>
-        <div class="f-input-icon">
-          <span class="f-ico">👤</span>
-          <input type="text" class="f-input" id="debtor-name" placeholder="Nombre del contacto" maxlength="60"/>
+      <div class="form-group">
+        <label class="form-label" for="debtor-name">¿A quién le prestas?</label>
+        <input type="text" class="form-input" id="debtor-name" placeholder="Nombre del contacto" maxlength="60"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="debtor-amount">Monto prestado</label>
+        <div class="amount-block">
+          <span class="amount-sym">$</span>
+          <input type="number" class="amount-input" id="debtor-amount" placeholder="0" min="0" inputmode="decimal"/>
         </div>
-      </div>
-
-      <div class="field-lbl">Monto prestado</div>
-      <div class="amount-block">
-        <span class="amount-sym">$</span>
-        <input type="number" class="amount-input" id="debtor-amount" placeholder="0" min="0" inputmode="decimal"/>
       </div>
 
       <div class="two-col">
-        <div>
-          <div class="field-lbl">Fecha</div>
-          <input type="date" class="f-input" id="debtor-date"/>
+        <div class="form-group">
+          <label class="form-label" for="debtor-date">Fecha</label>
+          <input type="date" class="form-input" id="debtor-date"/>
         </div>
-        <div>
-          <div class="field-lbl">¿De cuál cajita sale?</div>
-          <select class="f-input" id="debtor-wallet" style="-webkit-appearance:none;">
+        <div class="form-group">
+          <label class="form-label" for="debtor-wallet">¿De cuál cajita sale?</label>
+          <select class="form-select" id="debtor-wallet">
             <option value="">Sin cajita</option>
           </select>
         </div>
       </div>
 
-      <div class="field-block">
-        <div class="field-lbl">Notas <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
-        <textarea class="f-textarea" id="debtor-notes" placeholder="Motivo o recordatorio del préstamo..."></textarea>
+      <div class="form-group">
+        <label class="form-label" for="debtor-notes">Notas <span class="form-optional">(opcional)</span></label>
+        <textarea class="form-input form-textarea" id="debtor-notes" placeholder="Motivo o recordatorio del préstamo..."></textarea>
       </div>
 
-      <button class="modal-save-btn" id="btn-save-debtor">
-        Registrar préstamo
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
+      <button class="btn-primary" id="btn-save-debtor" type="button">Registrar préstamo</button>
     </div>
   </div>
 
   <!-- Modal: Nuevo préstamo a deudor existente -->
   <div class="modal-overlay" id="loan-overlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loan-modal-title">
       <div class="modal-hdr">
-        <div class="modal-title" id="loan-modal-title">Nuevo préstamo</div>
-        <button class="modal-close" id="loan-close">×</button>
+        <h2 class="modal-title" id="loan-modal-title">Nuevo préstamo</h2>
+        <button class="modal-close" id="loan-close" type="button" aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-      <div class="modal-subtitle">Agrega otro préstamo al mismo deudor.</div>
+      <p class="modal-subtitle">Agrega otro préstamo a la misma persona.</p>
 
-      <div class="field-lbl">Monto prestado</div>
-      <div class="amount-block">
-        <span class="amount-sym">$</span>
-        <input type="number" class="amount-input" id="loan-amount" placeholder="0" min="0" inputmode="decimal"/>
+      <div class="form-group">
+        <label class="form-label" for="loan-amount">Monto prestado</label>
+        <div class="amount-block">
+          <span class="amount-sym">$</span>
+          <input type="number" class="amount-input" id="loan-amount" placeholder="0" min="0" inputmode="decimal"/>
+        </div>
       </div>
 
       <div class="two-col">
-        <div>
-          <div class="field-lbl">Fecha</div>
-          <input type="date" class="f-input" id="loan-date"/>
+        <div class="form-group">
+          <label class="form-label" for="loan-date">Fecha</label>
+          <input type="date" class="form-input" id="loan-date"/>
         </div>
-        <div>
-          <div class="field-lbl">¿De cuál cajita sale?</div>
-          <select class="f-input" id="loan-wallet" style="-webkit-appearance:none;">
+        <div class="form-group">
+          <label class="form-label" for="loan-wallet">¿De cuál cajita sale?</label>
+          <select class="form-select" id="loan-wallet">
             <option value="">Sin cajita</option>
           </select>
         </div>
       </div>
 
-      <div class="field-block">
-        <div class="field-lbl">Notas <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
-        <textarea class="f-textarea" id="loan-notes" placeholder="Motivo del préstamo..."></textarea>
+      <div class="form-group">
+        <label class="form-label" for="loan-notes">Notas <span class="form-optional">(opcional)</span></label>
+        <textarea class="form-input form-textarea" id="loan-notes" placeholder="Motivo del préstamo..."></textarea>
       </div>
 
-      <button class="modal-save-btn" id="btn-save-loan">
-        Agregar préstamo
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
+      <button class="btn-primary" id="btn-save-loan" type="button">Agregar préstamo</button>
     </div>
   </div>
 
   <!-- Modal: Registrar abono -->
   <div class="modal-overlay" id="pay-overlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pay-title">
       <div class="modal-hdr">
-        <div class="modal-title" id="pay-title">Registrar abono</div>
-        <button class="modal-close" id="pay-close">×</button>
+        <h2 class="modal-title" id="pay-title">Registrar abono</h2>
+        <button class="modal-close" id="pay-close" type="button" aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-      <div class="modal-subtitle">El abono se aplica al total del deudor.</div>
+      <p class="modal-subtitle">El abono se aplica al total que debe esta persona.</p>
 
-      <div class="field-lbl">Monto del abono</div>
-      <div class="amount-block">
-        <span class="amount-sym">$</span>
-        <input type="number" class="amount-input" id="pay-amount" placeholder="0" min="0" inputmode="decimal"/>
+      <div class="form-group">
+        <label class="form-label" for="pay-amount">Monto del abono</label>
+        <div class="amount-block">
+          <span class="amount-sym">$</span>
+          <input type="number" class="amount-input" id="pay-amount" placeholder="0" min="0" inputmode="decimal"/>
+        </div>
       </div>
 
       <div class="two-col">
-        <div>
-          <div class="field-lbl">Fecha</div>
-          <input type="date" class="f-input" id="pay-date"/>
+        <div class="form-group">
+          <label class="form-label" for="pay-date">Fecha</label>
+          <input type="date" class="form-input" id="pay-date"/>
         </div>
-        <div>
-          <div class="field-lbl">¿A cuál cajita entra?</div>
-          <select class="f-input" id="pay-wallet" style="-webkit-appearance:none;">
+        <div class="form-group">
+          <label class="form-label" for="pay-wallet">¿A cuál cajita entra?</label>
+          <select class="form-select" id="pay-wallet">
             <option value="">Sin cajita</option>
           </select>
         </div>
       </div>
 
-      <div class="field-block">
-        <div class="field-lbl">Notas <span style="color:#aaa;font-weight:300;">(opcional)</span></div>
-        <textarea class="f-textarea" id="pay-notes" placeholder="Ej. Pago parcial..."></textarea>
+      <div class="form-group">
+        <label class="form-label" for="pay-notes">Notas <span class="form-optional">(opcional)</span></label>
+        <textarea class="form-input form-textarea" id="pay-notes" placeholder="Ej. Pago parcial..."></textarea>
       </div>
 
-      <button class="modal-save-btn" id="btn-save-pay">
-        Registrar abono
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
+      <button class="btn-primary" id="btn-save-pay" type="button">Registrar abono</button>
     </div>
   </div>
 
   <!-- Modal: Préstamos pagados -->
   <div class="modal-overlay" id="paid-overlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="paid-title">
       <div class="modal-hdr">
-        <div class="modal-title">Préstamos pagados</div>
-        <button class="modal-close" id="paid-close">×</button>
+        <h2 class="modal-title" id="paid-title">Préstamos pagados</h2>
+        <button class="modal-close" id="paid-close" type="button" aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-      <div class="modal-subtitle">Deudas ya saldadas al 100%.</div>
+      <p class="modal-subtitle">Deudas ya saldadas al 100%.</p>
       <div id="paid-loans-list"></div>
     </div>
   </div>
@@ -363,7 +434,7 @@
       addLoanPayment, getLoanPayments, deleteLoanPayment,
       migrateOldLoans, getWallets
     } from "../modules/db.js?v=20261018";
-    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
+    import { renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
     import { formatCOP, formatDate, today, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
@@ -371,9 +442,16 @@
     let uid, debtors = [], wallets = [], activeDebtorId = null;
     const detailCache = {};
 
+    // ── Presentación: formato de cifras y textos ──────────
+    // "$ 1.234" → "$1.234" (formato del DESIGN.md)
+    const money    = v => formatCOP(Math.abs(v)).replace(/\s/g, "");
+    const esc      = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const initials = name => (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+    const icoX     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+    const icoTrash = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>`;
+
     const user = await requireAuth();
     uid = user.uid;
-    renderTopbar(user);
     renderBottomNav("loans");
     wallets = await getWallets(uid);
     populateWalletSelects();
@@ -399,19 +477,26 @@
     function renderStats() {
       const totalPend = debtors.reduce((s, d) => s + Math.max(Number(d.totalAmount||0) - Number(d.totalPaid||0), 0), 0);
       const totalPaid = debtors.reduce((s, d) => s + Number(d.totalPaid||0), 0);
+      const totalLent = debtors.reduce((s, d) => s + Number(d.totalAmount||0), 0);
+      const owing     = debtors.filter(d => d.status !== "pagado").length;
+      const pct       = totalLent > 0 ? Math.min(totalPaid / totalLent, 1) : 0;
+
       document.getElementById("stats-row").innerHTML = `
-        <div class="stat-card">
-          <div class="stat-lbl">Por cobrar</div>
-          <div class="stat-val pending">${formatCOP(totalPend)}</div>
-          <div class="stat-ico pending">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <span class="label">Por cobrar</span>
+        <span class="amount-big neutral num sum-amount">${money(totalPend)}</span>
+        <div class="sum-sub">${owing ? `${owing} ${owing === 1 ? "persona te debe" : "personas te deben"}` : "Nadie te debe en este momento"}</div>
+        ${totalLent > 0 ? `
+          <div class="progress-bar" role="img" aria-label="${Math.round(pct * 100)}% cobrado">
+            <div class="progress-fill" style="width:${pct * 100}%;"></div>
+          </div>` : ""}
+        <div class="month-grid">
+          <div class="month-cell">
+            <span class="label">Prestado</span>
+            <span class="num ${totalLent ? "" : "zero"}">${money(totalLent)}</span>
           </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-lbl">Cobrado</div>
-          <div class="stat-val paid">${formatCOP(totalPaid)}</div>
-          <div class="stat-ico paid">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="month-cell">
+            <span class="label">Cobrado</span>
+            <span class="num ${totalPaid ? "pos" : "zero"}">${money(totalPaid)}</span>
           </div>
         </div>`;
     }
@@ -422,21 +507,21 @@
       const active = debtors.filter(d => d.status !== "pagado");
       const paid   = debtors.filter(d => d.status === "pagado");
 
+      document.getElementById("debtors-count").textContent =
+        active.length ? `${active.length} con saldo` : "";
+
       if (!active.length && !paid.length) {
-        el.innerHTML = `<div class="empty-state"><p>No tienes préstamos registrados.</p>
-          <p style="margin-top:6px;font-size:12px;color:#888;">Toca <strong style="color:#0f3460;">+</strong> para registrar uno.</p></div>`;
+        el.innerHTML = `<div class="empty-state"><p>No tienes préstamos registrados. Usa el botón + de arriba para registrar el primero.</p></div>`;
         return;
       }
 
       let html = active.length
-        ? active.map(renderDebtorCard).join("")
-        : `<div class="empty-state"><p>No hay préstamos pendientes.</p>
-            <p style="margin-top:6px;font-size:12px;color:#888;">Todos los deudores han saldado su deuda.</p></div>`;
+        ? `<ul class="rows">${active.map(renderDebtorCard).join("")}</ul>`
+        : `<div class="empty-state"><p>No hay préstamos pendientes: todos te pagaron.</p></div>`;
 
       if (paid.length) {
         const c = paid.length;
-        html += `<button class="paid-loans-link" onclick="openPaidModal()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        html += `<button class="btn-ghost paid-loans-link" type="button" onclick="openPaidModal()">
           Ver ${c} préstamo${c > 1 ? "s" : ""} pagado${c > 1 ? "s" : ""}
         </button>`;
       }
@@ -451,45 +536,35 @@
       const pct       = totalAmt > 0 ? Math.min(Math.round(totalPaid / totalAmt * 100), 100) : 0;
       const isPaid    = d.status === "pagado";
       const name      = formatName(d.name);
-      const initials  = (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
       return `
-        <div class="loan-card" id="dcard-${d.id}">
-          <div class="loan-top">
-            <div class="loan-avatar ${isPaid ? "paid" : ""}">${initials}</div>
-            <div class="loan-info">
-              <div class="loan-name">${name}</div>
-              <div class="loan-meta">${isPaid ? "Deuda saldada" : "Deuda pendiente"}</div>
+        <li class="row" id="dcard-${d.id}">
+          <div class="debtor-top">
+            <div class="debtor-avatar" aria-hidden="true">${esc(initials(name))}</div>
+            <div class="debtor-body">
+              <span class="row-name">${esc(name)}</span>
+              <span class="num row-meta">Prestado ${money(totalAmt)}</span>
             </div>
-            <span class="loan-badge ${d.status}">${isPaid ? "✓ Pagado" : "Pendiente"}</span>
-          </div>
-          <div class="loan-amounts">
-            <div>
-              <div class="loan-amt-lbl">Lo que debe</div>
-              <div class="loan-amt-val pend-v prominent">${formatCOP(pending)}</div>
-            </div>
-            <div>
-              <div class="loan-amt-lbl">Abonado</div>
-              <div class="loan-amt-val paid-v">${formatCOP(totalPaid)}</div>
-            </div>
-            <div>
-              <div class="loan-amt-lbl">Total prestado</div>
-              <div class="loan-amt-val total">${formatCOP(totalAmt)}</div>
+            <div class="debtor-owes">
+              <span class="num row-amt">${money(pending)}</span>
+              <span class="row-meta">${isPaid ? "Pagado" : "Te debe"}</span>
             </div>
           </div>
-          <div class="loan-prog-row">
-            <span>Progreso de pago</span>
-            <span class="loan-prog-pct">${pct}%</span>
+          <div class="progress-bar" role="img" aria-label="${pct}% pagado">
+            <div class="progress-fill" style="width:${pct}%;"></div>
           </div>
-          <div class="loan-prog-bar"><div class="loan-prog-fill" style="width:${pct}%;"></div></div>
+          <div class="row-line">
+            <span class="num row-meta">Abonado ${money(totalPaid)}</span>
+            <span class="row-meta">${pct}% pagado</span>
+          </div>
           <div class="loan-actions">
-            <button class="detail-toggle" onclick="toggleDetail('${d.id}')">Ver detalle</button>
-            <button class="loan-new-btn" onclick="openAddLoanModal('${d.id}')">+ Préstamo</button>
-            ${!isPaid ? `<button class="loan-abono-btn" onclick="openPayModal('${d.id}',${pending})">+ Abono</button>` : ""}
-            <button class="loan-del-btn" onclick="handleDeleteDebtor('${d.id}')">🗑</button>
+            <button class="detail-toggle" type="button" onclick="toggleDetail('${d.id}')">Ver detalle</button>
+            <button class="btn-ghost" type="button" onclick="openAddLoanModal('${d.id}')">+ Préstamo</button>
+            ${!isPaid ? `<button class="btn-ghost" type="button" onclick="openPayModal('${d.id}',${pending})">+ Abono</button>` : ""}
+            <button class="btn-danger icon-del" type="button" aria-label="Eliminar a ${esc(name)}" onclick="handleDeleteDebtor('${d.id}')">${icoTrash}</button>
           </div>
           <div class="debtor-detail" id="ddetail-${d.id}" style="display:none;"></div>
-        </div>`;
+        </li>`;
     }
 
     // ── Expandir detalle ──────────────────────────────────────
@@ -512,35 +587,32 @@
     function renderDetail(debtorId, loans, payments) {
       const el = document.getElementById(`ddetail-${debtorId}`);
 
+      const itemMain = it => {
+        const sub = [it.walletName, it.notes].filter(Boolean).map(t => esc(formatName(t))).join(" · ");
+        return `<span class="item-date">${formatDate(it.date)}</span>${sub ? `<span class="item-sub">${sub}</span>` : ""}`;
+      };
+
       const loansHTML = loans.length
         ? loans.map(l => `
             <div class="item-row">
-              <div class="item-main">
-                <span class="item-date">${formatDate(l.date)}</span>
-                ${l.walletName ? `<span class="item-wallet">${formatName(l.walletName)}</span>` : ""}
-                ${l.notes      ? `<span class="item-note">${formatName(l.notes)}</span>`       : ""}
-              </div>
-              <span class="item-amount total-v">${formatCOP(l.amount)}</span>
-              <button class="item-del" onclick="handleDeleteLoan('${debtorId}','${l.id}')">✕</button>
+              <div class="item-main">${itemMain(l)}</div>
+              <span class="num item-amount">${money(l.amount)}</span>
+              <button class="item-del" type="button" aria-label="Eliminar préstamo" onclick="handleDeleteLoan('${debtorId}','${l.id}')">${icoX}</button>
             </div>`).join("")
-        : `<div class="no-items">Sin préstamos individuales registrados</div>`;
+        : `<div class="no-items">Sin préstamos individuales registrados.</div>`;
 
       const paysHTML = payments.length
         ? payments.map(p => `
             <div class="item-row">
-              <div class="item-main">
-                <span class="item-date">${formatDate(p.date)}</span>
-                ${p.walletName ? `<span class="item-wallet">${formatName(p.walletName)}</span>` : ""}
-                ${p.notes      ? `<span class="item-note">${formatName(p.notes)}</span>`       : ""}
-              </div>
-              <span class="item-amount payment-v">+${formatCOP(p.amount)}</span>
-              <button class="item-del" onclick="handleDelPay('${debtorId}','${p.id}')">✕</button>
+              <div class="item-main">${itemMain(p)}</div>
+              <span class="num item-amount payment-v">+${money(p.amount)}</span>
+              <button class="item-del" type="button" aria-label="Eliminar abono" onclick="handleDelPay('${debtorId}','${p.id}')">${icoX}</button>
             </div>`).join("")
-        : `<div class="no-items">Sin abonos registrados</div>`;
+        : `<div class="no-items">Sin abonos registrados.</div>`;
 
       el.innerHTML = `
         <div class="detail-section">
-          <div class="detail-section-hdr">Préstamos individuales</div>
+          <div class="detail-section-hdr">Préstamos</div>
           ${loansHTML}
         </div>
         <div class="detail-section">
@@ -744,15 +816,14 @@
         const totalAmt  = Number(d.totalAmount || 0);
         const totalPaid = Number(d.totalPaid   || 0);
         const name      = formatName(d.name);
-        const initials  = (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
         return `
           <div class="paid-loan-item">
-            <div class="loan-avatar paid" style="width:36px;height:36px;font-size:13px;flex-shrink:0;">${initials}</div>
-            <div style="flex:1;min-width:0;opacity:0.75;">
-              <div style="font-size:13px;font-weight:500;color:var(--text);">${name}</div>
-              <div style="font-size:11px;color:#888;margin-top:2px;">${formatCOP(totalPaid)} de ${formatCOP(totalAmt)}</div>
+            <div class="debtor-avatar" aria-hidden="true">${esc(initials(name))}</div>
+            <div class="debtor-body">
+              <span class="row-name">${esc(name)}</span>
+              <span class="row-meta">Pagado</span>
             </div>
-            <span class="loan-badge pagado">✓ Pagado</span>
+            <span class="num row-amt">${money(totalPaid)}<span class="row-meta" style="display:block;text-align:right;font-weight:600;">de ${money(totalAmt)}</span></span>
           </div>`;
       }).join("");
     }
