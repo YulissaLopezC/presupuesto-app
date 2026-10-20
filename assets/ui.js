@@ -439,13 +439,15 @@ export function renderMonthSelector(containerId, currentMonth, onChange) {
   if (!el) return;
 
   let selected = currentMonth;
+  // "octubre de 2026" → "Octubre de 2026" (capitalize de CSS pondría "De")
+  const monthLabel = m => { const t = formatMonth(m); return t.charAt(0).toUpperCase() + t.slice(1); };
 
   el.innerHTML = `
     <div class="ms-wrap">
       <button class="ms-arrow" id="ms-prev" type="button" aria-label="Mes anterior">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <span class="ms-label" id="ms-label">${formatMonth(selected)}</span>
+      <span class="ms-label" id="ms-label">${monthLabel(selected)}</span>
       <button class="ms-arrow" id="ms-next" type="button" aria-label="Mes siguiente">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
@@ -471,7 +473,7 @@ export function renderMonthSelector(containerId, currentMonth, onChange) {
       .ms-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
       .ms-label {
         font-size: 14px; font-weight: 600; color: var(--text);
-        min-width: 130px; text-align: center; text-transform: capitalize;
+        min-width: 130px; text-align: center;
         font-family: "Public Sans", sans-serif;
       }
     `;
@@ -499,7 +501,7 @@ export function renderMonthSelector(containerId, currentMonth, onChange) {
     const d  = new Date(y, m - 1 + delta, 1);
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     selected = `${d.getFullYear()}-${mm}`;
-    labelEl.textContent = formatMonth(selected);
+    labelEl.textContent = monthLabel(selected);
     updateButtons();
     onChange(selected);
   }
