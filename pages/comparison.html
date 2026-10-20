@@ -5,179 +5,203 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Comparativo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
-    body { background: #f0f4f8; }
-    body.dark { background: #111; }
-    .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px; }
-
-    /* ── Header ──────────────────────────────────────────── */
-    .page-hdr {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      padding: 14px 0 0; margin-bottom: 18px;
+    /* ── Layout ─────────────────────────────────────────────
+       Móvil: una columna de 680px máx.
+       Escritorio (≥ 900px): resumen 5fr (fijo al hacer scroll) + categorías 7fr, gap 16px. */
+    .cmp {
+      max-width: 680px; margin: 0 auto;
+      padding: 20px 20px 0;
+      display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px;
     }
-    .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
-    .page-sub { font-size: 12px; color: #888; margin-top: 3px; }
+    .cmp .card { margin-bottom: 0; }
+    .cmp-main { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
-    /* ── 3 stat cards ────────────────────────────────────── */
-    .stats-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .s3-card { background: #fff; border-radius: 14px; padding: 14px 14px 12px; position: relative; overflow: hidden; }
-    body.dark .s3-card { background: #1a1a1a; }
-    .s3-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
-    .s3-val { font-size: 16px; font-weight: 500; letter-spacing: -0.3px; }
-    .s3-val.pres { color: #185fa5; }
-    .s3-val.gast { color: #c0392b; }
-    .s3-val.disp { color: #3b6d11; }
-    .s3-bar { height: 3px; border-radius: 99px; margin-top: 10px; }
-    .s3-ico {
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      opacity: 0.08; font-size: 32px;
+    /* ── Título + selector de mes (igual que Inicio) ─────── */
+    .cmp-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .cmp-head h1 {
+      font-family: "Sora", sans-serif; font-size: 22px; font-weight: 600;
+      letter-spacing: -0.02em; color: var(--text);
     }
 
-    /* ── Uso total ───────────────────────────────────────── */
-    .uso-card { background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
-    body.dark .uso-card { background: #1a1a1a; }
-    .uso-hdr { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
-    .uso-lbl { color: var(--text); font-weight: 400; }
-    .uso-pct { font-weight: 500; color: #185fa5; }
-    .uso-bar { height: 8px; background: #f0f4f8; border-radius: 99px; overflow: hidden; }
-    body.dark .uso-bar { background: #2a2a2a; }
-    .uso-fill { height: 100%; border-radius: 99px; background: #0f3460; transition: width 0.5s ease; }
-    .uso-fill.warn { background: #e0a050; }
-    .uso-fill.over { background: #c0392b; }
-
-    /* ── Filtros ─────────────────────────────────────────── */
-    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .filter-chip {
-      padding: 6px 14px; border-radius: 99px; border: 1.5px solid #e2e8f0;
-      font-size: 12px; font-weight: 500; color: #888; cursor: pointer;
-      background: #fff; font-family: "DM Sans", sans-serif;
-      transition: all 0.15s;
+    /* ── Cifras ──────────────────────────────────────────── */
+    .num {
+      font-family: "Sora", sans-serif; font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em; white-space: nowrap;
     }
-    body.dark .filter-chip { background: #1a1a1a; border-color: #2a2a2a; }
-    .filter-chip.active { background: #0f3460; border-color: #0f3460; color: #fff; }
+    .num.over { color: var(--warning-text); }
 
-    /* ── Category rows ───────────────────────────────────── */
-    .cat-row {
-      background: #fff; border-radius: 14px; padding: 16px;
-      margin-bottom: 8px;
+    /* ── Resumen: uso total ──────────────────────────────── */
+    .sum-amount { display: block; margin-top: 10px; }
+    .sum-sub {
+      font-family: "Sora", sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); margin-top: 8px;
     }
-    body.dark .cat-row { background: #1a1a1a; }
-    .cat-row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .cat-row-left { display: flex; align-items: center; gap: 10px; }
-    .cat-row-name { font-size: 14px; font-weight: 500; color: var(--text); }
-    .cat-badge {
-      font-size: 10px; font-weight: 500; padding: 2px 8px;
-      border-radius: 99px;
+    .sum-card .progress-bar { height: 10px; margin-top: 16px; }
+    .sum-finding { font-size: 15px; line-height: 1.5; color: var(--text); margin-top: 16px; }
+    .sum-finding strong { font-weight: 600; }
+
+    /* ── Tira de cifras (igual que "Este mes" en Inicio) ─── */
+    .month-grid { display: grid; grid-template-columns: 1fr 1fr; margin-top: 18px; }
+    .month-cell { padding: 14px 0; border-top: 1px solid var(--border-soft); }
+    .month-cell:nth-child(odd)  { padding-right: 14px; }
+    .month-cell:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--border-soft); }
+    .month-cell .num { display: block; font-size: 18px; font-weight: 700; margin-top: 6px; color: var(--text); }
+    .month-cell .num.over { color: var(--warning-text); }
+    .month-cell .num.zero { color: var(--muted); }
+
+    /* ── Chips de filtro (igual que Movimientos) ─────────── */
+    .filters {
+      display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
     }
-    .cat-badge.none { background: #f0f4f8; color: #888; }
-    body.dark .cat-badge.none { background: #222; }
-    .cat-badge.ok   { background: #eaf3de; color: #3b6d11; }
-    .cat-badge.warn { background: #faeeda; color: #854f0b; }
-    .cat-badge.over { background: #fbeaea; color: #c0392b; }
+    .filters::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; height: 36px; padding: 0 14px; border-radius: 999px;
+      border: 1px solid var(--border); font-size: 13px; font-weight: 600;
+      color: var(--text); cursor: pointer; background: var(--surface);
+      white-space: nowrap; font-family: "Public Sans", sans-serif;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      display: inline-flex; align-items: center;
+    }
+    .chip.active { background: var(--text); color: var(--surface); border-color: var(--text); }
 
-    .cat-row-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .cat-col-lbl { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
-    .cat-col-val { font-size: 14px; font-weight: 500; }
-    .cat-col-val.spent { color: var(--text); }
-    .cat-col-val.budget { color: #185fa5; }
-    .cat-col-val.avail  { color: #3b6d11; }
-    .cat-col-val.neg    { color: #c0392b; }
+    /* ── Encabezado de sección dentro de tarjeta ─────────── */
+    .sect-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; min-height: 24px;
+    }
+    .sect-hdr h2 {
+      font-family: "Public Sans", sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .sect-count { font-size: 13px; color: var(--muted); }
+    .sect-link {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      text-decoration: none; padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .sect-link:hover { border-color: var(--text); }
 
-    .cat-prog { height: 5px; background: #f0f4f8; border-radius: 99px; overflow: hidden; }
-    body.dark .cat-prog { background: #2a2a2a; }
-    .cat-prog-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+    /* ── Filas de categoría (igual que Inicio) ───────────── */
+    .rows { list-style: none; margin-top: 8px; }
+    .row { padding: 14px 0; border-top: 1px solid var(--border-soft); }
+    .row:first-child { border-top: none; }
+    .row-line {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    }
+    .row-name {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row-amt { font-size: 16px; font-weight: 600; color: var(--text); }
+    .row-amt.zero { color: var(--muted); }
+    .row-meta {
+      font-size: 13px; color: var(--muted);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row .num.row-meta { font-weight: 600; }
+    .row .progress-bar { margin: 10px 0 8px; }
 
-    .empty-filter { text-align: center; padding: 40px 0; font-size: 13px; color: #888; }
+    /* ── Estados ─────────────────────────────────────────── */
+    .cmp .empty-state { padding: 28px 12px; }
+    .cmp .empty-state p { margin-top: 0; color: var(--text); }
+    .cmp .empty-state .btn-ghost { display: inline-flex; align-items: center; margin-top: 14px; text-decoration: none; }
+    .sk-line { height: 14px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill, .chip, .sect-link { transition: none; }
+      .skeleton { animation: none; }
+    }
+
+    /* ── Escritorio ≥ 900px ──────────────────────────────── */
+    @media (min-width: 900px) {
+      .cmp {
+        max-width: 1240px; padding: 32px;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px;
+      }
+      .cmp-main  { gap: 16px; }
+      .cmp-head  { grid-column: 1 / -1; }
+      .cmp-head h1 { font-size: 26px; }
+      .sum-card  { align-self: start; position: sticky; top: 32px; }
+    }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar" style="max-width:680px;margin:0 auto;padding:12px 14px 0;"></div>
+  <main class="cmp">
 
-  <div class="wrap">
-    <div class="page-hdr">
-      <div>
-        <div class="page-title">Comparativo</div>
-        <div class="page-sub">Análisis de rendimiento presupuestario</div>
-      </div>
+    <div class="cmp-head">
+      <h1>Comparativo</h1>
       <div id="month-selector-container"></div>
     </div>
 
-    <div class="stats-3" id="stats-3">
-      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
-      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
-      <div class="skeleton" style="height:80px;border-radius:14px;"></div>
-    </div>
+    <!-- Resumen del mes: uso total del presupuesto -->
+    <section class="card sum-card" id="sum-card" aria-live="polite">
+      <div class="skeleton sk-line" style="width:45%;"></div>
+      <div class="skeleton" style="height:38px;width:40%;margin-top:12px;"></div>
+      <div class="skeleton sk-line" style="width:60%;margin-top:10px;"></div>
+      <div class="skeleton" style="height:10px;margin-top:22px;border-radius:999px;"></div>
+      <div class="skeleton" style="height:120px;margin-top:24px;"></div>
+    </section>
 
-    <div class="uso-card" id="uso-card">
-      <div class="uso-hdr">
-        <span class="uso-lbl">Uso total del presupuesto</span>
-        <span class="uso-pct" id="uso-pct">0%</span>
+    <div class="cmp-main">
+      <div class="filters" id="filters" role="group" aria-label="Filtrar por tipo de gasto">
+        <button class="chip active" data-filter="" type="button">Todos</button>
+        <button class="chip" data-filter="GASTO BÁSICO" type="button">Básico</button>
+        <button class="chip" data-filter="GASTO NO ESENCIAL" type="button">No esencial</button>
+        <button class="chip" data-filter="AHORRO O INVERSIÓN" type="button">Ahorro</button>
       </div>
-      <div class="uso-bar"><div class="uso-fill" id="uso-fill" style="width:0%;"></div></div>
+
+      <section class="card">
+        <div class="sect-hdr">
+          <h2>Categorías</h2>
+          <span class="sect-count" id="cat-count"></span>
+        </div>
+        <ul class="rows" id="cat-list">
+          <li class="row"><div class="skeleton" style="height:48px;"></div></li>
+          <li class="row"><div class="skeleton" style="height:48px;"></div></li>
+          <li class="row"><div class="skeleton" style="height:48px;"></div></li>
+        </ul>
+      </section>
     </div>
 
-    <div class="filters" id="filters">
-      <button class="filter-chip active" data-filter="">Todos</button>
-      <button class="filter-chip" data-filter="GASTO BÁSICO">Básico</button>
-      <button class="filter-chip" data-filter="GASTO NO ESENCIAL">No esencial</button>
-      <button class="filter-chip" data-filter="AHORRO O INVERSIÓN">Ahorro</button>
-    </div>
-
-    <div id="cat-list" style="padding-bottom:90px;">
-      <div class="skeleton" style="height:100px;border-radius:14px;margin-bottom:8px;"></div>
-      <div class="skeleton" style="height:100px;border-radius:14px;margin-bottom:8px;"></div>
-      <div class="skeleton" style="height:100px;border-radius:14px;"></div>
-    </div>
-  </div>
+  </main>
 
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script type="module">
     import { requireAuth } from "../modules/auth.js?v=20261018";
     import { getExpenses, getBudget, getCategories } from "../modules/db.js?v=20261018";
-    import { renderTopbar, renderBottomNav } from "../assets/ui.js?v=20261018";
+    import { renderBottomNav, renderMonthSelector } from "../assets/ui.js?v=20261018";
     import { formatCOP, currentMonth, formatMonth, sumByCategory, buildComparison, formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
-    let uid, selectedMonth, allData = [], categories = [], activeFilter = "";
+    let uid, selectedMonth, allData = [], categories = [], activeFilter = "", hasBudget = false;
+
+    // "$ 1.234" → "$1.234" (formato del DESIGN.md); el signo negativo es "−"
+    const money     = v => formatCOP(Math.abs(v)).replace(/\s/g, "");
+    const esc       = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const monthName = m => formatMonth(m).split(" ")[0];
 
     const user = await requireAuth();
     uid = user.uid;
     selectedMonth = currentMonth();
-    renderTopbar(user);
-    renderBottomNav("comparison");
+    renderBottomNav("comparativo");
 
-    // Month selector pill style
-    renderMonthPill();
+    renderMonthSelector("month-selector-container", selectedMonth, m => {
+      selectedMonth = m;
+      loadData();
+    });
     categories = await getCategories(uid);
     await loadData();
-
-    function renderMonthPill() {
-      const container = document.getElementById("month-selector-container");
-      container.innerHTML = `
-        <div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ddd;border-radius:99px;padding:6px 12px;">
-          <span style="font-size:13px;color:#888;cursor:pointer;" id="mp-prev">‹</span>
-          <span style="font-size:12px;font-weight:500;color:#1a1a2e;" id="mp-lbl">${formatMonth(selectedMonth)}</span>
-          <span style="font-size:13px;color:#888;cursor:pointer;" id="mp-next">›</span>
-        </div>`;
-      document.getElementById("mp-prev").addEventListener("click", () => {
-        const [y,m] = selectedMonth.split("-").map(Number);
-        const pm = m===1?12:m-1, py = m===1?y-1:y;
-        selectedMonth = `${py}-${String(pm).padStart(2,"0")}`;
-        document.getElementById("mp-lbl").textContent = formatMonth(selectedMonth);
-        loadData();
-      });
-      document.getElementById("mp-next").addEventListener("click", () => {
-        const [y,m] = selectedMonth.split("-").map(Number);
-        const nm = m===12?1:m+1, ny = m===12?y+1:y;
-        selectedMonth = `${ny}-${String(nm).padStart(2,"0")}`;
-        document.getElementById("mp-lbl").textContent = formatMonth(selectedMonth);
-        loadData();
-      });
-    }
 
     async function loadData() {
       const [expenses, budget] = await Promise.all([
@@ -190,10 +214,12 @@
         const catObj = categories.find(c => c.name === row.category);
         return { ...row, type: catObj?.type || "" };
       });
+      hasBudget = Object.keys(budget?.categories || {}).length > 0;
       renderStats(budget, expenses);
       renderList();
     }
 
+    // ── Resumen: uso total + tira de cifras ────────────────
     function renderStats(budget, expenses) {
       const totalBudget  = budget ? Object.values(budget.categories||{}).reduce((s,v)=>s+Number(v),0) : 0;
       const totalSpent   = expenses.reduce((s,e)=>s+Number(e.amount),0);
@@ -201,40 +227,78 @@
       const pct          = totalBudget > 0 ? Math.min(Math.round(totalSpent/totalBudget*100),100) : 0;
       const barCls       = pct >= 100 ? "over" : pct >= 80 ? "warn" : "";
 
-      document.getElementById("stats-3").innerHTML = `
-        <div class="s3-card">
-          <div class="s3-lbl">Presupuestado</div>
-          <div class="s3-val pres">${formatCOP(totalBudget)}</div>
-          <div class="s3-bar" style="background:#b5d4f4;"></div>
-          <div class="s3-ico">🏦</div>
-        </div>
-        <div class="s3-card">
-          <div class="s3-lbl">Gastado</div>
-          <div class="s3-val gast">${formatCOP(totalSpent)}</div>
-          <div class="s3-bar" style="background:#f5c6c6;"></div>
-          <div class="s3-ico">💸</div>
-        </div>
-        <div class="s3-card">
-          <div class="s3-lbl">Disponible</div>
-          <div class="s3-val disp">${formatCOP(totalAvail)}</div>
-          <div class="s3-bar" style="background:#c0dda0;"></div>
-          <div class="s3-ico">✅</div>
-        </div>`;
+      const over     = allData.filter(r => r.budgeted > 0 && r.actual > r.budgeted);
+      const near     = allData.filter(r => r.budgeted > 0 && r.actual < r.budgeted && r.actual / r.budgeted >= 0.8);
+      const full     = allData.filter(r => r.budgeted > 0 && r.actual === r.budgeted);
+      const overSum  = over.reduce((s, r) => s + (r.actual - r.budgeted), 0);
+      const el       = document.getElementById("sum-card");
+      const mName    = monthName(selectedMonth);
 
-      document.getElementById("uso-pct").textContent = pct + "%";
-      document.getElementById("uso-pct").style.color = pct >= 100 ? "#c0392b" : pct >= 80 ? "#e0a050" : "#185fa5";
-      const fill = document.getElementById("uso-fill");
-      fill.style.width = pct + "%";
-      fill.className = "uso-fill " + barCls;
+      if (totalBudget <= 0) {
+        el.innerHTML = `
+          <span class="label">Uso del presupuesto en ${mName}</span>
+          <p class="sum-finding" style="margin-top:12px;">No hay presupuesto para este mes. Créalo para comparar lo gastado contra lo planeado.</p>
+          <a href="./budget.html" class="btn-ghost" style="display:inline-flex;align-items:center;margin-top:16px;text-decoration:none;">Ir a presupuesto</a>`;
+        return;
+      }
+
+      let finding;
+      if (!over.length && !near.length && !full.length) {
+        finding = "Todas las categorías van por debajo del 80% de su tope.";
+      } else {
+        const parts = [];
+        if (over.length === 1) {
+          parts.push(`${esc(formatName(over[0].category))} se pasó por <strong class="num over">${money(over[0].actual - over[0].budgeted)}</strong>`);
+        } else if (over.length > 1) {
+          parts.push(`${over.length} categorías pasaron su tope por <strong class="num over">${money(overSum)}</strong> en total`);
+        }
+        if (near.length) {
+          parts.push(`${near.length === 1 ? `${esc(formatName(near[0].category))} va` : `${near.length} categorías van`} por encima del 80%`);
+        }
+        if (full.length) {
+          parts.push(`${full.length === 1 ? `${esc(formatName(full[0].category))} llegó a su tope` : `${full.length} categorías llegaron a su tope`}`);
+        }
+        finding = (parts.length > 1 ? parts.slice(0, -1).join(", ") + " y " + parts[parts.length - 1] : parts[0]) + ".";
+        finding = finding.charAt(0).toUpperCase() + finding.slice(1);
+      }
+
+      const cells = [
+        { label: "Presupuestado", value: money(totalBudget), cls: "" },
+        { label: "Gastado",       value: money(totalSpent),  cls: totalSpent ? "" : "zero" },
+        { label: "Disponible",    value: money(totalAvail),  cls: totalAvail ? "" : "zero" },
+        { label: "Excedido",      value: overSum ? money(overSum) : money(0), cls: overSum ? "over" : "zero" }
+      ];
+
+      el.innerHTML = `
+        <span class="label">Uso del presupuesto en ${mName}</span>
+        <span class="amount-big ${pct >= 100 ? "negative" : "neutral"} num sum-amount">${pct}%</span>
+        <div class="sum-sub">${money(totalSpent)} de ${money(totalBudget)}</div>
+        <div class="progress-bar" role="img" aria-label="${pct}% del presupuesto usado">
+          <div class="progress-fill ${barCls}" style="width:${pct}%;"></div>
+        </div>
+        <p class="sum-finding">${finding}</p>
+        <div class="month-grid">
+          ${cells.map(c => `
+            <div class="month-cell">
+              <span class="label">${c.label}</span>
+              <span class="num ${c.cls}">${c.value}</span>
+            </div>`).join("")}
+        </div>`;
     }
 
+    // ── Lista de categorías ────────────────────────────────
     function renderList() {
       const el       = document.getElementById("cat-list");
       const filtered = activeFilter ? allData.filter(r => r.type === activeFilter) : allData;
       const sorted   = filtered.sort((a,b) => (b.pct||0)-(a.pct||0));
 
+      document.getElementById("cat-count").textContent =
+        sorted.length ? `${sorted.length} ${sorted.length === 1 ? "categoría" : "categorías"}` : "";
+
       if (!sorted.length) {
-        el.innerHTML = `<div class="empty-filter">No hay datos para este filtro.</div>`;
+        el.innerHTML = !hasBudget
+          ? `<li class="empty-state"><p>Crea el presupuesto del mes para ver cada categoría aquí.</p></li>`
+          : `<li class="empty-state"><p>No hay categorías de este tipo en el presupuesto del mes.</p></li>`;
         return;
       }
 
@@ -243,51 +307,39 @@
         const actual    = row.actual   || 0;
         const avail     = Math.max(budgeted - actual, 0);
         const isOver    = actual > budgeted && budgeted > 0;
-        const pct       = row.pct !== null ? Math.min(Math.round((row.pct||0)*100), 100) : 0;
-        const barColor  = isOver ? "#c0392b" : pct >= 80 ? "#e0a050" : "#0f3460";
+        const pct       = row.pct !== null ? Math.round((row.pct||0)*100) : 0;
         const barW      = Math.min(row.pct||0, 1) * 100;
         const noSpend   = actual === 0;
+        const fillCls   = isOver ? "over" : pct >= 80 ? "warn" : "";
 
-        let badgeCls, badgeTxt;
-        if (noSpend)       { badgeCls="none"; badgeTxt="Sin gastos"; }
-        else if (isOver)   { badgeCls="over"; badgeTxt=`${pct}% · Excedido`; }
-        else if (pct >= 80){ badgeCls="warn"; badgeTxt=`${pct}%`; }
-        else               { badgeCls="ok";   badgeTxt=`${pct}%`; }
+        let right;
+        if (isOver)       right = `<span class="num row-meta over">Excedido ${money(actual - budgeted)}</span>`;
+        else if (noSpend) right = `<span class="row-meta">Sin gastos</span>`;
+        else if (!avail)  right = `<span class="row-meta">Completo</span>`;
+        else              right = `<span class="num row-meta">Quedan ${money(avail)}</span>`;
 
         return `
-          <div class="cat-row">
-            <div class="cat-row-top">
-              <div class="cat-row-left">
-                <div class="cat-row-name">${formatName(row.category)}</div>
-                <span class="cat-badge ${badgeCls}">${badgeTxt}</span>
-              </div>
+          <li class="row">
+            <div class="row-line">
+              <span class="row-name">${esc(formatName(row.category))}</span>
+              <span class="num row-amt ${noSpend ? "zero" : ""}">${money(actual)}</span>
             </div>
-            <div class="cat-row-cols">
-              <div>
-                <div class="cat-col-lbl">Gastado</div>
-                <div class="cat-col-val spent">${formatCOP(actual)}</div>
-              </div>
-              <div>
-                <div class="cat-col-lbl">Presupuesto</div>
-                <div class="cat-col-val budget">${formatCOP(budgeted)}</div>
-              </div>
-              <div>
-                <div class="cat-col-lbl">Disponible</div>
-                <div class="cat-col-val ${isOver?"neg":"avail"}">${isOver ? "-"+formatCOP(actual-budgeted) : formatCOP(avail)}</div>
-              </div>
+            <div class="progress-bar" role="img" aria-label="${pct}% usado">
+              <div class="progress-fill ${fillCls}" style="width:${barW}%;"></div>
             </div>
-            <div class="cat-prog">
-              <div class="cat-prog-fill" style="width:${barW}%;background:${barColor};"></div>
+            <div class="row-line">
+              <span class="num row-meta">de ${money(budgeted)} · ${pct}%</span>
+              ${right}
             </div>
-          </div>`;
+          </li>`;
       }).join("");
     }
 
-    // Filters
+    // Filtros
     document.getElementById("filters").addEventListener("click", e => {
-      const btn = e.target.closest(".filter-chip");
+      const btn = e.target.closest(".chip");
       if (!btn) return;
-      document.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll("#filters .chip").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       activeFilter = btn.dataset.filter;
       renderList();
