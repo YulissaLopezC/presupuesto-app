@@ -5,214 +5,251 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Ingresos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
-    .fab {
-      position: fixed; bottom: 76px; right: 20px;
-      width: 54px; height: 54px;
-      background: var(--info); color: #fff;
-      border: none; border-radius: 50%; font-size: 26px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(74,127,181,0.3);
-      z-index: 90; transition: background 0.2s, transform 0.2s;
+    /* ── Layout ─────────────────────────────────────────────
+       Móvil: una columna de 680px máx.
+       Escritorio (≥ 900px): resumen + devengado 5fr | fuentes + registros 7fr, gap 16px. */
+    .inc {
+      max-width: 680px; margin: 0 auto;
+      padding: 20px 20px 0;
+      display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px;
     }
-    .fab:hover  { background: #3a6fa0; }
-    .fab:active { transform: scale(0.95); }
+    .inc .card { margin-bottom: 0; }
+    .inc-col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; min-width: 0; }
 
-    .drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-      z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    /* ── Título + acciones ───────────────────────────────── */
+    .inc-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
     }
-    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .inc-head h1 {
+      font-family: "Sora", sans-serif; font-size: 22px; font-weight: 600;
+      letter-spacing: -0.02em; color: var(--text);
+    }
+    .inc-head-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: 1 1 100%; }
+    .inc-head-actions { display: flex; align-items: center; gap: 12px; }
+    /* Registrar ingreso: círculo en móvil (como Cajitas), botón primario en escritorio */
+    .inc-new {
+      width: 44px; height: 44px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-family: "Public Sans", sans-serif;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .inc-new:hover { border-color: var(--text); }
+    .inc-new-lbl { display: none; }
+
+    /* ── Cifras ──────────────────────────────────────────── */
+    .num {
+      font-family: "Sora", sans-serif; font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em; white-space: nowrap;
+    }
+    .num.pos { color: var(--income); }
+
+    /* ── Resumen: recibido ───────────────────────────────── */
+    .sum-amount { display: block; margin-top: 10px; }
+    .sum-sub {
+      font-family: "Sora", sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); margin-top: 8px;
+    }
+    .sum-card .progress-bar { height: 10px; margin-top: 16px; }
+    .sum-finding { font-size: 15px; line-height: 1.5; color: var(--text); margin-top: 16px; }
+
+    /* ── Encabezado de sección dentro de tarjeta ─────────── */
+    .sect-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; min-height: 24px;
+    }
+    .sect-hdr h2 {
+      font-family: "Public Sans", sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .sect-count { font-size: 13px; color: var(--muted); }
+
+    /* ── Filas (igual que Inicio) ────────────────────────── */
+    .rows { list-style: none; margin-top: 8px; }
+    .row { padding: 14px 0; border-top: 1px solid var(--border-soft); }
+    .row:first-child { border-top: none; }
+    .row-line {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    }
+    .row-name {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row-amt { font-size: 16px; font-weight: 600; color: var(--text); }
+    .row-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+    .row-type { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    .row-amt.zero { color: var(--muted); }
+    .row-meta {
+      font-size: 13px; color: var(--muted);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row > .row-meta { margin-top: 4px; }
+    .row .num.row-meta { font-weight: 600; }
+    .row .progress-bar { margin: 10px 0 8px; }
+
+    /* Registros: grupo por fecha + fila con acción de borrar */
+    .date-group + .date-group { border-top: 1px solid var(--border-soft); }
+    .date-group .label { display: block; padding-top: 14px; }
+    .date-group .rows { margin-top: 0; }
+    .income-item { display: flex; align-items: center; gap: 12px; }
+    .income-left { flex: 1; min-width: 0; cursor: pointer; }
+    .income-left:hover .row-name { text-decoration: underline; text-underline-offset: 3px; }
+    .income-item .btn-danger {
+      width: 36px; height: 36px; padding: 0; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Estados ─────────────────────────────────────────── */
+    .inc .empty-state { padding: 28px 12px; list-style: none; }
+    .inc .empty-state p { margin-top: 0; color: var(--text); }
+    .sk-line { height: 14px; }
+
+    /* ── Hoja de registro (como la hoja de categorías de Movimientos) ── */
+    .drawer-overlay {
+      position: fixed; inset: 0; background: rgba(14,23,38,0.5);
+      z-index: 150; opacity: 0; pointer-events: none; visibility: hidden;
+      transition: opacity 0.25s, visibility 0.25s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; visibility: visible; }
     .drawer {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--border);
-      border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
-      z-index: 160; transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
+      background: var(--surface);
+      border-radius: 20px 20px 0 0; padding: 10px 20px 28px;
+      z-index: 160; transform: translateY(100%); visibility: hidden;
+      transition: transform 0.3s ease, visibility 0.3s;
       max-width: 680px; margin: 0 auto; max-height: 90vh; overflow-y: auto;
     }
-    .drawer.open { transform: translateY(0); }
-    .drawer-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 99px; margin: 0 auto 20px; }
-    .drawer-title  { font-family: "DM Serif Display", serif; font-size: 20px; font-weight: 400; margin-bottom: 20px; }
-
-    /* ── Resumen del mes ─────────────────────────────────── */
-    .summary-row {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 10px; margin-bottom: 16px;
+    .drawer.open { transform: translateY(0); visibility: visible; }
+    .drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 999px; margin: 0 auto 16px; }
+    .drawer-title {
+      font-family: "Sora", sans-serif; font-size: 18px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text); margin-bottom: 20px;
     }
-    .sum-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px;
-    }
-    .sum-label { font-size: 10px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-    .sum-value { font-family: "DM Serif Display", serif; font-size: 20px; letter-spacing: -0.5px; }
-    .sum-value.inc { color: var(--info); }
-    .sum-value.exp { color: var(--warning); }
-
-    /* ── Comparativo presupuestado vs real ───────────────── */
-    .budget-comparison {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px; margin-bottom: 16px;
-    }
-    .bc-title { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-    .bc-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 0; border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .bc-row:last-child { border-bottom: none; }
-    .bc-source { color: var(--text); }
-    .bc-amounts { text-align: right; }
-    .bc-real { font-family: "DM Serif Display", serif; font-size: 15px; color: var(--info); }
-    .bc-budgeted { font-size: 11px; color: var(--muted); margin-top: 1px; }
-    .bc-diff { font-size: 11px; margin-top: 1px; }
-    .bc-diff.pos { color: var(--accent); }
-    .bc-diff.neg { color: var(--danger); }
-
-    /* ── Lista de ingresos ───────────────────────────────── */
-    .income-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 0; border-bottom: 1px solid var(--border);
-    }
-    .income-item:last-child { border-bottom: none; }
-    .income-left { flex: 1; min-width: 0; cursor: pointer; }
-    .income-source { font-size: 14px; color: var(--text); }
-    .income-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
-    .income-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
-    .income-amount { font-family: "DM Serif Display", serif; font-size: 16px; color: var(--info); letter-spacing: -0.3px; }
-    .income-wallet { font-size: 11px; color: var(--muted); margin-top: 1px; }
-
-    .date-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 0 6px; }
-
-    /* ── Amount wrapper ──────────────────────────────────── */
-    /* ── Sección devengado ───────────────────────────────── */
-    .devengado-section {
-      margin-bottom: 16px;
-    }
-    .devengado-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px; margin-bottom: 8px;
-    }
-    .dev-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .dev-name { font-size: 14px; color: var(--text); font-weight: 400; }
-    .dev-type { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 99px; }
-    .dev-type.fijo { background: rgba(74,127,181,0.12); color: var(--info); }
-    .dev-type.no_operacional { background: rgba(201,124,46,0.12); color: var(--warning); }
-    .dev-type.extraordinario { background: rgba(212,96,138,0.10); color: var(--accent); }
-    .dev-amounts { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-    .dev-accrued { font-family: "DM Serif Display", serif; font-size: 22px; letter-spacing: -0.5px; color: var(--info); }
-    .dev-total { font-size: 12px; color: var(--muted); }
-    .dev-days { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
     .amount-wrapper { position: relative; }
     .amount-wrapper .sym {
-      position: absolute; left: 12px; top: 50%;
-      transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none;
+      position: absolute; left: 16px; top: 50%;
+      transform: translateY(-50%); font-family: "Sora", sans-serif; font-weight: 600;
+      font-size: 15px; color: var(--muted); pointer-events: none;
     }
-    .amount-wrapper .form-input { padding-left: 26px; }
+    .amount-wrapper .form-input { padding-left: 30px; font-family: "Sora", sans-serif; font-weight: 600; }
+    .form-optional { text-transform: none; letter-spacing: 0; font-weight: 400; }
 
-    /* ── Lista por fuente (estilo registro) ─────────────── */
-    .source-item {
-      display: flex; align-items: flex-start;
-      justify-content: space-between;
-      padding: 13px 0; border-bottom: 1px solid var(--border);
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill, .drawer, .drawer-overlay, .inc-new { transition: none; }
+      .skeleton { animation: none; }
     }
-    .source-item:last-child { border-bottom: none; }
-    .source-left { flex: 1; min-width: 0; }
-    .source-name { font-size: 14px; color: var(--text); }
-    .source-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .source-prop-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .source-prop-note span { color: var(--info); font-weight: 500; }
-    .source-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
-    .source-received {
-      font-family: "DM Serif Display", serif;
-      font-size: 16px; letter-spacing: -0.3px; color: var(--info);
+
+    /* ── Escritorio ≥ 900px ──────────────────────────────── */
+    @media (min-width: 900px) {
+      .inc {
+        max-width: 1240px; padding: 32px;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px;
+      }
+      .inc-col   { gap: 16px; }
+      .inc-side { align-self: start; position: sticky; top: 32px; }
+      .inc-head  { grid-column: 1 / -1; flex-wrap: nowrap; }
+      .inc-head-title { display: contents; }
+      .inc-head h1 { font-size: 26px; margin-right: auto; }
+      .inc-head-actions { order: 1; }
+      .inc-new {
+        order: 2; height: 44px;
+        width: auto; padding: 0 18px; border: none; border-radius: 12px; gap: 6px;
+        background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
+      }
+      .inc-new:hover { background: var(--accent-strong); }
+      .inc-new-lbl { display: inline; }
+
+      .drawer {
+        top: 50%; bottom: auto; left: 50%; right: auto;
+        width: 520px; max-width: calc(100vw - 32px);
+        border-radius: 20px; padding: 28px;
+        transform: translate(-50%, -46%); opacity: 0; pointer-events: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        transition: transform 0.25s ease, opacity 0.25s ease, visibility 0.25s;
+      }
+      .drawer.open { transform: translate(-50%, -50%); opacity: 1; pointer-events: all; }
+      .drawer-handle { display: none; }
     }
-    .source-budgeted { font-size: 11px; color: var(--muted); margin-top: 1px; }
-    .source-diff { font-size: 11px; margin-top: 1px; }
-    .source-diff.pos { color: var(--accent); }
-    .source-diff.neg { color: var(--danger); }
-    .source-diff.ok  { color: var(--muted); }
-    .source-type-badge {
-      font-size: 10px; font-weight: 500; padding: 1px 6px;
-      border-radius: 99px; margin-left: 6px; vertical-align: middle;
-    }
-    .source-type-badge.fijo           { background: rgba(74,127,181,0.12); color: var(--info); }
-    .source-type-badge.no_operacional { background: rgba(201,124,46,0.12);  color: var(--warning); }
-    .source-type-badge.extraordinario { background: rgba(212,96,138,0.10); color: var(--accent); }
-    .source-type-badge.prop           { background: rgba(74,127,181,0.12); color: var(--info); }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar"></div>
+  <main class="inc">
 
-  <div class="page">
-    <div style="margin-bottom:16px;">
-      <h2>Ingresos</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:4px;">
-        Registra lo que realmente recibiste cada mes.
-      </p>
-    </div>
-
-    <div id="month-selector-container" style="margin-bottom:16px;"></div>
-
-    <!-- Devengado del mes -->
-    <div id="devengado-section" class="devengado-section" style="display:none;">
-      <h3 style="margin-bottom:10px;">Devengado del mes</h3>
-      <div id="devengado-list"></div>
-    </div>
-
-    <!-- Resumen -->
-    <div class="summary-row">
-      <div class="sum-card">
-        <div class="sum-label">Recibido</div>
-        <div class="sum-value inc" id="sum-real">$ 0</div>
+    <div class="inc-head">
+      <div class="inc-head-title">
+        <h1>Ingresos</h1>
+        <button class="inc-new" id="fab" type="button" aria-label="Registrar ingreso">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="inc-new-lbl">Registrar ingreso</span>
+        </button>
       </div>
-      <div class="sum-card">
-        <div class="sum-label">Presupuestado</div>
-        <div class="sum-value exp" id="sum-budgeted">$ 0</div>
+      <div class="inc-head-actions">
+        <div id="month-selector-container"></div>
       </div>
     </div>
 
-    <!-- Por fuente de ingreso -->
-    <div id="sources-section" style="display:none;">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <h3>Por fuente de ingreso</h3>
+    <div class="inc-col inc-side">
+      <!-- Recibido vs esperado -->
+      <section class="card sum-card" id="sum-card" aria-live="polite">
+        <div class="skeleton sk-line" style="width:45%;"></div>
+        <div class="skeleton" style="height:38px;width:60%;margin-top:12px;"></div>
+        <div class="skeleton sk-line" style="width:50%;margin-top:10px;"></div>
+        <div class="skeleton" style="height:10px;margin-top:22px;border-radius:999px;"></div>
+      </section>
+
+      <!-- Devengado del mes (ingresos proporcionales) -->
+      <section class="card" id="devengado-section" style="display:none;">
+        <div class="sect-hdr"><h2>Devengado del mes</h2></div>
+        <ul class="rows" id="devengado-list"></ul>
+      </section>
+    </div>
+
+    <div class="inc-col">
+      <!-- Por fuente de ingreso -->
+      <section class="card" id="sources-section" style="display:none;">
+        <div class="sect-hdr">
+          <h2>Por fuente de ingreso</h2>
+          <span class="sect-count" id="sources-count"></span>
         </div>
-        <div id="sources-list"></div>
-      </div>
+        <ul class="rows" id="sources-list"></ul>
+      </section>
+
+      <!-- Registros del mes -->
+      <section class="card">
+        <div class="sect-hdr">
+          <h2>Registros del mes</h2>
+          <span class="sect-count" id="incomes-count"></span>
+        </div>
+        <div id="incomes-list">
+          <ul class="rows">
+            <li class="row"><div class="skeleton" style="height:40px;"></div></li>
+            <li class="row"><div class="skeleton" style="height:40px;"></div></li>
+          </ul>
+        </div>
+      </section>
     </div>
 
-    <!-- Lista de ingresos registrados -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h3>Registros del mes</h3>
-      </div>
-      <div id="incomes-list">
-        <div class="skeleton" style="height:160px;border-radius:10px;"></div>
-      </div>
-    </div>
-  </div>
+  </main>
 
-  <button class="fab" id="fab" title="Registrar ingreso">+</button>
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Drawer -->
+  <!-- Hoja: nuevo / editar ingreso -->
   <div class="drawer-overlay" id="drawer-overlay"></div>
-  <div class="drawer" id="drawer">
+  <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
     <div class="drawer-handle"></div>
-    <div class="drawer-title" id="drawer-title">Nuevo ingreso</div>
+    <h2 class="drawer-title" id="drawer-title">Nuevo ingreso</h2>
 
     <div class="form-group">
-      <label class="form-label">Fecha</label>
+      <label class="form-label" for="field-date">Fecha</label>
       <input type="date" class="form-input" id="field-date"/>
     </div>
 
     <div class="form-group">
-      <label class="form-label">Fuente</label>
+      <label class="form-label" for="field-source">Fuente</label>
       <input type="text" class="form-input" id="field-source"
              placeholder="Ej: Guillo, Sociedad, Freelance..." maxlength="60"
              list="sources-datalist"/>
@@ -220,7 +257,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">Valor</label>
+      <label class="form-label" for="field-amount">Valor</label>
       <div class="amount-wrapper">
         <span class="sym">$</span>
         <input type="number" class="form-input" id="field-amount" placeholder="0" min="0"/>
@@ -228,14 +265,14 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">¿A cuál cajita entró?</label>
+      <label class="form-label" for="field-wallet">¿A cuál cajita entró?</label>
       <select class="form-select" id="field-wallet">
         <option value="">Sin cajita asignada</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label class="form-label">Descripción <span style="color:var(--muted);font-weight:300;">(opcional)</span></label>
+      <label class="form-label" for="field-description">Descripción <span class="form-optional">(opcional)</span></label>
       <input type="text" class="form-input" id="field-description" placeholder="Nota adicional..." maxlength="100"/>
     </div>
 
@@ -245,18 +282,26 @@
   <script type="module">
     import { requireAuth } from "../modules/auth.js?v=20261018";
     import { getIncomes, addIncome, updateIncome, deleteIncome, getWallets, getBudget, syncProportionalIncomes, getProportionalSummary } from "../modules/db.js?v=20261018";
-    import { renderTopbar, renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=20261018";
-    import { formatCOP, currentMonth, formatDate, today, applyNumericFormat, getNumericValue } from "../assets/utils.js?v=20261018";
+    import { renderBottomNav, renderMonthSelector, showToast } from "../assets/ui.js?v=20261018";
+    import { formatCOP, currentMonth, formatMonth, formatDate, today, applyNumericFormat, getNumericValue, formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
     let uid, selectedMonth, incomes = [], wallets = [], budget = null, propSummary = [], editingId = null;
 
+    // ── Presentación: formato de cifras y textos ──────────
+    // "$ 1.234" → "$1.234" (formato del DESIGN.md)
+    const money     = v => formatCOP(Math.abs(v)).replace(/\s/g, "");
+    const esc       = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const monthName = m => formatMonth(m).split(" ")[0];
+    const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
+    // "2026-10-16" → "16 oct" (el año ya está en el selector de mes)
+    const dayLabel  = d => d ? formatDate(d).replace(/ de \d{4}$| \d{4}$/, "").replace(".", "") : "—";
+
     const user = await requireAuth();
     uid = user.uid;
     selectedMonth = currentMonth();
 
-    renderTopbar(user);
     renderBottomNav("incomes");
     renderMonthSelector("month-selector-container", selectedMonth, m => {
       selectedMonth = m;
@@ -309,23 +354,20 @@
 
       list.innerHTML = summary.map(s => {
         const pct    = Math.min(s.pct, 1);
-        const barCls = pct >= 1 ? "over" : pct >= 0.8 ? "warn" : "";
-        const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
         return `
-          <div class="devengado-card">
-            <div class="dev-header">
-              <span class="dev-name">${s.name}</span>
-              <span class="dev-type ${s.type}">${typeLabels[s.type] || s.type}</span>
+          <li class="row">
+            <div class="row-line">
+              <span class="row-name">${esc(formatName(s.name))}</span>
+              <span class="num row-amt">${money(s.accruedAmount)}</span>
             </div>
-            <div class="dev-amounts">
-              <div class="dev-accrued">${formatCOP(s.accruedAmount)}</div>
-              <div class="dev-total">de ${formatCOP(s.totalAmount)}</div>
+            <div class="progress-bar" role="img" aria-label="${Math.round(pct * 100)}% devengado">
+              <div class="progress-fill" style="width:${pct*100}%;"></div>
             </div>
-            <div class="progress-bar">
-              <div class="progress-fill ${barCls}" style="width:${pct*100}%;background:var(--info);"></div>
+            <div class="row-line">
+              <span class="num row-meta">de ${money(s.totalAmount)} · ${money(s.dailyAmount)}/día</span>
+              <span class="row-meta">${s.daysPassed} de ${s.daysInMonth} días</span>
             </div>
-            <div class="dev-days">${s.daysPassed} de ${s.daysInMonth} días · ${formatCOP(s.dailyAmount)}/día</div>
-          </div>`;
+          </li>`;
       }).join("");
     }
 
@@ -349,8 +391,34 @@
       const totalReal     = incomes.reduce((s, i) => s + Number(i.amount), 0);
       const incomeArr  = normalizeIncome(budget?.income);
       const totalBudgeted = incomeArr.reduce((s, i) => s + Number(i.amount || 0), 0);
-      document.getElementById("sum-real").textContent     = formatCOP(totalReal);
-      document.getElementById("sum-budgeted").textContent = formatCOP(totalBudgeted);
+
+      const el    = document.getElementById("sum-card");
+      const mName = monthName(selectedMonth);
+      const pct   = totalBudgeted > 0 ? Math.min(totalReal / totalBudgeted, 1) : 0;
+      const diff  = totalReal - totalBudgeted;
+
+      let finding;
+      if (totalBudgeted <= 0) {
+        finding = totalReal > 0
+          ? "No hay ingresos presupuestados este mes para comparar."
+          : "Aún no hay ingresos presupuestados ni registrados este mes.";
+      } else if (diff < 0) {
+        finding = `Faltan <strong class="num">${money(diff)}</strong> por recibir para llegar a lo esperado.`;
+      } else if (diff > 0) {
+        finding = `Recibiste <strong class="num pos">${money(diff)}</strong> más de lo esperado.`;
+      } else {
+        finding = "Recibiste exactamente lo esperado.";
+      }
+
+      el.innerHTML = `
+        <span class="label">Recibido en ${mName}</span>
+        <span class="amount-big ${totalReal > 0 ? "positive" : "neutral"} num sum-amount">${money(totalReal)}</span>
+        ${totalBudgeted > 0 ? `
+          <div class="sum-sub">de ${money(totalBudgeted)} esperados · ${Math.round(totalReal / totalBudgeted * 100)}%</div>
+          <div class="progress-bar" role="img" aria-label="${Math.round(pct * 100)}% de lo esperado">
+            <div class="progress-fill" style="width:${pct * 100}%;"></div>
+          </div>` : ""}
+        <p class="sum-finding">${finding}</p>`;
     }
 
     // ── Por fuente de ingreso ─────────────────────────────
@@ -379,6 +447,9 @@
       const budgetedNames = new Set(incomeArr.map(i => i.name));
       const extraSources  = Object.keys(realBySource).filter(s => !budgetedNames.has(s));
 
+      const total = incomeArr.length + extraSources.length;
+      document.getElementById("sources-count").textContent = `${total} ${total === 1 ? "fuente" : "fuentes"}`;
+
       listEl.innerHTML = [
         ...incomeArr.map(inc => sourceCardHTML(inc, realBySource[inc.name] || 0, propMap[inc.name])),
         ...extraSources.map(src => sourceCardHTML({name: src, amount: 0, type: "fijo", proportional: false}, realBySource[src] || 0, null))
@@ -394,50 +465,45 @@
 
       const diff      = received - budgeted;
       const diffVal   = Math.abs(diff);
-      const diffCls   = diff > 0 ? "pos" : diff < 0 ? "neg" : "ok";
-      const diffLabel = diff > 0 ? `+${formatCOP(diffVal)} extra`
-                      : diff < 0 ? `-${formatCOP(diffVal)} pendiente`
-                      : "Completo ✓";
 
-      const typeLabels = { fijo: "Fijo", no_operacional: "No operacional", extraordinario: "Extraordinario" };
       const typeLabel  = inc.proportional
         ? (typeLabels[inc.type] || inc.type) + " · Proporcional"
-        : (typeLabels[inc.type] || inc.type);
+        : budgeted > 0 ? (typeLabels[inc.type] || inc.type) : "Sin presupuestar";
 
-      const propNote = prop
-        ? `<div class="source-prop-note">
-             Devengado: <span>${formatCOP(prop.accruedAmount)}</span>
-             · ${prop.daysPassed}/${prop.daysInMonth} días
-             · <span>${formatCOP(prop.dailyAmount)}/día</span>
-           </div>`
-        : "";
-
-      const subLine = inc.proportional ? "" :
-        receivedManual > 0 ? `<div class="source-sub">Registrado manualmente</div>` : "";
+      let right = "";
+      if (budgeted > 0) {
+        right = diff > 0 ? `<span class="num row-meta pos">+${money(diffVal)} extra</span>`
+              : diff < 0 ? `<span class="num row-meta">Pendiente ${money(diffVal)}</span>`
+              : `<span class="row-meta">Completo</span>`;
+      }
 
       return `
-        <div class="source-item">
-          <div class="source-left">
-            <div class="source-name">
-              ${inc.name}
-              <span class="source-type-badge ${inc.proportional ? "prop" : inc.type}">${typeLabel}</span>
+        <li class="row">
+          <div class="row-line">
+            <span class="row-title">
+              <span class="row-name">${esc(formatName(inc.name))}</span>
+              <span class="row-type">${esc(typeLabel)}</span>
+            </span>
+            <span class="num row-amt ${received ? "" : "zero"}">${money(received)}</span>
+          </div>
+          ${budgeted > 0 ? `
+            <div class="progress-bar" role="img" aria-label="${Math.round(Math.min(received / budgeted, 1) * 100)}% recibido">
+              <div class="progress-fill" style="width:${Math.min(received / budgeted, 1) * 100}%;"></div>
             </div>
-            ${subLine}
-            ${propNote}
-          </div>
-          <div class="source-right">
-            <div class="source-received">${formatCOP(received)}</div>
-            ${budgeted > 0 ? `<div class="source-budgeted">de ${formatCOP(budgeted)}</div>` : ""}
-            ${budgeted > 0 ? `<div class="source-diff ${diffCls}">${diffLabel}</div>` : ""}
-          </div>
-        </div>`;
+            <div class="row-line">
+              <span class="num row-meta">de ${money(budgeted)}</span>
+              ${right}
+            </div>` : ""}
+        </li>`;
     }
 
     // ── Lista ingresos ────────────────────────────────────
     function renderIncomes() {
       const el = document.getElementById("incomes-list");
+      document.getElementById("incomes-count").textContent =
+        incomes.length ? `${incomes.length} ${incomes.length === 1 ? "registro" : "registros"}` : "";
       if (!incomes.length) {
-        el.innerHTML = `<div class="empty-state"><p>No hay ingresos registrados este mes.</p></div>`;
+        el.innerHTML = `<div class="empty-state"><p>No hay ingresos registrados este mes. Usa el botón + de arriba para registrar uno.</p></div>`;
         return;
       }
       const groups = incomes.reduce((acc, i) => {
@@ -446,19 +512,27 @@
       }, {});
       const sortedDates = Object.keys(groups).sort().reverse();
       el.innerHTML = sortedDates.map(date => `
-        <div class="date-label">${formatDate(date)}</div>
-        ${groups[date].map(i => `
-          <div class="income-item">
-            <div class="income-left" data-id="${i.id}">
-              <div class="income-source">${i.source}</div>
-              ${i.description ? `<div class="income-sub">${i.description}</div>` : ""}
-              ${i.walletName  ? `<div class="income-wallet">→ ${i.walletName}</div>` : ""}
-            </div>
-            <div class="income-right">
-              <div class="income-amount">${formatCOP(i.amount)}</div>
-              <button class="btn-danger" data-id="${i.id}" style="margin-top:4px;">✕</button>
-            </div>
-          </div>`).join("")}
+        <div class="date-group">
+          <span class="label">${dayLabel(date)}</span>
+          <ul class="rows">
+            ${groups[date].map(i => {
+              const meta = [i.description, i.walletName ? `→ ${i.walletName}` : ""].filter(Boolean).map(esc).join(" · ");
+              return `
+              <li class="row income-item">
+                <div class="income-left" data-id="${i.id}">
+                  <div class="row-line">
+                    <span class="row-name">${esc(formatName(i.source))}</span>
+                    <span class="num row-amt">+${money(Number(i.amount))}</span>
+                  </div>
+                  ${meta ? `<div class="row-meta" style="margin-top:4px;">${meta}</div>` : ""}
+                </div>
+                <button class="btn-danger" data-id="${i.id}" type="button" aria-label="Eliminar ingreso">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </li>`;
+            }).join("")}
+          </ul>
+        </div>
       `).join("");
     }
 
