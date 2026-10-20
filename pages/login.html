@@ -5,254 +5,128 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Ingresar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:       #fdf6f0;
-      --surface:  #ffffff;
-      --border:   #f0dde6;
-      --text:     #3a2530;
-      --muted:    #9e7d8a;
-      --accent:   #d4608a;
-      --accent2:  #b84d75;
-      --danger:   #d94f4f;
-      --radius:   14px;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg:       #1c1217;
-        --surface:  #261820;
-        --border:   #3d2633;
-        --text:     #f2e0e8;
-        --muted:    #9e7d8a;
-        --accent:   #e87aaa;
-        --accent2:  #d45c90;
-        --danger:   #e07070;
-      }
-    }
-
+    /* ── Layout: una columna centrada, 400px de ancho ───────
+       Sin barra de navegación: se quita el espacio inferior que deja style.css. */
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: "DM Sans", sans-serif;
-      font-weight: 300;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      padding: 24px 20px !important;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth { width: 100%; max-width: 400px; }
+
+    /* Marca (igual que en el sidebar) */
+    .auth-brand {
+      font-family: "Sora", sans-serif; font-size: 20px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text);
+      margin: 0 4px 16px;
     }
 
-    /* Fondo con patrón sutil */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image:
-        radial-gradient(ellipse 60% 50% at 70% 20%, rgba(212,96,138,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(212,96,138,0.05) 0%, transparent 50%);
-      pointer-events: none;
+    .auth .card { padding: 28px 24px 24px; margin-bottom: 0; }
+    .auth h1 {
+      font-family: "Sora", sans-serif; font-size: 22px; font-weight: 600;
+      letter-spacing: -0.02em; color: var(--text);
     }
+    .auth-sub { font-size: 15px; color: var(--muted); margin-top: 6px; }
 
-    .card {
-      width: 100%;
-      max-width: 420px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 48px 40px 40px;
-      position: relative;
-    }
-
-    .brand {
-      text-align: center;
-      margin-bottom: 36px;
-    }
-
-    .brand-icon {
-      width: 52px;
-      height: 52px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      font-size: 24px;
-    }
-
-    .brand h1 {
-      font-family: "DM Serif Display", serif;
-      font-size: 26px;
-      font-weight: 400;
-      letter-spacing: -0.5px;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .brand p {
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    /* Tabs login / registro */
+    /* ── Selector Ingresar / Registrarme (como Gasto / Ingreso en Movimientos) ── */
     .tabs {
-      display: flex;
-      background: var(--bg);
-      border-radius: 10px;
-      padding: 4px;
-      margin-bottom: 28px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;
+      background: var(--surface2); padding: 4px; border-radius: 14px;
+      margin: 24px 0;
     }
-
     .tab {
-      flex: 1;
-      padding: 8px;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      cursor: pointer;
-      border-radius: 7px;
-      transition: all 0.2s;
-      user-select: none;
+      height: 42px; border: none; border-radius: 11px;
+      font-family: "Public Sans", sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; background: transparent; color: var(--muted);
+      transition: background 0.15s, color 0.15s;
     }
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--surface); color: var(--text); }
 
-    .tab.active {
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+    .auth .btn-primary { margin-top: 8px; }
 
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-      margin-bottom: 7px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 13px 16px;
-      font-family: "DM Sans", sans-serif;
-      font-size: 15px;
-      font-weight: 300;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-    }
-
-    input::placeholder {
-      color: var(--muted);
-      opacity: 0.5;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--accent);
-      color: #ffffff;
-      border: none;
-      border-radius: 10px;
-      font-family: "DM Sans", sans-serif;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .btn:hover  { background: var(--accent2); }
-    .btn:active { transform: scale(0.99); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
+    /* Error: paleta de .btn-danger del DESIGN.md */
     .error-msg {
-      background: rgba(217,79,79,0.10);
-      border: 1px solid rgba(217,79,79,0.30);
+      background: rgba(217,63,63,0.08);
+      border: 1px solid rgba(217,63,63,0.3);
       color: var(--danger);
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 10px 14px;
-      font-size: 13px;
+      font-size: 14px;
       margin-top: 12px;
       display: none;
     }
-
     .error-msg.show { display: block; }
 
     .footer-note {
       text-align: center;
-      font-size: 12px;
+      font-size: 13px;
       color: var(--muted);
-      margin-top: 24px;
+      margin-top: 20px;
     }
 
     /* Ocultar/mostrar secciones */
     #section-register { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tab { transition: none; }
+    }
+
+    @media (min-width: 600px) {
+      .auth .card { padding: 36px 32px 32px; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand">
-      <div class="brand-icon">💰</div>
-      <h1>Mi Presupuesto</h1>
-      <p>Control financiero personal</p>
-    </div>
+  <main class="auth">
+    <div class="auth-brand">Mi Presupuesto</div>
 
-    <div class="tabs">
-      <div class="tab active" id="tab-login-btn">Ingresar</div>
-      <div class="tab" id="tab-register-btn">Registrarme</div>
-    </div>
+    <section class="card">
+      <h1>Tu presupuesto, claro</h1>
+      <p class="auth-sub">Control financiero personal.</p>
 
-    <!-- Formulario Login -->
-    <div id="section-login">
-      <div class="form-group">
-        <label>Correo</label>
-        <input type="email" id="login-email" placeholder="tu@correo.com" autocomplete="email"/>
+      <div class="tabs" role="tablist" aria-label="Ingresar o crear cuenta">
+        <button class="tab active" id="tab-login-btn" type="button" role="tab">Ingresar</button>
+        <button class="tab" id="tab-register-btn" type="button" role="tab">Registrarme</button>
       </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
-      </div>
-      <button class="btn" id="btn-login">Ingresar</button>
-      <div class="error-msg" id="login-error"></div>
-    </div>
 
-    <!-- Formulario Registro -->
-    <div id="section-register">
-      <div class="form-group">
-        <label>Correo</label>
-        <input type="email" id="reg-email" placeholder="tu@correo.com" autocomplete="email"/>
+      <!-- Formulario Login -->
+      <div id="section-login">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Correo</label>
+          <input type="email" class="form-input" id="login-email" placeholder="tu@correo.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Contraseña</label>
+          <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+        </div>
+        <button class="btn-primary" id="btn-login" type="button">Ingresar</button>
+        <div class="error-msg" id="login-error" role="alert"></div>
       </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+
+      <!-- Formulario Registro -->
+      <div id="section-register">
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Correo</label>
+          <input type="email" class="form-input" id="reg-email" placeholder="tu@correo.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Contraseña</label>
+          <input type="password" class="form-input" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-password2">Confirmar contraseña</label>
+          <input type="password" class="form-input" id="reg-password2" placeholder="Repite tu contraseña" autocomplete="new-password"/>
+        </div>
+        <button class="btn-primary" id="btn-register" type="button">Crear cuenta</button>
+        <div class="error-msg" id="register-error" role="alert"></div>
       </div>
-      <div class="form-group">
-        <label>Confirmar contraseña</label>
-        <input type="password" id="reg-password2" placeholder="Repite tu contraseña" autocomplete="new-password"/>
-      </div>
-      <button class="btn" id="btn-register">Crear cuenta</button>
-      <div class="error-msg" id="register-error"></div>
-    </div>
+    </section>
 
     <p class="footer-note">Tus datos son privados y solo tú los puedes ver.</p>
-  </div>
+  </main>
 
   <script type="module">
     import { login, register, onAuthChange } from "../modules/auth.js?v=20261018";
