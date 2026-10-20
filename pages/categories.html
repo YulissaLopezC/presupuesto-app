@@ -5,175 +5,240 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Presupuesto · Categorías</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" href="../assets/style.css?v=20261018"/>
   <style>
-    .fab {
-      position: fixed; bottom: 76px; right: 20px;
-      width: 54px; height: 54px;
-      background: var(--accent); color: #fdf6f0;
-      border: none; border-radius: 50%;
-      font-size: 26px; cursor: pointer;
+    /* ── Layout ─────────────────────────────────────────────
+       Móvil: una columna de 680px máx.
+       Escritorio (≥ 900px): resumen 5fr (fijo al hacer scroll) + grupos 7fr, gap 16px. */
+    .cats {
+      max-width: 680px; margin: 0 auto;
+      padding: 20px 20px 0;
+      display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px;
+    }
+    .cats .card { margin-bottom: 0; }
+    .cats-col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; min-width: 0; }
+
+    /* ── Título + acciones (igual que Ingresos y Préstamos) ── */
+    .cats-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .cats-head h1 {
+      font-family: "Sora", sans-serif; font-size: 22px; font-weight: 600;
+      letter-spacing: -0.02em; color: var(--text);
+    }
+    /* Nueva categoría: círculo en móvil (como Cajitas), botón primario en escritorio */
+    .cats-new {
+      width: 44px; height: 44px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-family: "Public Sans", sans-serif;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .cats-new:hover { border-color: var(--text); }
+    .cats-new-lbl { display: none; }
+
+    /* ── Cifras ──────────────────────────────────────────── */
+    .num {
+      font-family: "Sora", sans-serif; font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em; white-space: nowrap;
+    }
+
+    /* ── Resumen: categorías por tipo ────────────────────── */
+    .sum-amount { display: block; margin-top: 10px; }
+    .sum-finding { font-size: 15px; line-height: 1.5; color: var(--text); margin-top: 12px; }
+    /* Tira de cifras (igual que "Este mes" en Inicio), en 3 columnas */
+    .month-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; }
+    .month-cell {
+      padding: 14px 14px 0 0; border-top: 1px solid var(--border-soft);
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .month-cell + .month-cell { padding-left: 14px; border-left: 1px solid var(--border-soft); }
+    .month-cell .label { display: flex; align-items: center; gap: 6px; }
+    .month-cell .num { display: block; font-size: 18px; font-weight: 700; margin-top: 6px; color: var(--text); }
+    .month-cell .num.zero { color: var(--muted); }
+
+    /* Punto de tipo: colores de los badges del DESIGN.md (§6.5) */
+    .type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .type-dot.basico      { background: #1B6FC2; }
+    .type-dot.no-esencial { background: #B5487A; }
+    .type-dot.ahorro      { background: #3F7D1E; }
+
+    /* ── Encabezado de sección dentro de tarjeta ─────────── */
+    .sect-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; min-height: 24px;
+    }
+    .sect-hdr h2 {
+      display: flex; align-items: center; gap: 8px;
+      font-family: "Public Sans", sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .sect-count { font-size: 13px; color: var(--muted); }
+
+    /* ── Filas de categoría ──────────────────────────────── */
+    .rows { list-style: none; margin-top: 8px; }
+    .cat-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 6px 0; min-height: 56px;
+      border-top: 1px solid var(--border-soft);
+      cursor: pointer;
+    }
+    .cat-item:first-child { border-top: none; }
+    .cat-item-name {
+      flex: 1; min-width: 0;
+      font-size: 15px; font-weight: 600; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cat-item:hover .cat-item-name { text-decoration: underline; text-underline-offset: 3px; }
+    .cat-item-edit { font-size: 13px; color: var(--muted); }
+    .cat-item .btn-danger {
+      width: 36px; height: 36px; padding: 0; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(212,96,138,0.25);
-      z-index: 90; transition: background 0.2s, transform 0.2s;
     }
-    .fab:hover  { background: var(--accent2); }
-    .fab:active { transform: scale(0.95); }
 
+    /* ── Estados ─────────────────────────────────────────── */
+    .cats .empty-state { padding: 28px 12px; }
+    .cats .empty-state p { margin-top: 0; color: var(--text); }
+    .sk-line { height: 14px; }
+
+    /* ── Hoja de registro (igual que Ingresos) ───────────── */
     .drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+      position: fixed; inset: 0; background: rgba(14,23,38,0.5);
+      z-index: 150; opacity: 0; pointer-events: none; visibility: hidden;
+      transition: opacity 0.25s, visibility 0.25s;
     }
-    .drawer-overlay.open { opacity: 1; pointer-events: all; }
-
+    .drawer-overlay.open { opacity: 1; pointer-events: all; visibility: visible; }
     .drawer {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--border);
-      border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
-      z-index: 160; transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
-      max-width: 680px; margin: 0 auto;
+      background: var(--surface);
+      border-radius: 20px 20px 0 0; padding: 10px 20px 28px;
+      z-index: 160; transform: translateY(100%); visibility: hidden;
+      transition: transform 0.3s ease, visibility 0.3s;
+      max-width: 680px; margin: 0 auto; max-height: 90vh; overflow-y: auto;
     }
-    .drawer.open { transform: translateY(0); }
-    .drawer-handle {
-      width: 36px; height: 4px; background: var(--border2);
-      border-radius: 99px; margin: 0 auto 20px;
-    }
+    .drawer.open { transform: translateY(0); visibility: visible; }
+    .drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 999px; margin: 0 auto 16px; }
     .drawer-title {
-      font-family: "DM Serif Display", serif;
-      font-size: 20px; font-weight: 400; margin-bottom: 20px;
+      font-family: "Sora", sans-serif; font-size: 18px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text); margin-bottom: 20px;
     }
 
-    /* ── Grupos de tipo ──────────────────────────────────── */
-    .type-group { margin-bottom: 8px; }
-
-    .type-header {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 0 8px;
-    }
-
-    .type-dot {
-      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-    }
-    .type-dot.basico     { background: var(--accent); }
-    .type-dot.no-esencial{ background: var(--warning); }
-    .type-dot.ahorro     { background: var(--info); }
-
-    .type-label {
-      font-size: 11px; font-weight: 500; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.07em;
-    }
-
-    .type-count {
-      font-size: 11px; color: var(--muted2);
-      margin-left: auto;
-    }
-
-    /* ── Item de categoría ───────────────────────────────── */
-    .cat-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 6px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .cat-item:hover { border-color: var(--border2); }
-
-    .cat-item-name { font-size: 14px; color: var(--text); }
-
-    .cat-item-actions { display: flex; gap: 6px; align-items: center; }
-
-    /* ── Nota de categorías por defecto ──────────────────── */
-    .default-note {
-      background: rgba(74,127,181,0.07);
-      border: 1px solid rgba(74,127,181,0.2);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 12px;
-      color: var(--info);
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-
-    /* ── Selector de tipo en el drawer ───────────────────── */
-    .type-options {
-      display: flex; flex-direction: column; gap: 8px;
-    }
-
+    /* Selector de tipo en la hoja */
+    .type-options { display: flex; flex-direction: column; gap: 8px; }
     .type-option {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 14px;
-      background: var(--bg);
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; min-height: 56px;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color 0.2s, background 0.2s;
     }
-    .type-option:hover { border-color: var(--border2); }
-    .type-option.selected { border-color: var(--accent); background: rgba(212,96,138,0.06); }
-    .type-option.selected-warn { border-color: var(--warning); background: rgba(224,184,112,0.05); }
-    .type-option.selected-info { border-color: var(--info); background: rgba(112,171,224,0.05); }
+    .type-option:hover { border-color: var(--text); }
+    .type-option.selected      { border-color: #1B6FC2; background: rgba(27,111,194,0.08); }
+    .type-option.selected-warn { border-color: #B5487A; background: rgba(181,72,122,0.08); }
+    .type-option.selected-info { border-color: #3F7D1E; background: rgba(63,125,30,0.08); }
+    .type-option-label { font-size: 15px; font-weight: 600; color: var(--text); }
+    .type-option-desc  { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-    .type-option-label { font-size: 14px; color: var(--text); }
-    .type-option-desc  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    @media (prefers-reduced-motion: reduce) {
+      .drawer, .drawer-overlay, .cats-new, .type-option { transition: none; }
+      .skeleton { animation: none; }
+    }
+
+    /* ── Escritorio ≥ 900px ──────────────────────────────── */
+    @media (min-width: 900px) {
+      .cats {
+        max-width: 1240px; padding: 32px;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px;
+      }
+      .cats-col  { gap: 16px; }
+      .cats-head { grid-column: 1 / -1; }
+      .cats-head h1 { font-size: 26px; }
+      .cats-side { align-self: start; position: sticky; top: 32px; }
+      .cats-new {
+        width: auto; height: 44px; padding: 0 18px; border: none; border-radius: 12px; gap: 6px;
+        background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
+      }
+      .cats-new:hover { background: var(--accent-strong); }
+      .cats-new-lbl { display: inline; }
+
+      .drawer {
+        top: 50%; bottom: auto; left: 50%; right: auto;
+        width: 520px; max-width: calc(100vw - 32px);
+        border-radius: 20px; padding: 28px;
+        transform: translate(-50%, -46%); opacity: 0; pointer-events: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        transition: transform 0.25s ease, opacity 0.25s ease, visibility 0.25s;
+      }
+      .drawer.open { transform: translate(-50%, -50%); opacity: 1; pointer-events: all; }
+      .drawer-handle { display: none; }
+    }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar"></div>
+  <main class="cats">
 
-  <div class="page">
-    <div style="margin-bottom:20px;">
-      <h2>Categorías</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:4px;">
-        Define tus categorías de gasto, ahorro e inversión.
-      </p>
+    <div class="cats-head">
+      <h1>Categorías</h1>
+      <button class="cats-new" id="fab" type="button" aria-label="Nueva categoría">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="cats-new-lbl">Nueva categoría</span>
+      </button>
     </div>
 
-    <div class="default-note">
-      Tip: configura tus categorías antes de registrar gastos o configurar el presupuesto mensual.
+    <!-- Resumen: cuántas categorías hay de cada tipo -->
+    <div class="cats-col cats-side">
+      <section class="card" id="cats-summary" aria-live="polite">
+        <div class="skeleton sk-line" style="width:40%;"></div>
+        <div class="skeleton" style="height:38px;width:30%;margin-top:12px;"></div>
+        <div class="skeleton sk-line" style="width:85%;margin-top:14px;"></div>
+      </section>
     </div>
 
-    <div id="categories-list">
-      <div class="skeleton" style="height:200px;border-radius:14px;"></div>
+    <!-- Grupos por tipo -->
+    <div class="cats-col" id="categories-list">
+      <section class="card">
+        <div class="skeleton sk-line" style="width:35%;"></div>
+        <div class="skeleton" style="height:40px;margin-top:18px;"></div>
+        <div class="skeleton" style="height:40px;margin-top:16px;"></div>
+      </section>
     </div>
-  </div>
 
-  <button class="fab" id="fab" title="Nueva categoría">+</button>
+  </main>
+
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Drawer -->
+  <!-- Hoja: nueva / editar categoría -->
   <div class="drawer-overlay" id="drawer-overlay"></div>
-  <div class="drawer" id="drawer">
+  <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
     <div class="drawer-handle"></div>
-    <div class="drawer-title" id="drawer-title">Nueva categoría</div>
+    <h2 class="drawer-title" id="drawer-title">Nueva categoría</h2>
 
     <div class="form-group">
-      <label class="form-label">Nombre</label>
+      <label class="form-label" for="field-name">Nombre</label>
       <input type="text" class="form-input" id="field-name" placeholder="Ej: Mercado, Gimnasio..." maxlength="40"/>
     </div>
 
     <div class="form-group">
-      <label class="form-label" style="margin-bottom:10px;">Tipo</label>
-      <div class="type-options">
-        <div class="type-option" id="opt-basico">
+      <span class="form-label">Tipo</span>
+      <div class="type-options" role="radiogroup" aria-label="Tipo de categoría">
+        <div class="type-option" id="opt-basico" role="radio" tabindex="0">
           <div class="type-dot basico"></div>
           <div>
             <div class="type-option-label">Gasto básico</div>
             <div class="type-option-desc">Necesidades esenciales del mes</div>
           </div>
         </div>
-        <div class="type-option" id="opt-no-esencial">
+        <div class="type-option" id="opt-no-esencial" role="radio" tabindex="0">
           <div class="type-dot no-esencial"></div>
           <div>
             <div class="type-option-label">Gasto no esencial</div>
             <div class="type-option-desc">Entretenimiento, gustos, salidas</div>
           </div>
         </div>
-        <div class="type-option" id="opt-ahorro">
+        <div class="type-option" id="opt-ahorro" role="radio" tabindex="0">
           <div class="type-dot ahorro"></div>
           <div>
             <div class="type-option-label">Ahorro o inversión</div>
@@ -183,26 +248,27 @@
       </div>
     </div>
 
-    <button class="btn-primary" id="btn-save" style="margin-top:8px;">
-      Guardar categoría
-    </button>
+    <button class="btn-primary" id="btn-save" type="button" style="margin-top:8px;">Guardar categoría</button>
   </div>
 
   <script type="module">
     import { requireAuth }   from "../modules/auth.js?v=20261018";
     import { getCategories, addCategory, updateCategory, deleteCategory } from "../modules/db.js?v=20261018";
-    import { renderTopbar, renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
+    import { renderBottomNav, showToast } from "../assets/ui.js?v=20261018";
     import { formatName } from "../assets/utils.js?v=20261018";
 
     window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
     let uid, categories = [], editingId = null, selectedType = "";
 
+    // ── Presentación ─────────────────────────────────────
+    const esc   = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const icoX  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+
     // ── Init ─────────────────────────────────────────────
     const user = await requireAuth();
     uid = user.uid;
 
-    renderTopbar(user);
     renderBottomNav("categories");
     await loadCategories();
 
@@ -215,41 +281,58 @@
     function renderCategories() {
       const el = document.getElementById("categories-list");
 
+      const TYPES = [
+        { key: "GASTO BÁSICO",       cls: "basico",      label: "Gasto básico",       short: "Básico" },
+        { key: "GASTO NO ESENCIAL",  cls: "no-esencial", label: "Gasto no esencial",  short: "No esencial" },
+        { key: "AHORRO O INVERSIÓN", cls: "ahorro",      label: "Ahorro o inversión", short: "Ahorro" }
+      ];
+      renderSummary(TYPES);
+
       if (!categories.length) {
         el.innerHTML = `
-          <div class="empty-state">
-            <p>Aún no tienes categorías.</p>
-            <p style="margin-top:6px;font-size:12px;">Toca <strong style="color:var(--accent)">+</strong> para crear la primera.</p>
-          </div>`;
+          <section class="card">
+            <div class="sect-hdr"><h2>Por tipo</h2></div>
+            <div class="empty-state"><p>Aún no tienes categorías. Usa el botón + de arriba para crear la primera.</p></div>
+          </section>`;
         return;
       }
-
-      const TYPES = [
-        { key: "GASTO BÁSICO",       cls: "basico",      label: "Gasto básico" },
-        { key: "GASTO NO ESENCIAL",  cls: "no-esencial", label: "Gasto no esencial" },
-        { key: "AHORRO O INVERSIÓN", cls: "ahorro",      label: "Ahorro o inversión" }
-      ];
 
       el.innerHTML = TYPES.map(type => {
         const items = categories.filter(c => c.type === type.key);
         if (!items.length) return "";
         return `
-          <div class="type-group">
-            <div class="type-header">
-              <div class="type-dot ${type.cls}"></div>
-              <span class="type-label">${type.label}</span>
-              <span class="type-count">${items.length}</span>
+          <section class="card">
+            <div class="sect-hdr">
+              <h2><span class="type-dot ${type.cls}" aria-hidden="true"></span>${type.label}</h2>
+              <span class="sect-count">${items.length}</span>
             </div>
-            ${items.map(cat => `
-              <div class="cat-item" data-id="${cat.id}">
-                <span class="cat-item-name">${formatName(cat.name)}</span>
-                <div class="cat-item-actions">
-                  <span class="badge ${type.cls}">${type.label.split(" ")[0]}</span>
-                  <button class="btn-danger" data-id="${cat.id}" data-name="${cat.name}">✕</button>
-                </div>
-              </div>`).join("")}
-          </div>`;
+            <ul class="rows">
+              ${items.map(cat => `
+                <li class="cat-item" data-id="${cat.id}">
+                  <span class="cat-item-name">${esc(formatName(cat.name))}</span>
+                  <span class="cat-item-edit">Editar</span>
+                  <button class="btn-danger" type="button" data-id="${cat.id}" data-name="${esc(cat.name)}" aria-label="Eliminar ${esc(formatName(cat.name))}">${icoX}</button>
+                </li>`).join("")}
+            </ul>
+          </section>`;
       }).join("");
+    }
+
+    // ── Resumen: cuántas hay de cada tipo ─────────────────
+    function renderSummary(TYPES) {
+      const counts = TYPES.map(t => ({ ...t, n: categories.filter(c => c.type === t.key).length }));
+      const total  = counts.reduce((s, t) => s + t.n, 0);
+      document.getElementById("cats-summary").innerHTML = `
+        <span class="label">Tus categorías</span>
+        <span class="amount-big neutral num sum-amount">${total}</span>
+        <p class="sum-finding">Configúralas antes de registrar gastos o armar el presupuesto del mes.</p>
+        <div class="month-grid">
+          ${counts.map(t => `
+            <div class="month-cell">
+              <span class="label"><span class="type-dot ${t.cls}" aria-hidden="true"></span>${t.short}</span>
+              <span class="num ${t.n ? "" : "zero"}">${t.n}</span>
+            </div>`).join("")}
+        </div>`;
     }
 
     // ── Drawer: nuevo ─────────────────────────────────────
